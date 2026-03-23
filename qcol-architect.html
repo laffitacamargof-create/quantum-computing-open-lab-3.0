@@ -263,7 +263,7 @@ body { background:var(--bg); color:var(--tx); font-family:var(--ex); user-select
 .q-wire::before {
   content:''; position:absolute; left:0; right:0; top:50%;
   height:1.5px;
-  background:linear-gradient(90deg, rgba(0,136,255,.7), rgba(0,136,255,.3));
+  background:linear-gradient(90deg, rgba(0,200,255,.9), rgba(0,136,255,.5));
   transform:translateY(-50%);
   pointer-events:none;
 }
@@ -1352,20 +1352,21 @@ function setLib(lib,el){
   document.querySelectorAll('.lib-btn').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('sb-lib').textContent=lib.charAt(0).toUpperCase()+lib.slice(1);
-  // Circuito visual solo para Qiskit
-  const cs=document.getElementById('circuit-section');
-  const pal=document.getElementById('palette');
-  const rh=document.getElementById('resize-h');
-  const isQiskit=lib==='qiskit';
-  if(cs) cs.style.display=isQiskit?'flex':'none';
-  if(pal) pal.style.display=isQiskit?'flex':'none';
-  if(rh) rh.style.display=isQiskit?'flex':'none';
+  const cs  = document.getElementById('circuit-section');
+  const pal = document.getElementById('palette');
+  const rh  = document.getElementById('resize-h');
+  const isQiskit = lib==='qiskit';
+  // Puertas siempre visibles para todos los lenguajes
+  if(pal) pal.style.display='flex';
+  // Circuito solo para Qiskit
+  if(cs) cs.style.display = isQiskit ? 'flex' : 'none';
+  if(rh) rh.style.display = isQiskit ? 'flex' : 'none';
   if(!isQiskit) setMode('code');
   circuit.gates=[];
   if(isQiskit) renderCircuit();
   document.getElementById('code-ta').value=LIB_EXAMPLES[lib]||LIB_EXAMPLES.qiskit;
   onEdit();
-  notify('Librería: '+lib+(isQiskit?'':' — Solo editor de código'));
+  notify('Libreria: '+lib);
 }
 
 // ── OPEN IN HUGGINGFACE ────────────────────────────────
@@ -1577,58 +1578,73 @@ function highlightErrorLine(lineNum){
 
 // ── SYNTAX HIGHLIGHT ──────────────────────────────────
 function highlight(code){
-  // Paso 1: escapar HTML
+  // Escapar HTML primero
   let h = code
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;');
 
-  // Paso 2: proteger strings y comentarios primero (no tocar su interior)
-  const preserved = [];
-  h = h.replace(/(#[^
-]*)/g, (m)=>{
-    preserved.push(`<span class="cm">${m}</span>`);
-    return ` ${preserved.length-1} `;
-  });
-  h = h.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, (m)=>{
-    preserved.push(`<span class="st">${m}</span>`);
-    return ` ${preserved.length-1} `;
-  });
-
-  // Paso 3: keywords
+  // Keywords Python/Qiskit
   const KW = ['from','import','as','def','class','return','if','elif','else',
               'for','while','in','not','and','or','True','False','None',
               'with','pass','try','except','finally','raise','yield','lambda'];
-  KW.forEach(k=>{
-    h = h.replace(new RegExp(`(?<![\w])(${k})(?![\w])`,'g'),
-      `<span class="kw">$1</span>`);
-  });
 
-  // Paso 4: clases Qiskit
-  ['QuantumCircuit','QuantumRegister','ClassicalRegister','Statevector',
-   'DensityMatrix','AerSimulator','Sampler','Estimator','SparsePauliOp',
-   'LineQubit','GridQubit','Circuit','VQE','QAOA','Grover'].forEach(k=>{
-    h = h.replace(new RegExp(`(?<![\w])(${k})(?![\w])`,'g'),
-      `<span class="cl">$1</span>`);
-  });
+  // Procesar línea por línea para manejar comentarios
+  const lines = h.split('\n');
+  h = lines.map(line => {
+    // Si es comentario, colorear todo
+    const ci = line.indexOf('#');
+    if(ci === 0) return `<span class="cm">${line}</span>`;
+    
+    let code_part = ci > 0 ? line.substring(0, ci) : line;
+    const comment_part = ci > 0 ? line.substring(ci) : '';
+    
+    // Strings
+    code_part = code_part.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+      `<span class="st">$1</span>`);
+    
+    // Solo aplicar keywords fuera de spans ya creados
+    KW.forEach(k => {
+      code_part = code_part.replace(
+        new RegExp(`(<[^>]*>)|\b(${k})\b`, 'g'),
+        (m, tag, word) => tag ? tag : `<span class="kw">${word}</span>`
+      );
+    });
+    
+    // Clases Qiskit
+    ['QuantumCircuit','QuantumRegister','ClassicalRegister','Statevector',
+     'DensityMatrix','AerSimulator','SparsePauliOp','LineQubit','GridQubit',
+     'VQE','QAOA','Grover'].forEach(k => {
+      code_part = code_part.replace(
+        new RegExp(`(<[^>]*>)|\b(${k})\b`, 'g'),
+        (m, tag, word) => tag ? tag : `<span class="cl">${word}</span>`
+      );
+    });
+    
+    // Números
+    code_part = code_part.replace(
+      /(<[^>]*>)|(?<!\w)(\d+\.?\d*)(?!\w)/g,
+      (m, tag, num) => tag ? tag : `<span class="nm">${num}</span>`
+    );
 
-  // Paso 5: números
-  h = h.replace(/(?<![\w.])(\d+\.?\d*(?:e[+-]?\d+)?)(?![\w])/g,
-    `<span class="nm">$1</span>`);
+    // Variables comunes
+    code_part = code_part.replace(
+      /(<[^>]*>)|(pi|np|qml|qt|cirq|qc|plt)/g,
+      (m, tag, word) => tag ? tag : `<span class="nm">${word}</span>`
+    );
 
-  // Paso 6: variables comunes
-  h = h.replace(/(?<![\w])(pi|np|qml|qt|cirq|qc|plt|sp)(?![\w])/g,
-    `<span class="nm">$1</span>`);
-
-  // Paso 7: funciones
-  h = h.replace(/(?<![\w])([a-zA-Z_]\w*)\s*(?=\()/g,
-    `<span class="fn">$1</span>`);
-
-  // Paso 8: restaurar strings/comentarios preservados
-  h = h.replace(/ (\d+) /g, (_, i) => preserved[parseInt(i)]);
+    // Funciones
+    code_part = code_part.replace(
+      /(<[^>]*>)|([a-zA-Z_]\w*)\s*(?=\()/g,
+      (m, tag, fn) => tag ? tag : `<span class="fn">${fn}</span>`
+    );
+    
+    return code_part + (comment_part ? `<span class="cm">${comment_part}</span>` : '');
+  }).join('\n');
 
   return h;
 }
+
 function onEdit(){
   const ta=document.getElementById('code-ta'),sl=document.getElementById('syn-lay');
   const ln=document.getElementById('lnums');
@@ -1697,7 +1713,10 @@ function parseCodeToCircuit(code){
       }
     });
 
-    if(newGates.length > 0 || circuit.gates.length > 0){
+    // Actualizar circuito si cambió
+    const prevJSON = JSON.stringify(circuit.gates.map(g=>({id:g.id,q:g.q,q2:g.q2})));
+    const newJSON  = JSON.stringify(newGates.map(g=>({id:g.id,q:g.q,q2:g.q2})));
+    if(prevJSON !== newJSON){
       circuit.gates = newGates;
       renderCircuit();
     }
@@ -2039,10 +2058,25 @@ function stopRes(){
 }
 
 // ── INIT ──────────────────────────────────────────────
-buildPalette();
-renderCircuit();
-document.getElementById('code-ta').value=LIB_EXAMPLES.qiskit;
-onEdit();
+function initApp(){
+  // Esperar un tick para asegurar DOM completo
+  setTimeout(()=>{
+    buildPalette();
+    renderCircuit();
+    const ta=document.getElementById('code-ta');
+    if(ta) ta.value=LIB_EXAMPLES.qiskit;
+    onEdit();
+    // Forzar palette visible
+    const pal=document.getElementById('palette');
+    if(pal) pal.style.display='flex';
+  }, 50);
+}
+// Asegurar que el DOM está listo
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 drawBloch();
 </script>
 </body>
