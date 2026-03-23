@@ -480,17 +480,19 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
 // Estilo Google Colab · Solo Admin/Founder
 // ══════════════════════════════════════════════════
 
+// Detectar si está dentro del ecosistema o abierto directamente
 const STANDALONE = window.parent === window;
 let curUser = null;
 let engineURL = '', engineOK = false, running = false;
 let curView = 'notebook';
-let cells = [];      // [{id, type, code, output, exec_count}]
+let cells = [];
 let curCellId = null;
 let execCounter = 0;
+let _initialized = false;
 
 // ── CORE COMM ──────────────────────────────────────
 function postCore(type, data={}){
-  if(!STANDALONE) window.parent.postMessage({type,...data},'*');
+  try{ window.parent.postMessage({type,...data},'*'); }catch(e){}
 }
 function notify(msg,ms=2800){
   const el=document.getElementById('notif');
@@ -498,43 +500,64 @@ function notify(msg,ms=2800){
   setTimeout(()=>el.classList.remove('show'),ms);
 }
 
-// ── AUTH ───────────────────────────────────────────
-window.addEventListener('message',e=>{
-  const d=e.data||{};
-  if(d.type==='QCOL_USER'){
-    curUser=d.user;
-    const role=curUser?.role||'guest';
-    if(role!=='admin'&&role!=='founder'){
-      document.getElementById('access-denied').classList.add('show');
-      return;
-    }
-    document.getElementById('topbar').style.display='flex';
-    document.getElementById('secbar').style.display='flex';
-    document.getElementById('main-area').style.display='flex';
-    document.getElementById('statusbar').style.display='flex';
-    document.getElementById('user-pill').textContent=
-      (role==='founder'?'👑 ':role==='admin'?'🔑 ':'') + (curUser.name||'—').split(' ')[0];
+// ── SHOW UI ────────────────────────────────────────
+function showUI(user){
+  if(_initialized) return;
+  _initialized = true;
+  curUser = user;
+  const role = curUser?.role || 'guest';
+
+  // Bloquear si no es admin/founder — SOLO si hay usuario real
+  if(user && role !== 'admin' && role !== 'founder'){
+    document.getElementById('access-denied').classList.add('show');
+    return;
+  }
+
+  ['topbar','secbar','main-area','statusbar'].forEach(id=>{
+    document.getElementById(id).style.display=
+      id==='main-area'?'flex':id==='topbar'||id==='secbar'?'flex':'flex';
+  });
+
+  const pill = document.getElementById('user-pill');
+  if(user){
+    const ico = role==='founder'?'👑 ':role==='admin'?'🔑 ':'';
+    pill.textContent = ico + (user.name||'—').split(' ')[0];
     if(role==='admin'||role==='founder')
       document.getElementById('admin-pill').style.display='';
-    engineURL=localStorage.getItem('qcol_colab_url')||'';
-    if(engineURL) checkEngine();
-    refreshNbs();
-    if(cells.length===0) addCellAt(-1,'code');
+  } else {
+    pill.textContent = 'DEMO';
+  }
+
+  engineURL = localStorage.getItem('qcol_colab_url')||'';
+  if(engineURL) checkEngine();
+  refreshNbs();
+  if(cells.length===0) addCellAt(-1,'code');
+}
+
+// ── AUTH ───────────────────────────────────────────
+window.addEventListener('message',e=>{
+  const d = e.data||{};
+  if(d.type==='QCOL_USER'){
+    showUI(d.user);
   }
   if(d.type==='QCOL_CONFIG_UPDATED'){
-    engineURL=localStorage.getItem('qcol_colab_url')||'';
+    engineURL = localStorage.getItem('qcol_colab_url')||'';
     if(engineURL) checkEngine();
   }
 });
-if(STANDALONE){
-  document.getElementById('topbar').style.display='flex';
-  document.getElementById('secbar').style.display='flex';
-  document.getElementById('main-area').style.display='flex';
-  document.getElementById('statusbar').style.display='flex';
-  document.getElementById('user-pill').textContent='DEV';
-  if(cells.length===0) addCellAt(-1,'code');
-  refreshNbs();
-}
+
+// Pedir usuario al ecosistema
+postCore('QCOL_GET_USER');
+
+// Fallback: si en 1.5s no llegó QCOL_USER, activar en modo demo
+setTimeout(()=>{
+  if(!_initialized){
+    // Intentar leer usuario de localStorage (guardado por el ecosistema)
+    const stored = localStorage.getItem('qcol_cur_user');
+    const user = stored ? JSON.parse(stored) : null;
+    showUI(user);
+  }
+}, 1500);
 
 // ── COMPILADOR ─────────────────────────────────────
 async function checkEngine(){
