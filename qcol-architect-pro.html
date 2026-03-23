@@ -357,6 +357,13 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
 .st{color:var(--st);}.nm{color:var(--nm);}.cm{color:var(--cm);font-style:italic;}
 .cl{color:var(--cl);}
 
+.nb-cell.drag-over{
+  border-color:var(--cy)!important;
+  box-shadow:0 0 0 2px rgba(0,255,221,.2);
+}
+.nb-cell[draggable]{cursor:grab;}
+.nb-cell[draggable]:active{cursor:grabbing;}
+
 /* Mobile */
 @media(max-width:700px){
   .nb-cell{width:98%;}
@@ -507,26 +514,21 @@ function showUI(user){
   curUser = user;
   const role = curUser?.role || 'guest';
 
-  // Bloquear si no es admin/founder — SOLO si hay usuario real
-  if(user && role !== 'admin' && role !== 'founder'){
+  // SEGURIDAD: bloquear si no es admin o founder
+  // No hay modo demo — requiere cuenta real
+  if(role !== 'admin' && role !== 'founder'){
     document.getElementById('access-denied').classList.add('show');
     return;
   }
 
   ['topbar','secbar','main-area','statusbar'].forEach(id=>{
-    document.getElementById(id).style.display=
-      id==='main-area'?'flex':id==='topbar'||id==='secbar'?'flex':'flex';
+    document.getElementById(id).style.display='flex';
   });
 
   const pill = document.getElementById('user-pill');
-  if(user){
-    const ico = role==='founder'?'👑 ':role==='admin'?'🔑 ':'';
-    pill.textContent = ico + (user.name||'—').split(' ')[0];
-    if(role==='admin'||role==='founder')
-      document.getElementById('admin-pill').style.display='';
-  } else {
-    pill.textContent = 'DEMO';
-  }
+  const ico = role==='founder'?'👑 ':role==='admin'?'🔑 ':'';
+  pill.textContent = ico + (curUser.name||'—').split(' ')[0];
+  document.getElementById('admin-pill').style.display='';
 
   engineURL = localStorage.getItem('qcol_colab_url')||'';
   if(engineURL) checkEngine();
@@ -544,6 +546,22 @@ window.addEventListener('message',e=>{
     engineURL = localStorage.getItem('qcol_colab_url')||'';
     if(engineURL) checkEngine();
   }
+  // Cargar notebook desde Proyectos
+  if(d.type==='QCOL_LOAD_NB' && d.nb){
+    if(!requireAuth()) return;
+    const nb = d.nb;
+    document.getElementById('nb-name-inp').value = nb.title||'Sin título';
+    if(nb.cells && nb.cells.length>0){
+      cells = nb.cells.map(c=>({...c, id:genId(), output:'', exec_count:null, mdEdit:false}));
+      renderCells();
+      if(cells[0]) focusCell(cells[0].id);
+    } else {
+      cells=[];
+      addCellAt(-1,'code');
+    }
+    setView('notebook');
+    notify('📂 Cargado: '+nb.title);
+  }
 });
 
 // Pedir usuario al ecosistema
@@ -558,6 +576,17 @@ setTimeout(()=>{
     showUI(user);
   }
 }, 1500);
+
+// ── SEGURIDAD — verificar en cada operación crítica ──
+function requireAuth(){
+  const role = curUser?.role||'guest';
+  if(role!=='admin'&&role!=='founder'){
+    notify('❌ Requiere cuenta Admin o Founder');
+    postCore('QCOL_LOGIN');
+    return false;
+  }
+  return true;
+}
 
 // ── COMPILADOR ─────────────────────────────────────
 async function checkEngine(){
@@ -693,7 +722,12 @@ function buildCellEl(cell,i){
   const el=document.createElement('div');
   el.className='nb-cell'+(curCellId===cell.id?' active':'');
   el.dataset.id=cell.id;
+  el.draggable=true;
   el.onclick=()=>focusCell(cell.id);
+  el.ondragstart=e=>onCellDragStart(e,cell.id);
+  el.ondragend=e=>onCellDragEnd(e,cell.id);
+  el.ondragover=e=>onCellDragOver(e,cell.id);
+  el.ondrop=e=>onCellDrop(e,cell.id);
 
   const isCode=cell.type==='code';
   const execLbl=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]';
@@ -893,8 +927,53 @@ function changeCellType(id){
   renderCells(); focusCell(id);
 }
 
+// ── DRAG & DROP CELDAS ────────────────────────────
+let dragSrcId = null;
+let dragOverId = null;
+
+function onCellDragStart(e, id){
+  dragSrcId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  setTimeout(()=>{
+    const el = document.querySelector(`.nb-cell[data-id="${id}"]`);
+    if(el) el.style.opacity = '0.4';
+  },0);
+}
+function onCellDragEnd(e, id){
+  dragSrcId = null; dragOverId = null;
+  document.querySelectorAll('.nb-cell').forEach(el=>{
+    el.style.opacity='';
+    el.classList.remove('drag-over');
+  });
+}
+function onCellDragOver(e, id){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if(id===dragSrcId) return;
+  if(id!==dragOverId){
+    document.querySelectorAll('.nb-cell').forEach(el=>el.classList.remove('drag-over'));
+    dragOverId = id;
+    const el = document.querySelector(`.nb-cell[data-id="${id}"]`);
+    if(el) el.classList.add('drag-over');
+  }
+}
+function onCellDrop(e, id){
+  e.preventDefault();
+  if(!dragSrcId||dragSrcId===id) return;
+  const srcIdx = cells.findIndex(c=>c.id===dragSrcId);
+  const dstIdx = cells.findIndex(c=>c.id===id);
+  if(srcIdx<0||dstIdx<0) return;
+  const [moved] = cells.splice(srcIdx,1);
+  cells.splice(dstIdx,0,moved);
+  renderCells();
+  focusCell(dragSrcId);
+  notify('↕ Celda movida');
+}
+
 // ── EJECUTAR ───────────────────────────────────────
 async function runCell(id){
+  if(!requireAuth()) return;
   if(running){ notify('Ya hay una ejecución en curso'); return; }
   const cell=cells.find(c=>c.id===id);
   if(!cell||cell.type!=='code') return;
@@ -1166,10 +1245,36 @@ function showPublish(){
 }
 function closePublish(){ document.getElementById('pub-modal').classList.remove('open'); }
 function publishNb(){
+  if(!requireAuth()) return;
   saveCurrentNb();
+  // Publicar directamente en el módulo Proyectos via postMessage
+  const name = document.getElementById('nb-name-inp').value||'Sin título';
+  const desc = document.getElementById('pub-desc').value.trim();
+  const tags = document.getElementById('pub-tags').value.trim();
+  const id   = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+
+  // 1. Guardar en qcol_projs para que aparezca en Proyectos
+  const projs = JSON.parse(localStorage.getItem('qcol_projs')||'[]');
+  const existing = projs.findIndex(p=>p.id===id);
+  const entry = {
+    id, title:name, type:'nb', desc, tags,
+    size: cells.length,
+    time: Math.max(5, cells.length*2),
+    added: new Date().toLocaleDateString(),
+    author: curUser?.name||'Admin',
+    cells: JSON.parse(JSON.stringify(cells))  // guardar celdas completas
+  };
+  if(existing>=0) projs[existing]=entry;
+  else projs.unshift(entry);
+  localStorage.setItem('qcol_projs', JSON.stringify(projs));
+
+  // 2. Notificar al ecosistema para refrescar Proyectos
+  postCore('QCOL_SAVE', {key:'qcol_projs', val:projs});
+
+  // 3. Descargar .ipynb para subir a GitHub
   downloadNb();
   closePublish();
-  notify('📤 Descargado — súbelo a GitHub /notebooks');
+  notify('✅ Publicado en Proyectos: '+name);
 }
 
 // Auto-guardar cada 60s

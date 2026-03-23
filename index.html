@@ -573,9 +573,19 @@ const QCOL = (() => {
     if (d.type === 'QCOL_GET_CONFIG')   sendCfg(e.source);
     if (d.type === 'QCOL_LOGOUT')       doLogout();
     if (d.type === 'QCOL_OPEN_FOUNDER') openAuth('founder');
-    // Módulo pide el usuario actual — responder inmediatamente
     if (d.type === 'QCOL_GET_USER') {
       try { e.source.postMessage({type:'QCOL_USER', user:curUser}, '*'); } catch(err){}
+    }
+    // Cargar notebook en Arquitecto Pro desde Proyectos
+    if (d.type === 'QCOL_LOAD_NB') {
+      nav('architect-pro');
+      setTimeout(()=>{
+        const proIframe = iframes['architect-pro'];
+        if (proIframe) {
+          try { proIframe.contentWindow.postMessage({type:'QCOL_LOAD_NB', nb:d.nb}, '*'); }
+          catch(err){}
+        }
+      }, 400);
     }
     if (d.type === 'QCOL_SAVE') {
       const val = typeof d.val === 'object' ? JSON.stringify(d.val) : d.val;
