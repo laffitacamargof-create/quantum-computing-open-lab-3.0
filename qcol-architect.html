@@ -910,7 +910,15 @@ canvas#bloch-canvas { display:block; }
 
     <!-- BLOCH SPHERE -->
     <div class="bloch-panel" id="p-bloch" style="display:none;">
-      <div class="bloch-lbl">ESFERA DE BLOCH — q[0]</div>
+      <div class="bloch-lbl" style="display:flex;align-items:center;gap:.5rem;">
+        <span>ESFERA DE BLOCH</span>
+        <select id="bloch-q-sel" onchange="blochSelectQ(this.value)"
+          style="background:#0d1628;border:1px solid var(--bd2);color:var(--bl2);
+          font-family:var(--orb);font-size:.42rem;padding:.1rem .3rem;
+          border-radius:3px;cursor:pointer;margin-left:auto;">
+          <option value="0">q[0]</option>
+        </select>
+      </div>
       <canvas id="bloch-cv" width="210" height="210"
         style="border-radius:9px;border:1px solid var(--bd2);box-shadow:0 0 20px rgba(0,136,255,.1);"></canvas>
       <div class="bloch-st" id="b-st">|ψ⟩ = |0⟩</div>
@@ -966,6 +974,31 @@ canvas#bloch-canvas { display:block; }
 let curUser=null, engineURL='', engineOK=false, running=false;
 let curLib='qiskit', curMode='circ';
 let blochSt={th:0,ph:0};
+// Estado por qubit para la esfera de Bloch
+let blochStates = {};  // {0:{th,ph}, 1:{th,ph}, ...}
+let curBlochQ = 0;
+
+function blochSelectQ(q){
+  // Guardar estado del qubit actual
+  blochStates[curBlochQ] = {...blochSt};
+  // Cargar estado del nuevo qubit
+  curBlochQ = parseInt(q);
+  blochSt = blochStates[curBlochQ] || {th:0,ph:0};
+  drawBloch();
+}
+
+function updateBlochSelector(){
+  const sel = document.getElementById('bloch-q-sel');
+  if(!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '';
+  for(let i=0;i<circuit.qubits;i++){
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = 'q['+i+']';
+    if(i===curBlochQ) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
 
 // Circuit data
 let circuit={qubits:2, gates:[]};
@@ -1048,8 +1081,8 @@ const GATE_DEFS = {
     {id:'CP',  sym:'CP',  bg:'#5e35b1', glow:'rgba(94,53,177,.4)', code_q:'qc.cp(pi/4,{q},{q1})', code_c:'cirq.CZPowGate(exponent=0.5)({q},{q1})', desc:'Ctrl-Fase', multi:true},
   ],
   '3q':[
-    {id:'CCX', sym:'CCX', bg:'#005f6a', glow:'rgba(0,95,106,.5)',  code_q:'qc.ccx({q},{q1},2)',   code_c:'cirq.TOFFOLI({q},{q1},q[2])', desc:'Toffoli', multi:true},
-    {id:'CSW', sym:'CSW', bg:'#1565c0', glow:'rgba(21,101,192,.4)',code_q:'qc.cswap({q},{q1},2)', code_c:'cirq.FREDKIN({q},{q1},q[2])', desc:'Fredkin', multi:true},
+    {id:'CCX', sym:'CCX', bg:'#005f6a', glow:'rgba(0,95,106,.5)',  code_q:'qc.ccx({q},{q1},{q2})',   code_c:'cirq.TOFFOLI({q},{q1},q[2])', desc:'Toffoli', multi:true},
+    {id:'CSW', sym:'CSW', bg:'#1565c0', glow:'rgba(21,101,192,.4)',code_q:'qc.cswap({q},{q1},{q2})', code_c:'cirq.FREDKIN({q},{q1},q[2])', desc:'Fredkin', multi:true},
   ],
   'meas':[
     {id:'M',   sym:'M',   bg:'#6d4c41', glow:'rgba(255,215,0,.35)', code_q:'qc.measure({q},{q})', code_c:'cirq.measure({q})', desc:'Medir'},
@@ -1253,10 +1286,22 @@ function placeGate(gid,q){
   const def=findDef(gid);
   if(!def){ notify('Puerta no encontrada'); return; }
 
-  let q2=q+1<circuit.qubits?q+1:q-1;
+  // Puertas 3 qubits: CCX (Toffoli) y CSW (Fredkin)
+  const is3q = (gid==='CCX'||gid==='CSW');
 
-  if(def.multi){
+  if(is3q){
+    if(circuit.qubits<3){
+      notify('⚠️ '+gid+' necesita mínimo 3 qubits — pulsa + Qubit');
+      return;
+    }
+    // q=control1, q2=control2, q3=target
+    const q2 = q+1 < circuit.qubits ? q+1 : q-1;
+    const q3 = q+2 < circuit.qubits ? q+2 : (q-1>=0&&q-1!==q2?q-1:0);
+    if(q2===q||q3===q||q3===q2){ notify('No hay qubits suficientes distintos'); return; }
+    circuit.gates.push({id:gid,q,q2,q3,def,uid:uid()});
+  } else if(def.multi){
     if(circuit.qubits<2){notify('Necesitas al menos 2 qubits para '+gid);return;}
+    let q2=q+1<circuit.qubits?q+1:q-1;
     if(q2<0||q2>=circuit.qubits){notify('No hay qubit destino para '+gid);return;}
     circuit.gates.push({id:gid,q,q2,def,uid:uid()});
   } else {
@@ -1281,17 +1326,18 @@ function addQubit(){
   if(circuit.qubits>=20){notify('Máximo 20 qubits');return;}
   circuit.qubits++; renderCircuit();
   notify(`${circuit.qubits} qubits`);
-  // Mostrar cola solo si >10 qubits
   const qs=document.getElementById('queue-sec');
   const bs=document.getElementById('btn-schedule');
   if(qs) qs.style.display=circuit.qubits>10?'block':'none';
   if(bs) bs.style.display=circuit.qubits>10?'inline-flex':'none';
+  updateBlochSelector();
 }
 function removeQubit(){
   if(circuit.qubits<=1){notify('Mínimo 1 qubit');return;}
-  // Remove gates on last qubit
   circuit.gates=circuit.gates.filter(g=>g.q<circuit.qubits-1&&(g.q2===undefined||g.q2<circuit.qubits-1));
   circuit.qubits--; renderCircuit(); genCode();
+  if(curBlochQ>=circuit.qubits){ curBlochQ=circuit.qubits-1; blochSt=blochStates[curBlochQ]||{th:0,ph:0}; }
+  updateBlochSelector();
 }
 function clearCircuit(){
   circuit={qubits:circuit.qubits,gates:[]};
@@ -1310,11 +1356,15 @@ function renderCircuit(){
   const depth=Array(circuit.qubits).fill(0);
   const placed=circuit.gates.map(g=>{
     let col;
-    if(g.q2!==undefined){
-      col=Math.max(depth[g.q],depth[g.q2]);
+    if(g.q3!==undefined){
+      // 3-qubit gate
+      col=Math.max(depth[g.q]||0,depth[g.q2]||0,depth[g.q3]||0);
+      depth[g.q]=col+1; depth[g.q2]=col+1; depth[g.q3]=col+1;
+    } else if(g.q2!==undefined){
+      col=Math.max(depth[g.q]||0,depth[g.q2]||0);
       depth[g.q]=col+1; depth[g.q2]=col+1;
     } else {
-      col=depth[g.q]; depth[g.q]++;
+      col=depth[g.q]||0; depth[g.q]++;
     }
     return {...g,col};
   });
@@ -1322,7 +1372,13 @@ function renderCircuit(){
   const totalCols=Math.max(...depth,1);
   const wireW=totalCols*STEP+80;
 
-  let html=`<div style="position:relative;min-width:${wireW}px;">`;
+  let html=`<div style="position:relative;min-width:${wireW}px;">
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <filter id="glow-cy"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-pu"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+  </svg>`;
 
   // ─── QUBIT WIRES ───
   for(let q=0;q<circuit.qubits;q++){
@@ -1330,7 +1386,7 @@ function renderCircuit(){
     let ghtml='';
 
     placed.forEach(g=>{
-      if(g.q!==q && g.q2!==q) return;
+      if(g.q!==q && g.q2!==q && g.q3!==q) return;
       const left=g.col*STEP+4;
       const def=g.def;
       const bg=def.bg||'#1a5fb4';
@@ -1354,141 +1410,183 @@ function renderCircuit(){
         return;
       }
 
-            // ── PUERTAS MULTI-QUBIT ESTILO LIBRO ──────────
+            // ── PUERTAS MULTI-QUBIT ──────────────────────────
+      // Cada puerta multi-qubit se dibuja UNA SOLA VEZ
+      // en el qubit de control (g.q), con la figura unificada.
+      // ROW_H = altura de fila, STEP = columna
       const ROW_H = 56;
 
-      // Helper: línea vertical entre qubits
+      // ctrlLine: línea vertical entre qubits
       function ctrlLine(dy, color){
         color = color || 'rgba(0,255,221,.6)';
-        const top = dy > 0 ? 'top:28px' : 'bottom:28px';
-        const h = Math.abs(dy) || 28;
+        const top = dy >= 0 ? 'top:50%' : 'bottom:50%';
+        const h   = Math.abs(dy) || 4;
         return '<div class="pg-ctrl-line" style="' + top + ';height:' + h + 'px;background:' + color + ';"></div>';
       }
 
-      // CNOT (CX): punto ● + círculo ⊕
+      // ── CX / CNOT: solo renderizar en qubit de control ──
       if((g.id==='CX'||g.id==='CNOT') && g.q2!==undefined){
-        const dy=(g.q2-g.q)*ROW_H;
-        if(g.q===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+10}px;z-index:5;" title="CNOT — clic para eliminar">
-            <div style="width:16px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;position:relative;" onclick="removeGate('${g.uid}')">
-              <div class="pg-ctrl-dot"></div>
-              ${ctrlLine(dy,'rgba(0,255,221,.6)')}
-            </div>
-            <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
-          </div>`;
-        } else if(g.q2===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+2}px;" title="CNOT target">
-            <div class="pg-tgt" onclick="removeGate('${g.uid}')"></div>
-            <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
-          </div>`;
-        }
+        if(g.q !== q) return; // solo dibujar en qubit control
+        const span = (g.q2 - g.q) * ROW_H; // positivo = abajo, negativo = arriba
+        const absSpan = Math.abs(span);
+        const isDown  = span > 0;
+        ghtml += `<div class="placed-gate" style="left:${left}px;z-index:5;width:36px;height:${ROW_H + absSpan}px;top:50%;transform:translateY(-50%);" title="CNOT — clic eliminar">
+          <svg width="36" height="${ROW_H + absSpan}" style="overflow:visible;position:absolute;top:0;left:0;">
+            <!-- línea vertical -->
+            <line x1="18" y1="${isDown ? ROW_H/2 : absSpan+ROW_H/2}"
+                  x2="18" y2="${isDown ? ROW_H/2+absSpan : ROW_H/2}"
+                  stroke="rgba(0,255,221,.7)" stroke-width="2"/>
+            <!-- punto de control ● -->
+            <circle cx="18" cy="${isDown ? ROW_H/2 : absSpan+ROW_H/2}" r="6"
+                    fill="#00ffdd" filter="url(#glow-cy)" style="cursor:pointer;" onclick="removeGate('${g.uid}')"/>
+            <!-- target ⊕ -->
+            <circle cx="18" cy="${isDown ? ROW_H/2+absSpan : ROW_H/2}" r="14"
+                    fill="rgba(0,255,221,.06)" stroke="#00ffdd" stroke-width="2"
+                    style="cursor:pointer;" onclick="removeGate('${g.uid}')"/>
+            <line x1="4"  y1="${isDown ? ROW_H/2+absSpan : ROW_H/2}"
+                  x2="32" y2="${isDown ? ROW_H/2+absSpan : ROW_H/2}"
+                  stroke="#00ffdd" stroke-width="2"/>
+            <line x1="18" y1="${isDown ? ROW_H/2+absSpan-14 : ROW_H/2-14}"
+                  x2="18" y2="${isDown ? ROW_H/2+absSpan+14 : ROW_H/2+14}"
+                  stroke="#00ffdd" stroke-width="2"/>
+          </svg>
+          <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
+        </div>`;
         return;
       }
 
-      // CZ: punto ● en ambos + línea morada
+      // ── CZ: punto ● en ambos extremos + línea ──
       if(g.id==='CZ' && g.q2!==undefined){
-        const dy=(g.q2-g.q)*ROW_H;
-        if(g.q===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+10}px;z-index:5;" title="CZ — clic para eliminar">
-            <div style="width:16px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;position:relative;" onclick="removeGate('${g.uid}')">
-              <div class="pg-cz-dot"></div>
-              ${ctrlLine(dy,'rgba(189,147,249,.7)')}
-            </div>
-            <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
-          </div>`;
-        } else if(g.q2===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+10}px;" title="CZ target">
-            <div style="width:16px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;" onclick="removeGate('${g.uid}')">
-              <div class="pg-cz-dot"></div>
-            </div>
-          </div>`;
-        }
+        if(g.q !== q) return;
+        const span = (g.q2 - g.q) * ROW_H;
+        const absSpan = Math.abs(span);
+        const isDown  = span > 0;
+        ghtml += `<div class="placed-gate" style="left:${left+2}px;z-index:5;width:32px;height:${ROW_H+absSpan}px;top:50%;transform:translateY(-50%);" title="CZ — clic eliminar">
+          <svg width="32" height="${ROW_H+absSpan}" style="overflow:visible;position:absolute;top:0;left:0;">
+            <line x1="16" y1="${isDown ? ROW_H/2 : absSpan+ROW_H/2}"
+                  x2="16" y2="${isDown ? ROW_H/2+absSpan : ROW_H/2}"
+                  stroke="rgba(189,147,249,.7)" stroke-width="2"/>
+            <circle cx="16" cy="${isDown ? ROW_H/2 : absSpan+ROW_H/2}" r="6"
+                    fill="#bd93f9" filter="url(#glow-pu)" onclick="removeGate('${g.uid}')" style="cursor:pointer;"/>
+            <circle cx="16" cy="${isDown ? ROW_H/2+absSpan : ROW_H/2}" r="6"
+                    fill="#bd93f9" filter="url(#glow-pu)" onclick="removeGate('${g.uid}')" style="cursor:pointer;"/>
+          </svg>
+          <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
+        </div>`;
         return;
       }
 
-      // SWAP: × en ambos qubits + línea azul
+      // ── SWAP: × en ambos extremos + línea ──
       if(g.id==='SWAP' && g.q2!==undefined){
-        const dy=(g.q2-g.q)*ROW_H;
-        if(g.q===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+4}px;z-index:5;" title="SWAP — clic para eliminar">
-            <div style="width:24px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;position:relative;" onclick="removeGate('${g.uid}')">
-              <div class="pg-swap-x"></div>
-              ${ctrlLine(dy,'rgba(0,170,255,.6)')}
-            </div>
-            <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
-          </div>`;
-        } else if(g.q2===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+4}px;" title="SWAP target">
-            <div style="width:24px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;" onclick="removeGate('${g.uid}')">
-              <div class="pg-swap-x"></div>
-            </div>
-          </div>`;
-        }
+        if(g.q !== q) return;
+        const span = (g.q2 - g.q) * ROW_H;
+        const absSpan = Math.abs(span);
+        const isDown  = span > 0;
+        const y1 = isDown ? ROW_H/2 : absSpan+ROW_H/2;
+        const y2 = isDown ? ROW_H/2+absSpan : ROW_H/2;
+        ghtml += `<div class="placed-gate" style="left:${left+2}px;z-index:5;width:32px;height:${ROW_H+absSpan}px;top:50%;transform:translateY(-50%);" title="SWAP — clic eliminar">
+          <svg width="32" height="${ROW_H+absSpan}" style="overflow:visible;position:absolute;top:0;left:0;">
+            <line x1="16" y1="${y1}" x2="16" y2="${y2}" stroke="rgba(0,170,255,.7)" stroke-width="2"/>
+            <!-- × arriba -->
+            <line x1="${16-8}" y1="${y1-8}" x2="${16+8}" y2="${y1+8}" stroke="#00aaff" stroke-width="2.5"/>
+            <line x1="${16+8}" y1="${y1-8}" x2="${16-8}" y2="${y1+8}" stroke="#00aaff" stroke-width="2.5"/>
+            <!-- × abajo -->
+            <line x1="${16-8}" y1="${y2-8}" x2="${16+8}" y2="${y2+8}" stroke="#00aaff" stroke-width="2.5"/>
+            <line x1="${16+8}" y1="${y2-8}" x2="${16-8}" y2="${y2+8}" stroke="#00aaff" stroke-width="2.5"/>
+          </svg>
+          <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
+        </div>`;
         return;
       }
 
-      // CH, CY, CP: punto ● + caja con letra
+      // ── CH, CY, CP: punto ● + caja con letra ──
       if((g.id==='CH'||g.id==='CY'||g.id==='CP') && g.q2!==undefined){
+        if(g.q !== q) return;
         const gColors = {CH:'#1a5fb4',CY:'#613583',CP:'#5e35b1'};
         const gLabels = {CH:'H',CY:'Y',CP:'P'};
-        const gCol = gColors[g.id]||'#1a5fb4';
-        const gLbl = gLabels[g.id]||g.id;
-        const dy=(g.q2-g.q)*ROW_H;
-        if(g.q===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+10}px;z-index:5;" title="${g.id} control">
-            <div style="width:16px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;position:relative;" onclick="removeGate('${g.uid}')">
-              <div class="pg-ctrl-dot"></div>
-              ${ctrlLine(dy,'rgba(0,255,221,.5)')}
-            </div>
-            <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
-          </div>`;
-        } else if(g.q2===q){
-          ghtml+=`<div class="placed-gate" style="left:${left}px;" title="${g.id} target">
-            <div class="pg-ctrl-box" style="border-color:${gCol};color:${gCol};background:rgba(0,0,0,.3);" onclick="removeGate('${g.uid}')">${gLbl}</div>
-            <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
-          </div>`;
-        }
+        const col  = gColors[g.id]||'#1a5fb4';
+        const lbl  = gLabels[g.id]||g.id;
+        const span = (g.q2 - g.q) * ROW_H;
+        const absSpan = Math.abs(span);
+        const isDown  = span > 0;
+        const yCtrl = isDown ? ROW_H/2 : absSpan+ROW_H/2;
+        const yTgt  = isDown ? ROW_H/2+absSpan : ROW_H/2;
+        ghtml += `<div class="placed-gate" style="left:${left}px;z-index:5;width:36px;height:${ROW_H+absSpan}px;top:50%;transform:translateY(-50%);" title="${g.id} — clic eliminar">
+          <svg width="36" height="${ROW_H+absSpan}" style="overflow:visible;position:absolute;top:0;left:0;">
+            <line x1="18" y1="${yCtrl}" x2="18" y2="${yTgt}" stroke="rgba(0,255,221,.5)" stroke-width="2"/>
+            <circle cx="18" cy="${yCtrl}" r="6" fill="#00ffdd" onclick="removeGate('${g.uid}')" style="cursor:pointer;"/>
+            <rect x="1" y="${yTgt-14}" width="34" height="28" rx="4"
+                  fill="${col}" fill-opacity=".85" stroke="rgba(255,255,255,.2)" stroke-width="1.5"
+                  onclick="removeGate('${g.uid}')" style="cursor:pointer;"/>
+            <text x="18" y="${yTgt+5}" text-anchor="middle"
+                  font-family="monospace" font-size="12" font-weight="700"
+                  fill="white" pointer-events="none">${lbl}</text>
+          </svg>
+          <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
+        </div>`;
         return;
       }
 
-      // CCX (Toffoli): dos puntos verdes ● + círculo ⊕
-      if(g.id==='CCX' && g.q2!==undefined){
-        const dy=(g.q2-g.q)*ROW_H;
-        if(g.q===q || g.q2===q){
-          const isFirstCtrl = g.q===q;
-          ghtml+=`<div class="placed-gate" style="left:${left+10}px;z-index:5;" title="Toffoli ctrl">
-            <div style="width:16px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;position:relative;" onclick="removeGate('${g.uid}')">
-              <div class="pg-toffoli-ctrl"></div>
-              ${ctrlLine(isFirstCtrl ? dy : -dy,'rgba(0,255,136,.6)')}
-            </div>
-          </div>`;
-        } else {
-          ghtml+=`<div class="placed-gate" style="left:${left+2}px;" title="Toffoli target">
-            <div class="pg-tgt" onclick="removeGate('${g.uid}')"></div>
-            <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
-          </div>`;
-        }
+      // ── CCX (Toffoli): requiere 3 qubits ──
+      // g.q=ctrl1, g.q2=ctrl2, g.q3=target
+      if(g.id==='CCX'){
+        if(g.q3 === undefined) return; // gate mal formado
+        if(g.q !== q) return; // solo renderizar desde qubit menor
+        const qMin  = g.q;
+        const qMax  = Math.max(g.q2, g.q3);
+        const totalSpan = (qMax - qMin) * ROW_H;
+        const y1    = ROW_H/2; // ctrl1 (g.q)
+        const y2    = (g.q2 - g.q) * ROW_H + ROW_H/2; // ctrl2
+        const yTgt  = (g.q3 - g.q) * ROW_H + ROW_H/2; // target ⊕
+        ghtml += `<div class="placed-gate" style="left:${left}px;z-index:5;width:36px;height:${ROW_H+totalSpan}px;top:50%;transform:translateY(-50%);" title="Toffoli CCX — clic eliminar">
+          <svg width="36" height="${ROW_H+totalSpan}" style="overflow:visible;position:absolute;top:0;left:0;">
+            <line x1="18" y1="${Math.min(y1,y2,yTgt)}" x2="18" y2="${Math.max(y1,y2,yTgt)}"
+                  stroke="rgba(0,255,136,.6)" stroke-width="2"/>
+            <!-- ctrl1 ● -->
+            <circle cx="18" cy="${y1}" r="7" fill="#00ff88"
+                    onclick="removeGate('${g.uid}')" style="cursor:pointer;"/>
+            <!-- ctrl2 ● -->
+            <circle cx="18" cy="${y2}" r="7" fill="#00ff88"
+                    onclick="removeGate('${g.uid}')" style="cursor:pointer;"/>
+            <!-- target ⊕ -->
+            <circle cx="18" cy="${yTgt}" r="14"
+                    fill="rgba(0,255,136,.06)" stroke="#00ff88" stroke-width="2"
+                    onclick="removeGate('${g.uid}')" style="cursor:pointer;"/>
+            <line x1="4"  y1="${yTgt}" x2="32" y2="${yTgt}" stroke="#00ff88" stroke-width="2"/>
+            <line x1="18" y1="${yTgt-14}" x2="18" y2="${yTgt+14}" stroke="#00ff88" stroke-width="2"/>
+          </svg>
+          <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
+        </div>`;
         return;
       }
 
-      // CSW (Fredkin): punto ● + dos × 
-      if(g.id==='CSW' && g.q2!==undefined){
-        const dy=(g.q2-g.q)*ROW_H;
-        if(g.q===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+10}px;z-index:5;" title="Fredkin ctrl">
-            <div style="width:16px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;position:relative;" onclick="removeGate('${g.uid}')">
-              <div class="pg-ctrl-dot"></div>
-              ${ctrlLine(dy,'rgba(0,255,221,.5)')}
-            </div>
-            <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
-          </div>`;
-        } else if(g.q2===q){
-          ghtml+=`<div class="placed-gate" style="left:${left+4}px;" title="Fredkin swap">
-            <div style="width:24px;height:${ROW_H}px;display:flex;align-items:center;justify-content:center;" onclick="removeGate('${g.uid}')">
-              <div class="pg-swap-x"></div>
-            </div>
-          </div>`;
-        }
+      // ── CSW (Fredkin): requiere 3 qubits ──
+      // g.q=ctrl, g.q2=swap1, g.q3=swap2
+      if(g.id==='CSW'){
+        if(g.q3 === undefined) return;
+        if(g.q !== q) return;
+        const qMin  = g.q;
+        const qMax  = Math.max(g.q2, g.q3);
+        const totalSpan = (qMax - qMin) * ROW_H;
+        const yCtrl = ROW_H/2;
+        const yS1   = (g.q2 - g.q) * ROW_H + ROW_H/2;
+        const yS2   = (g.q3 - g.q) * ROW_H + ROW_H/2;
+        ghtml += `<div class="placed-gate" style="left:${left}px;z-index:5;width:36px;height:${ROW_H+totalSpan}px;top:50%;transform:translateY(-50%);" title="Fredkin CSW — clic eliminar">
+          <svg width="36" height="${ROW_H+totalSpan}" style="overflow:visible;position:absolute;top:0;left:0;">
+            <line x1="18" y1="${Math.min(yCtrl,yS1,yS2)}" x2="18" y2="${Math.max(yCtrl,yS1,yS2)}"
+                  stroke="rgba(0,255,221,.5)" stroke-width="2"/>
+            <!-- ctrl ● -->
+            <circle cx="18" cy="${yCtrl}" r="7" fill="#00ffdd"
+                    onclick="removeGate('${g.uid}')" style="cursor:pointer;"/>
+            <!-- swap1 × -->
+            <line x1="${18-8}" y1="${yS1-8}" x2="${18+8}" y2="${yS1+8}" stroke="#00aaff" stroke-width="2.5"/>
+            <line x1="${18+8}" y1="${yS1-8}" x2="${18-8}" y2="${yS1+8}" stroke="#00aaff" stroke-width="2.5"/>
+            <!-- swap2 × -->
+            <line x1="${18-8}" y1="${yS2-8}" x2="${18+8}" y2="${yS2+8}" stroke="#00aaff" stroke-width="2.5"/>
+            <line x1="${18+8}" y1="${yS2-8}" x2="${18-8}" y2="${yS2+8}" stroke="#00aaff" stroke-width="2.5"/>
+          </svg>
+          <button class="pg-del" onclick="event.stopPropagation();removeGate('${g.uid}')">✕</button>
+        </div>`;
         return;
       }
 
@@ -1508,7 +1606,6 @@ function renderCircuit(){
     html+=`
       <div class="q-row">
         <div class="q-label">q[${q}]</div>
-        <div class="q-ket">|0⟩</div>
         <div class="q-wire" id="wire-${q}"
           style="min-width:${wireW-74}px;"
           ondragenter="wireDragEnter(event,${q})"
@@ -1556,7 +1653,8 @@ function genCode(){
       circuit.gates.forEach(g=>{
         let line=g.def.code_q
           .replace(/\{q\}/g,String(g.q))
-          .replace(/\{q1\}/g,String(g.q2??Math.min(g.q+1,n-1)));
+          .replace(/\{q1\}/g,String(g.q2??Math.min(g.q+1,n-1)))
+          .replace(/\{q2\}/g,String(g.q3??Math.min(g.q+2,n-1)));
         code+=line+'  # '+g.def.desc+'\n';
       });
       code+=`\nprint(qc.draw(output='text'))`;
@@ -1743,10 +1841,13 @@ async function runCode(){
         out.innerHTML+=`<span class="ok">${escH(d.output)}</span>`;
         if(d.bloch?.probabilities){
           out.innerHTML+=`\n<span class="inf">══ Probabilidades ══\n</span>`;
-          Object.entries(d.bloch.probabilities).sort((a,b)=>b[1]-a[1]).forEach(([s,p])=>{
+          const probs = d.bloch.probabilities;
+          Object.entries(probs).sort((a,b)=>b[1]-a[1]).forEach(([s,p])=>{
             const bar='█'.repeat(Math.round(p*20));
             out.innerHTML+=`<span class="pb">|${s}⟩: ${(p*100).toFixed(1).padStart(5)}%  ${bar}\n</span>`;
           });
+          // Actualizar esfera de Bloch para cada qubit
+          updateBlochFromProbs(probs);
         }
         if(d.bloch?.counts){
           const tot=Object.values(d.bloch.counts).reduce((a,b)=>a+b,0);
@@ -1987,33 +2088,55 @@ function parseCodeToCircuit(code){
 
     lines.forEach(line => {
       const trimmed = line.trim();
-      // 1-qubit: qc.h(0), qc.x(1), etc.
-      const m1 = trimmed.match(/qc\.([a-z]+)\((?:[^,)]*,\s*)?(\d+)(?:\s*,[^)]*)?\)/);
-      if(m1){
-        const op = m1[1].toLowerCase();
-        const q = parseInt(m1[2]);
-        if(gateMap[op] && q < circuit.qubits){
-          const def = Object.values(GATE_DEFS).flat().find(g=>g.id===gateMap[op]);
-          if(def) newGates.push({id:gateMap[op], q, def, uid:uid()});
-        }
-      }
-      // 2-qubit: qc.cx(0,1)
-      const m2 = trimmed.match(/qc\.(cx|cy|cz|swap|ccx)\s*\(\s*(\d+)\s*,\s*(\d+)/);
+      if(!trimmed || trimmed.startsWith('#')) return; // skip comments
+
+      // 2-qubit primero (más específico): qc.cx(0,1), qc.cz(0,1), etc.
+      const m2 = trimmed.match(/^qc\.(cx|cy|cz|swap|ccx|ch|cp)\s*\(\s*(\d+)\s*,\s*(\d+)/);
       if(m2){
-        const op = m2[1];
+        const op = m2[1].toLowerCase();
         const q1 = parseInt(m2[2]);
         const q2 = parseInt(m2[3]);
-        if(q1 < circuit.qubits && q2 < circuit.qubits){
-          const def = Object.values(GATE_DEFS).flat().find(g=>g.id===(gateMap[op]||op.toUpperCase()));
-          newGates.push({id:(gateMap[op]||op.toUpperCase()), q:q1, q2:q2, def:def||{}, uid:uid()});
+        const gid = gateMap[op] || op.toUpperCase();
+        if(q1 < circuit.qubits && q2 < circuit.qubits && q1 !== q2){
+          const def = Object.values(GATE_DEFS).flat().find(g=>g.id===gid);
+          if(def) newGates.push({id:gid, q:q1, q2:q2, def, uid:uid()});
         }
+        return;
       }
-      // measure: qc.measure([0,1],[0,1])
-      if(trimmed.match(/qc\.measure/)){
-        // añadir M en cada qubit
-        for(let qi=0; qi<Math.min(circuit.qubits,4); qi++){
+
+      // measure: qc.measure(q, c) — un solo qubit
+      const mMeas = trimmed.match(/^qc\.measure\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/);
+      if(mMeas){
+        const qi = parseInt(mMeas[1]);
+        if(qi < circuit.qubits){
           const def = Object.values(GATE_DEFS).flat().find(g=>g.id==='M');
           if(def) newGates.push({id:'M', q:qi, def, uid:uid()});
+        }
+        return;
+      }
+      // measure lista: qc.measure([0,1],[0,1])
+      const mMeasList = trimmed.match(/^qc\.measure\s*\(\s*\[([^\]]+)\]/);
+      if(mMeasList){
+        const qs = mMeasList[1].split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+        const def = Object.values(GATE_DEFS).flat().find(g=>g.id==='M');
+        if(def) qs.forEach(qi=>{ if(qi<circuit.qubits) newGates.push({id:'M',q:qi,def,uid:uid()}); });
+        return;
+      }
+
+      // 1-qubit: qc.h(0), qc.x(1), qc.rx(pi/4, 0), etc.
+      // Pattern: qc.GATE(qubit) or qc.GATE(angle, qubit)
+      const m1a = trimmed.match(/^qc\.([a-z]+)\s*\(\s*(\d+)\s*\)/); // qc.h(0)
+      const m1b = trimmed.match(/^qc\.([a-z]+)\s*\([^,]+,\s*(\d+)\s*\)/); // qc.rx(pi/4, 0)
+      const m1 = m1a || m1b;
+      if(m1){
+        const op = m1[1].toLowerCase();
+        const qi = parseInt(m1[2]);
+        // Skip 2-qubit ops and measure
+        if(['cx','cy','cz','swap','ccx','ch','cp','measure'].includes(op)) return;
+        const gid = gateMap[op];
+        if(gid && qi < circuit.qubits){
+          const def = Object.values(GATE_DEFS).flat().find(g=>g.id===gid);
+          if(def) newGates.push({id:gid, q:qi, def, uid:uid()});
         }
       }
     });
@@ -2132,7 +2255,38 @@ function applyG(g){
   }
   drawBloch();
 }
-function resetB(){blochSt={th:0,ph:0};drawBloch();}
+// Actualizar esfera de Bloch desde probabilidades del resultado
+function updateBlochFromProbs(probs){
+  // Extraer amplitudes por qubit desde el estado completo
+  // Para cada qubit q: P(q=0) = suma de probabilidades donde bit q es 0
+  const n = circuit.qubits;
+  for(let qi=0; qi<n; qi++){
+    let p0 = 0;
+    Object.entries(probs).forEach(([s,p])=>{
+      // s es string como "00", "01", etc. (bit más derecho = qubit 0)
+      const bit = s.length > qi ? s[s.length-1-qi] : '0';
+      if(bit==='0') p0 += p;
+    });
+    const p1 = 1 - p0;
+    // Convertir a ángulos de la esfera de Bloch
+    // th = 2*arccos(sqrt(p0)), ph = 0 (sin info de fase)
+    const th = 2 * Math.acos(Math.min(1, Math.sqrt(Math.max(0, p0))));
+    blochStates[qi] = { th, ph: blochStates[qi]?.ph || 0 };
+    if(qi === curBlochQ){
+      blochSt = { ...blochStates[qi] };
+      drawBloch();
+    }
+  }
+  // Actualizar label de la esfera
+  const lbl = document.querySelector('#p-bloch .bloch-lbl span');
+  if(lbl) lbl.textContent = 'ESFERA DE BLOCH (q['+curBlochQ+'])';
+}
+
+function resetB(){
+  blochSt={th:0,ph:0};
+  blochStates[curBlochQ]={th:0,ph:0};
+  drawBloch();
+}
 // ── MONITOR — registrar ejecución ────────────────
 function logMonitorRun(info){
   try{
@@ -2368,10 +2522,10 @@ function initApp(){
   setTimeout(()=>{
     buildPalette();
     renderCircuit();
+    updateBlochSelector();
     const ta=document.getElementById('code-ta');
     if(ta) ta.value=LIB_EXAMPLES.qiskit;
     onEdit();
-    // Forzar palette visible
     const pal=document.getElementById('palette');
     if(pal) pal.style.display='flex';
   }, 50);
