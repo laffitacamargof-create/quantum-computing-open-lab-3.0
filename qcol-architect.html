@@ -415,7 +415,9 @@ body { background:var(--bg); color:var(--tx); font-family:var(--ex); user-select
   position:absolute; inset:0; padding:.72rem .85rem;
   font-family:var(--mono); font-size:.68rem; line-height:1.72;
   pointer-events:none; z-index:1; overflow:hidden;
-  white-space:pre; background:var(--bg3); color:var(--tx2); tab-size:4;
+  white-space:pre-wrap; word-break:break-all;
+  background:var(--bg3); color:var(--tx2); tab-size:4;
+  border:none; outline:none;
 }
 .code-ta {
   position:absolute; inset:0;
@@ -489,17 +491,34 @@ body { background:var(--bg); color:var(--tx); font-family:var(--ex); user-select
   font-family:var(--orb); font-size:.5rem; color:var(--mu); flex-shrink:0;
 }
 .out-body {
-  flex:1; padding:.72rem .8rem; background:var(--bg4);
-  font-family:var(--mono); font-size:.67rem; color:var(--tx2);
-  line-height:1.78; overflow-y:auto; white-space:pre-wrap;
+  flex:1; padding:.85rem 1.1rem; background:#040810;
+  font-family:var(--mono); font-size:.75rem; color:#e6edf3;
+  line-height:1.9; overflow-y:auto; white-space:pre-wrap;
+  border-left:4px solid var(--bl);
 }
 .out-body::-webkit-scrollbar { width:5px; }
-.out-body::-webkit-scrollbar-thumb { background:var(--bd2); border-radius:3px; }
-.ok  { color:#39d353; }
-.er  { color:#ff6080; }
+.out-body::-webkit-scrollbar-thumb { background:#254070; border-radius:3px; }
+/* Colores terminal mejorados */
+.ok  { color:#3fb950; text-shadow:0 0 8px rgba(63,185,80,.3); }
+.er  { color:#f85149; text-shadow:0 0 8px rgba(248,81,73,.25); }
 .inf { color:#58a6ff; }
 .wa  { color:#d29922; }
-.pb  { color:#bd93f9; }
+.pb  { color:#bc8cff; }
+/* Línea de error resaltada */
+.err-line { 
+  background:rgba(248,81,73,.12); 
+  border-left:3px solid #f85149;
+  padding:.1rem .5rem;
+  display:block;
+  margin:.1rem 0;
+  border-radius:0 4px 4px 0;
+}
+.err-arrow { color:#f85149; font-weight:bold; }
+.err-msg { color:#ffa198; }
+.line-hi { 
+  background:rgba(248,81,73,.15);
+  border-radius:3px;
+}
 .out-bar {
   padding:.38rem .75rem; background:#080c14;
   border-top:1px solid var(--bd);
@@ -637,7 +656,7 @@ body { background:var(--bg); color:var(--tx); font-family:var(--ex); user-select
   <!-- Circuit to code -->
   <button class="bsm" onclick="genCode()" title="Generar código desde el circuito visual">⟳ CÓDIGO</button>
   <!-- Open in HuggingFace -->
-  <button class="bsm" onclick="openHF()" title="Abrir en HuggingFace con GPU">🤗 HF GPU</button>
+  <button class="bsm" onclick="openHF()" title="Descargar .ipynb">🤗 HF</button>
   <div class="sep"></div>
   <!-- Library -->
   <span style="font-family:var(--orb);font-size:.48rem;color:var(--mu);flex-shrink:0;">LIB:</span>
@@ -763,7 +782,7 @@ body { background:var(--bg); color:var(--tx); font-family:var(--ex); user-select
 # 1. Arrastra puertas al cable del qubit
 # 2. O escribe código directamente
 # 3. ▶ EJECUTAR → resultado aquí
-# 4. 🤗 HF GPU → ejecutar con compilador real
+# 4. Ctrl+R → ejecutar con compilador real
 #
 # Sin compilador: simulación local
 # Con compilador: Qiskit real en HuggingFace</span>
@@ -874,17 +893,17 @@ async function checkEngine(){
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({data:['']}),
-        signal:AbortSignal.timeout(15000)
+        signal:AbortSignal.timeout(65000)
       });
       ok=r.ok;
     } else {
-      const r=await fetch(engineURL+'/health',{signal:AbortSignal.timeout(5000)});
+      const r=await fetch(engineURL+'/health',{signal:AbortSignal.timeout(65000)});
       ok=r.ok;
     }
     if(ok){
       engineOK=true;
       const b=document.getElementById('eng-badge');
-      b.textContent=isHF?'● GPU A100':'● COMPILADOR ACTIVO';
+      b.textContent=isHF?'● COMPILADOR ACTIVO':'● COMPILADOR ACTIVO';
       b.className='badge badge-eng-on';
     }
   }catch(e){ engineOK=false; }
@@ -1054,6 +1073,11 @@ function placeGate(gid,q){
   renderCircuit();
   genCode();
   notify(`${gid} → q[${q}]`);
+  // Auto-ejecutar al soltar puerta (debounce 900ms)
+  clearTimeout(window._autoRunTimer);
+  window._autoRunTimer = setTimeout(()=>{
+    if(engineOK && engineURL && curLib==='qiskit') runCode();
+  }, 900);
 }
 
 function removeGate(uid_){
@@ -1409,7 +1433,7 @@ async function runCode(){
       const el=((Date.now()-t0)/1000).toFixed(2);
       document.getElementById('out-elapsed').textContent=el+'s';
       if(d.success){
-        out.innerHTML=`<span class="inf">╔════════════════════════════╗\n║  Compilador · ${el}s${isHF?' · GPU A100':''}\n╚════════════════════════════╝\n\n</span>`;
+        out.innerHTML=`<span class="inf">╔════════════════════════════╗\n║  Compilador · ${el}s${isHF?' · CPU':''}\n╚════════════════════════════╝\n\n</span>`;
         out.innerHTML+=`<span class="ok">${escH(d.output)}</span>`;
         if(d.bloch?.probabilities){
           out.innerHTML+=`\n<span class="inf">══ Probabilidades ══\n</span>`;
@@ -1430,7 +1454,7 @@ async function runCode(){
         setRunSt('idle','Listo'); animateBloch(code);
         logMonitorRun({success:true, lib:curLib, qubits:circuit.qubits, time:parseFloat(el)});
       } else {
-        out.innerHTML+=`<span class="er">❌ Error:\n${escH(d.output)}</span>`;
+        out.innerHTML+=`<span class="er">${formatError(d.output, code)}</span>`;
         setRunSt('err','Error');
       }
     } catch(e){
@@ -1467,7 +1491,7 @@ async function runCode(){
 <span class="wa">
 💡 Para Qiskit/Cirq real:
    Configuración → Compilador HuggingFace → URL
-   O usa 🤗 HF GPU para ejecutar con compilador</span>`;
+   Configura el compilador en Configuración</span>`;
     document.getElementById('out-elapsed').textContent=el+'s';
     setRunSt('idle','Listo (sim.)'); animateBloch(code);
     logMonitorRun({success:true, lib:curLib, qubits:circuit.qubits, time:parseFloat(el), simulated:true});
@@ -1478,20 +1502,131 @@ async function runCode(){
 
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+// Formatear error con línea resaltada y explicación
+function formatError(errText, code){
+  const lines = code ? code.split('\n') : [];
+  let html = '';
+
+  // Extraer número de línea
+  const lineMatch = errText.match(/line[^\d]*(\d+)/i) ||
+                    errText.match(/línea[^\d]*(\d+)/i);
+  const errLine = lineMatch ? parseInt(lineMatch[1]) : null;
+
+  // Resaltar línea en el editor
+  if(errLine && errLine > 0){
+    highlightErrorLine(errLine);
+  }
+
+  // Tipo de error
+  const typeMatch = errText.match(/(SyntaxError|NameError|TypeError|ValueError|ImportError|AttributeError|IndexError|KeyError|ZeroDivisionError|IndentationError)[:\s]/);
+  const errType = typeMatch ? typeMatch[1] : 'Error';
+
+  // Explicaciones en español
+  const explanations = {
+    'SyntaxError':      '💡 Error de sintaxis — revisa paréntesis, dos puntos o indentación.',
+    'NameError':        '💡 Variable o función no definida — ¿escribiste bien el nombre?',
+    'TypeError':        '💡 Tipo incorrecto — estás usando un tipo de dato que no corresponde.',
+    'ValueError':       '💡 Valor incorrecto — el valor no es válido para esta operación.',
+    'ImportError':      '💡 No se pudo importar — la librería no está disponible.',
+    'AttributeError':   '💡 Atributo no existe — el objeto no tiene ese método o propiedad.',
+    'IndexError':       '💡 Índice fuera de rango — el índice es mayor que el tamaño.',
+    'IndentationError': '💡 Error de indentación — verifica los espacios al inicio de la línea.',
+    'ZeroDivisionError':'💡 División por cero.',
+  };
+  const explanation = explanations[errType] || '💡 Revisa el código en la línea indicada.';
+
+  html += `❌ ${errType}`;
+  if(errLine) html += ` en línea ${errLine}`;
+  html += '\n';
+
+  // Mostrar la línea con error
+  if(errLine && lines[errLine-1]){
+    html += `\n<span class="err-line">`;
+    html += `<span class="err-arrow">→ L${errLine}:</span> <span style="color:#ffa198;">${escH(lines[errLine-1])}</span>`;
+    html += `</span>\n`;
+  }
+
+  // Mensaje del error
+  const msgLines = errText.split('\n').filter(l=>l.trim());
+  const lastMsg = msgLines[msgLines.length-1] || errText;
+  html += `<span class="err-msg">${escH(lastMsg)}</span>\n`;
+  html += `\n<span class="wa">${explanation}</span>`;
+
+  return html;
+}
+
+// Resaltar línea de error en el editor
+function highlightErrorLine(lineNum){
+  try{
+    const ta = document.getElementById('code-ta');
+    if(!ta) return;
+    const lines = ta.value.split('\n');
+    let pos = 0;
+    for(let i=0; i<lineNum-1 && i<lines.length; i++){
+      pos += lines[i].length + 1;
+    }
+    ta.focus();
+    ta.setSelectionRange(pos, pos + (lines[lineNum-1]||'').length);
+    // Scroll a la línea
+    const lineHeight = parseInt(getComputedStyle(ta).lineHeight) || 19;
+    ta.scrollTop = (lineNum - 3) * lineHeight;
+    // Actualizar cursor
+    updCur();
+  }catch(e){}
+}
+
 // ── SYNTAX HIGHLIGHT ──────────────────────────────────
 function highlight(code){
-  let h=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  h=h.replace(/(#[^\n]*)/g,'<span class="cm">$1</span>');
-  h=h.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,m=>m.includes('class=')?m:`<span class="st">${m}</span>`);
-  ['from','import','as','def','class','return','if','elif','else','for','while','in','not','and','or','True','False','None','with','pass','try','except','finally','raise','yield','lambda'].forEach(k=>{
-    h=h.replace(new RegExp(`(?<![\\w])(${k})(?![\\w])`,'g'),(m,w)=>m.includes('class=')?m:`<span class="kw">${w}</span>`);
+  // Paso 1: escapar HTML
+  let h = code
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+
+  // Paso 2: proteger strings y comentarios primero (no tocar su interior)
+  const preserved = [];
+  h = h.replace(/(#[^
+]*)/g, (m)=>{
+    preserved.push(`<span class="cm">${m}</span>`);
+    return ` ${preserved.length-1} `;
   });
-  ['QuantumCircuit','Statevector','AerSimulator','Simulator','LineQubit','GridQubit','Circuit'].forEach(k=>{
-    h=h.replace(new RegExp(`(?<![\\w])(${k})(?![\\w])`,'g'),(m,w)=>m.includes('class=')?m:`<span class="cl">${w}</span>`);
+  h = h.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, (m)=>{
+    preserved.push(`<span class="st">${m}</span>`);
+    return ` ${preserved.length-1} `;
   });
-  h=h.replace(/(?<![\\w.])(\d+\.?\d*(?:e[+-]?\d+)?)(?![\\w])/g,(m,n)=>`<span class="nm">${n}</span>`);
-  h=h.replace(/\b(pi|np|qml|qt|cirq|qc)\b/g,m=>`<span class="nm">${m}</span>`);
-  h=h.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g,(m,fn)=>m.includes('class=')?m:`<span class="fn">${fn}</span>`);
+
+  // Paso 3: keywords
+  const KW = ['from','import','as','def','class','return','if','elif','else',
+              'for','while','in','not','and','or','True','False','None',
+              'with','pass','try','except','finally','raise','yield','lambda'];
+  KW.forEach(k=>{
+    h = h.replace(new RegExp(`(?<![\w])(${k})(?![\w])`,'g'),
+      `<span class="kw">$1</span>`);
+  });
+
+  // Paso 4: clases Qiskit
+  ['QuantumCircuit','QuantumRegister','ClassicalRegister','Statevector',
+   'DensityMatrix','AerSimulator','Sampler','Estimator','SparsePauliOp',
+   'LineQubit','GridQubit','Circuit','VQE','QAOA','Grover'].forEach(k=>{
+    h = h.replace(new RegExp(`(?<![\w])(${k})(?![\w])`,'g'),
+      `<span class="cl">$1</span>`);
+  });
+
+  // Paso 5: números
+  h = h.replace(/(?<![\w.])(\d+\.?\d*(?:e[+-]?\d+)?)(?![\w])/g,
+    `<span class="nm">$1</span>`);
+
+  // Paso 6: variables comunes
+  h = h.replace(/(?<![\w])(pi|np|qml|qt|cirq|qc|plt|sp)(?![\w])/g,
+    `<span class="nm">$1</span>`);
+
+  // Paso 7: funciones
+  h = h.replace(/(?<![\w])([a-zA-Z_]\w*)\s*(?=\()/g,
+    `<span class="fn">$1</span>`);
+
+  // Paso 8: restaurar strings/comentarios preservados
+  h = h.replace(/ (\d+) /g, (_, i) => preserved[parseInt(i)]);
+
   return h;
 }
 function onEdit(){
@@ -1499,6 +1634,74 @@ function onEdit(){
   const ln=document.getElementById('lnums');
   if(sl) sl.innerHTML=highlight(ta.value)+'\n';
   if(ln){const l=ta.value.split('\n');ln.innerHTML=l.map((_,i)=>`<div>${i+1}</div>`).join('');}
+  // Parsear código y actualizar circuito visual en tiempo real (debounce 600ms)
+  if(curLib==='qiskit'){
+    clearTimeout(window._parseTimer);
+    window._parseTimer = setTimeout(()=>parseCodeToCircuit(ta.value), 600);
+  }
+}
+
+// Parsear código Qiskit y montar puertas en el circuito visual
+function parseCodeToCircuit(code){
+  try{
+    const lines = code.split('\n');
+    const newGates = [];
+
+    // Detectar número de qubits
+    const qcMatch = code.match(/QuantumCircuit\s*\(\s*(\d+)/);
+    if(qcMatch){
+      const nq = Math.min(parseInt(qcMatch[1]), 20);
+      if(nq !== circuit.qubits){
+        circuit.qubits = nq;
+      }
+    }
+
+    // Mapeo de instrucciones Qiskit → puertas visuales
+    const gateMap = {
+      'h':'H','x':'X','y':'Y','z':'Z','s':'S','t':'T',
+      'sdg':'S†','tdg':'T†','rx':'Rx','ry':'Ry','rz':'Rz',
+      'cx':'CX','cy':'CY','cz':'CZ','ccx':'CCX','swap':'SW',
+      'measure':'M'
+    };
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      // 1-qubit: qc.h(0), qc.x(1), etc.
+      const m1 = trimmed.match(/qc\.([a-z]+)\((?:[^,)]*,\s*)?(\d+)(?:\s*,[^)]*)?\)/);
+      if(m1){
+        const op = m1[1].toLowerCase();
+        const q = parseInt(m1[2]);
+        if(gateMap[op] && q < circuit.qubits){
+          const def = Object.values(GATE_DEFS).flat().find(g=>g.id===gateMap[op]);
+          if(def) newGates.push({id:gateMap[op], q, def, uid:uid()});
+        }
+      }
+      // 2-qubit: qc.cx(0,1)
+      const m2 = trimmed.match(/qc\.(cx|cy|cz|swap|ccx)\s*\(\s*(\d+)\s*,\s*(\d+)/);
+      if(m2){
+        const op = m2[1];
+        const q1 = parseInt(m2[2]);
+        const q2 = parseInt(m2[3]);
+        if(q1 < circuit.qubits && q2 < circuit.qubits){
+          const def = Object.values(GATE_DEFS).flat().find(g=>g.id===(gateMap[op]||op.toUpperCase()));
+          newGates.push({id:(gateMap[op]||op.toUpperCase()), q:q1, q2:q2, def:def||{}, uid:uid()});
+        }
+      }
+      // measure: qc.measure([0,1],[0,1])
+      if(trimmed.match(/qc\.measure/)){
+        // añadir M en cada qubit
+        for(let qi=0; qi<Math.min(circuit.qubits,4); qi++){
+          const def = Object.values(GATE_DEFS).flat().find(g=>g.id==='M');
+          if(def) newGates.push({id:'M', q:qi, def, uid:uid()});
+        }
+      }
+    });
+
+    if(newGates.length > 0 || circuit.gates.length > 0){
+      circuit.gates = newGates;
+      renderCircuit();
+    }
+  }catch(e){}
 }
 function syncSc(){
   const ta=document.getElementById('code-ta'),sl=document.getElementById('syn-lay'),ln=document.getElementById('lnums');

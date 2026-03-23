@@ -223,9 +223,13 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .cell-output::-webkit-scrollbar{width:4px;}
 .cell-output::-webkit-scrollbar-thumb{background:var(--bd2);}
 .cell-output.show{display:block;}
-.out-ok{color:#39d353;}
-.out-err{color:#ff6080;}
+.out-ok{color:#3fb950;text-shadow:0 0 8px rgba(63,185,80,.2);}
+.out-err{color:#f85149;}
 .out-inf{color:#58a6ff;}
+.out-warn{color:#d29922;}
+.err-line{background:rgba(248,81,73,.12);border-left:3px solid #f85149;padding:.1rem .5rem;display:block;margin:.1rem 0;border-radius:0 4px 4px 0;}
+.err-arrow{color:#f85149;font-weight:bold;}
+.err-msg{color:#ffa198;}
 .out-warn{color:var(--yw);}
 
 /* Toolbar de celda (hover) */
@@ -509,17 +513,28 @@ function notify(msg,ms=2800){
 
 // ── SHOW UI ────────────────────────────────────────
 function showUI(user){
-  if(_initialized) return;
+  // Permitir re-inicializar si llega un usuario con más permisos
+  const newRole = user?.role || 'guest';
+  const isUpgrade = _initialized && 
+    (newRole==='founder'||newRole==='admin') &&
+    (curUser?.role!=='founder' && curUser?.role!=='admin');
+
+  if(_initialized && !isUpgrade) return;
   _initialized = true;
   curUser = user;
-  const role = curUser?.role || 'guest';
+  const role = newRole;
 
   // SEGURIDAD: bloquear si no es admin o founder
-  // No hay modo demo — requiere cuenta real
   if(role !== 'admin' && role !== 'founder'){
     document.getElementById('access-denied').classList.add('show');
+    document.getElementById('topbar').style.display='none';
+    document.getElementById('secbar').style.display='none';
+    document.getElementById('main-area').style.display='none';
+    document.getElementById('statusbar').style.display='none';
     return;
   }
+  // Ocultar access-denied si estaba visible
+  document.getElementById('access-denied').classList.remove('show');
 
   ['topbar','secbar','main-area','statusbar'].forEach(id=>{
     document.getElementById(id).style.display='flex';
@@ -567,15 +582,27 @@ window.addEventListener('message',e=>{
 // Pedir usuario al ecosistema
 postCore('QCOL_GET_USER');
 
-// Fallback: si en 1.5s no llegó QCOL_USER, activar en modo demo
+// Fallback: si en 2s no llegó QCOL_USER, leer de localStorage
 setTimeout(()=>{
   if(!_initialized){
-    // Intentar leer usuario de localStorage (guardado por el ecosistema)
     const stored = localStorage.getItem('qcol_cur_user');
     const user = stored ? JSON.parse(stored) : null;
     showUI(user);
   }
-}, 1500);
+}, 2000);
+
+// Escuchar también QCOL_USER_UPDATE (por si el usuario hace login después)
+window.addEventListener('message', e=>{
+  const d = e.data||{};
+  if(d.type==='QCOL_USER_UPDATE'){
+    // Si ahora es admin/founder, mostrar UI
+    const role = d.user?.role||'guest';
+    if(role==='admin'||role==='founder'){
+      _initialized = false; // reset para permitir re-init
+      showUI(d.user);
+    }
+  }
+});
 
 // ── SEGURIDAD — verificar en cada operación crítica ──
 function requireAuth(){
@@ -815,6 +842,22 @@ function buildCellEl(cell,i){
 
 function escH(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+function formatProError(errText, code){
+  const lines = code ? code.split('\n') : [];
+  const lineMatch = errText.match(/line[^\d]*(\d+)/i)||errText.match(/línea[^\d]*(\d+)/i);
+  const errLine = lineMatch ? parseInt(lineMatch[1]) : null;
+  const types = {'SyntaxError':'Sintaxis','NameError':'Variable no definida','TypeError':'Tipo incorrecto','ValueError':'Valor inválido','ImportError':'Importación fallida','AttributeError':'Atributo no existe','IndentationError':'Indentación incorrecta'};
+  const typeMatch = errText.match(/(SyntaxError|NameError|TypeError|ValueError|ImportError|AttributeError|IndentationError)/);
+  const errType = typeMatch ? typeMatch[1] : 'Error';
+  const tips = {'SyntaxError':'Revisa paréntesis, dos puntos o indentación.','NameError':'Variable no definida — ¿escribiste bien el nombre?','IndentationError':'Verifica los espacios al inicio de la línea.','ImportError':'La librería no está disponible.'};
+  let html = `<span class="out-err">❌ ${types[errType]||errType}${errLine?' en línea '+errLine:''}\n</span>`;
+  if(errLine && lines[errLine-1]) html += `<span class="err-line"><span class="err-arrow">→ L${errLine}:</span> <span style="color:#ffa198;">${escH(lines[errLine-1])}</span></span>\n`;
+  const lastMsg = errText.split('\n').filter(l=>l.trim()).pop()||errText;
+  html += `<span class="err-msg">${escH(lastMsg)}</span>\n`;
+  if(tips[errType]) html += `<span class="out-warn">💡 ${tips[errType]}</span>`;
+  return html;
+}
+
 function editMd(id){
   const cell=cells.find(c=>c.id===id);
   if(cell){ cell.mdEdit=true; renderCells(); focusCell(id); }
@@ -1032,8 +1075,9 @@ async function runCell(id){
         if(outEl){ outEl.innerHTML=html; outEl.className='cell-output show'; }
         setSbRun(false,'✅ Completado en '+(result.time||0)+'s');
       } else {
-        cell.output=`<span class="out-err">${escH(result.output||'Error')}</span>`;
-        if(outEl){ outEl.innerHTML=cell.output; outEl.className='cell-output show'; }
+        const errHtml = formatProError(result.output||'Error', cell.code);
+        cell.output=errHtml;
+        if(outEl){ outEl.innerHTML=errHtml; outEl.className='cell-output show'; }
         setSbRun(false,'❌ Error','err');
       }
     } else {
