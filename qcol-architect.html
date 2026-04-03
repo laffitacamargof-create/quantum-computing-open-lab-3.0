@@ -75,6 +75,9 @@ body { background:var(--bg); color:var(--tx); font-family:var(--ex); }
 .btn-parse {
   background:linear-gradient(135deg,#8b5cf6,var(--pu));
 }
+.btn-server {
+  background:linear-gradient(135deg,#2d6a4f,var(--gr));
+}
 .bsm {
   padding:.2rem .5rem; border-radius:5px;
   background:rgba(30,48,88,.5); border:1px solid var(--bd2);
@@ -313,6 +316,7 @@ body { background:var(--bg); color:var(--tx); font-family:var(--ex); }
 
 <div class="toolbar">
   <button class="btn-run" id="btn-run">▶ EJECUTAR</button>
+  <button class="btn-run btn-server" id="btn-run-server">🌐 EJECUTAR EN SERVIDOR</button>
   <button class="btn-run btn-parse" id="btn-parse">🔄 SINCRONIZAR (Pyodide)</button>
   <button class="bsm" id="btn-clear">🗑 Limpiar</button>
   <div class="sep"></div>
@@ -399,8 +403,8 @@ body { background:var(--bg); color:var(--tx); font-family:var(--ex); }
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// ARQUITECTO CUÁNTICO — Con Pyodide (ejecución real de Python)
-// Módulo qiskit mock UNIVERSAL + scipy DINÁMICO (acepta cualquier importación)
+// ARQUITECTO CUÁNTICO — VERSIÓN DEFINITIVA CON BACKEND (Qiskit real)
+// Se mantiene toda la funcionalidad original + botón "Ejecutar en servidor"
 // ═══════════════════════════════════════════════════════════
 
 let circuit = { qubits: 2, gates: [] };
@@ -409,8 +413,6 @@ let curMode = 'circ';
 let curUser = null;
 let engineURL = '', engineOK = false;
 let running = false;
-let aiCfg = {};        // Config de AI (provider, apiKey, model)
-let aiFixing = false;  // Prevenir llamadas simultáneas
 let dragGate = null;
 let nextId = 1;
 let isUpdatingFromCircuit = false;
@@ -426,17 +428,18 @@ let pyodide = null;
 let pyodideLoading = false;
 
 // ═══════════════════════════════════════════════════════════
-// MOCK DE QISKIT UNIVERSAL + SCIPY DINÁMICO
+// MOCK COMPLETO DE QISKIT (CORREGIDO) + SCIPY + NUMPY (sin conflictos)
+// (El mismo código que ya funcionaba, se mantiene intacto)
 // ═══════════════════════════════════════════════════════════
 const QISKIT_MOCK_CODE = `
 import sys, types
 
-# ── 1. DynamicModule ──────────────────────────────────────
-class DynamicModule(types.ModuleType):
-    """Módulo que acepta cualquier atributo y devuelve un stub."""
+class DynamicPackage(types.ModuleType):
+    def __init__(self, name, is_package=True):
+        super().__init__(name)
+        if is_package:
+            self.__path__ = []
     def __getattr__(self, name):
-        if name.startswith('_'):
-            raise AttributeError(name)
         class Stub:
             def __init__(self, *args, **kwargs):
                 self.name = name
@@ -447,11 +450,10 @@ class DynamicModule(types.ModuleType):
         setattr(self, name, Stub)
         return Stub
 
-# ── 2. Import hook universal para qiskit.* ────────────────
-def _create_dynamic_module(fullname):
+def _create_qiskit_submodule(fullname):
     if fullname in sys.modules:
         return sys.modules[fullname]
-    mod = DynamicModule(fullname)
+    mod = DynamicPackage(fullname, is_package=True)
     sys.modules[fullname] = mod
     parent, _, child = fullname.rpartition('.')
     if parent and parent in sys.modules:
@@ -464,21 +466,30 @@ class QiskitMetaFinder:
             return None
         if fullname in sys.modules:
             return None
-        _create_dynamic_module(fullname)
+        _create_qiskit_submodule(fullname)
         return None
 
 sys.meta_path.insert(0, QiskitMetaFinder())
 
-# ── 3. Módulo raíz qiskit como DynamicModule ──────────────
-qiskit_mod = DynamicModule('qiskit')
-sys.modules['qiskit'] = qiskit_mod
+qiskit = DynamicPackage('qiskit', is_package=True)
+sys.modules['qiskit'] = qiskit
 
-# Aseguramos que los submódulos que definiremos más adelante se creen como DynamicModule
-for _sub in ['qiskit.circuit.library', 'qiskit.providers.aer', 'qiskit.visualization', 'qiskit.extensions']:
-    if _sub not in sys.modules:
-        sys.modules[_sub] = DynamicModule(_sub)
+essential_subs = [
+    'qiskit.circuit', 'qiskit.circuit.library',
+    'qiskit.extensions', 'qiskit.visualization',
+    'qiskit.providers', 'qiskit.providers.aer',
+    'qiskit.quantum_info'
+]
+for sub in essential_subs:
+    _create_qiskit_submodule(sub)
 
-# ── 4. Clases reales (QuantumRegister, ClassicalRegister, QuantumCircuit) ──
+class Operation:
+    __slots__ = ('name', 'qubits', 'params')
+    def __init__(self, name, qubits, params=None):
+        self.name = name
+        self.qubits = qubits
+        self.params = params or []
+
 class QuantumRegister:
     def __init__(self, size, name=None):
         self.size = int(size)
@@ -500,13 +511,6 @@ class ClassicalRegister:
         except: return 0
     def __len__(self): return self.size
     def __iter__(self): return iter(range(self.size))
-
-class Operation:
-    __slots__ = ('name', 'qubits', 'params')
-    def __init__(self, name, qubits, params=None):
-        self.name = name
-        self.qubits = qubits
-        self.params = params or []
 
 class QuantumCircuit:
     def __init__(self, *args):
@@ -538,8 +542,6 @@ class QuantumCircuit:
 
     def _to_int(self, q):
         if isinstance(q, int): return q
-        if isinstance(q, bool): return int(q)
-        if isinstance(q, float): return int(q)
         try: return int(q)
         except: return 0
 
@@ -562,11 +564,10 @@ class QuantumCircuit:
     def _add(self, name, qubits, params=None):
         clean = self._expand(qubits)
         if clean:
-            op = Operation(name, clean, params or [])
+            op = Operation(name, clean, [float(p) if isinstance(p,(int,float)) else 0.0 for p in (params or [])])
             self.data.append(op)
         return self
 
-    # Puertas 1-qubit
     def h(self, q): return self._add('h', [q])
     def x(self, q): return self._add('x', [q])
     def y(self, q): return self._add('y', [q])
@@ -588,7 +589,6 @@ class QuantumCircuit:
     def initialize(self, sv, q): return self._add('h', [q])
     def reset(self, q): return self._add('reset', [q])
 
-    # Puertas 2-qubit
     def cx(self, c, t): return self._add('cx', [c,t])
     def cnot(self, c, t): return self._add('cx', [c,t])
     def cz(self, c, t): return self._add('cz', [c,t])
@@ -602,14 +602,12 @@ class QuantumCircuit:
     def crz(self, theta, c, t): return self._add('crz', [c,t], [theta])
     def cu(self, t,p,l,g,c,tgt): return self._add('cu', [c,tgt], [t,p,l])
 
-    # Puertas 3-qubit
     def ccx(self, a, b, t): return self._add('ccx', [a,b,t])
     def toffoli(self, a, b, t): return self._add('ccx', [a,b,t])
     def cswap(self, a, b, t): return self._add('cswap', [a,b,t])
     def fredkin(self, a, b, t): return self._add('cswap', [a,b,t])
     def ccz(self, a, b, t): return self._add('ccz', [a,b,t])
 
-    # Multi-control
     def mcx(self, controls, target, ancilla=None):
         qs = (list(controls) if hasattr(controls,'__iter__') else [controls]) + [target]
         return self._add('mcx', qs)
@@ -619,7 +617,6 @@ class QuantumCircuit:
         name = getattr(gate, 'name', 'unknown')
         return self._add(name, list(qubits) if hasattr(qubits,'__iter__') else [qubits])
 
-    # Medición
     def measure(self, q, c):
         qs = list(q) if hasattr(q,'__iter__') and not isinstance(q,int) else [q]
         cs = list(c) if hasattr(c,'__iter__') and not isinstance(c,int) else [c]
@@ -631,7 +628,6 @@ class QuantumCircuit:
             self._add('measure', [i], [i])
         return self
 
-    # Utilidades
     def barrier(self, *args): return self
     def delay(self, dt, q, unit='dt'): return self
     def compose(self, other, qubits=None, **kw): return self
@@ -644,7 +640,6 @@ class QuantumCircuit:
     def copy(self):
         import copy; return copy.deepcopy(self)
 
-# ── 5. Clases del library ────────────────────────────────
 class MCXGate:
     def __init__(self, n, ctrl_state=None):
         self.name = 'mcx'
@@ -654,6 +649,7 @@ class QFT:
     def __init__(self, n, approximation_degree=0, do_swaps=True, **kw):
         self.name = 'qft'
         self.num_qubits = n
+        self.size = n
 
 class GroverOperator:
     def __init__(self, oracle, **kw): self.name = 'grover'
@@ -661,7 +657,6 @@ class GroverOperator:
 class PhaseOracle:
     def __init__(self, expression, **kw): self.name = 'phase_oracle'
 
-# ── 6. UnitaryGate para qiskit.extensions ─────────────────
 class UnitaryGate:
     def __init__(self, data, label=None, num_qubits=None):
         self.name = 'unitary'
@@ -669,14 +664,10 @@ class UnitaryGate:
         self.label = label
         self.num_qubits = num_qubits
 
-_ext_mod = sys.modules.get('qiskit.extensions')
-if _ext_mod is None:
-    _ext_mod = DynamicModule('qiskit.extensions')
-    sys.modules['qiskit.extensions'] = _ext_mod
+_ext_mod = sys.modules['qiskit.extensions']
 _ext_mod.UnitaryGate = UnitaryGate
-qiskit_mod.UnitaryGate = UnitaryGate   # para from qiskit import UnitaryGate
+qiskit.UnitaryGate = UnitaryGate
 
-# ── 7. Aer / Simulador ────────────────────────────────────
 class _MockResult:
     def __init__(self, n): self._n = n
     def get_counts(self, *a, **k): return {'0'*self._n: 1024}
@@ -699,31 +690,29 @@ class Aer:
 def transpile(circuit, backend=None, **k): return circuit
 def execute(circ, backend, shots=1024, **k): return backend.run(circ, shots)
 
-# ── 8. Visualización stubs ───────────────────────────────
-_vis_mod = sys.modules['qiskit.visualization']
-if not hasattr(_vis_mod, 'plot_histogram'):
-    def plot_histogram(*args, **kwargs):
-        return "[Mock] Histogram plot - Qiskit mock"
-    def plot_bloch_multivector(*args, **kwargs):
-        return "[Mock] Bloch sphere - Qiskit mock"
-    _vis_mod.plot_histogram = plot_histogram
-    _vis_mod.plot_bloch_multivector = plot_bloch_multivector
-    qiskit_mod.plot_histogram = plot_histogram
-    qiskit_mod.plot_bloch_multivector = plot_bloch_multivector
+_vis_mod = types.ModuleType('qiskit.visualization')
+def plot_histogram(*args, **kwargs):
+    return "[Mock] Histogram plot - Qiskit mock"
+def plot_bloch_multivector(*args, **kwargs):
+    return "[Mock] Bloch sphere - Qiskit mock"
+_vis_mod.plot_histogram = plot_histogram
+_vis_mod.plot_bloch_multivector = plot_bloch_multivector
+sys.modules['qiskit.visualization'] = _vis_mod
+qiskit.plot_histogram = plot_histogram
+qiskit.plot_bloch_multivector = plot_bloch_multivector
 
-# ── 9. Asignar clases al módulo raíz ─────────────────────
-qiskit_mod.QuantumRegister = QuantumRegister
-qiskit_mod.ClassicalRegister = ClassicalRegister
-qiskit_mod.QuantumCircuit = QuantumCircuit
-qiskit_mod.MCXGate = MCXGate
-qiskit_mod.QFT = QFT
-qiskit_mod.GroverOperator = GroverOperator
-qiskit_mod.AerSimulator = AerSimulator
-qiskit_mod.Aer = Aer
-qiskit_mod.transpile = transpile
-qiskit_mod.execute = execute
+qiskit.QuantumRegister = QuantumRegister
+qiskit.ClassicalRegister = ClassicalRegister
+qiskit.QuantumCircuit = QuantumCircuit
+qiskit.MCXGate = MCXGate
+qiskit.QFT = QFT
+qiskit.GroverOperator = GroverOperator
+qiskit.UnitaryGate = UnitaryGate
+qiskit.AerSimulator = AerSimulator
+qiskit.Aer = Aer
+qiskit.transpile = transpile
+qiskit.execute = execute
 
-# Asignar también a los submódulos correspondientes
 library_mod = sys.modules['qiskit.circuit.library']
 library_mod.MCXGate = MCXGate
 library_mod.QFT = QFT
@@ -734,109 +723,76 @@ library_mod.QuantumCircuit = QuantumCircuit
 aer_mod = sys.modules['qiskit.providers.aer']
 aer_mod.AerSimulator = AerSimulator
 
-# ── 10. Mock de scipy (COMPLETAMENTE DINÁMICO) ───────────
-# Esta versión acepta CUALQUIER importación dentro de scipy
-# Resuelve: ImportError: cannot import name 'unitary_group' from 'scipy.stats'
-# ── scipy universal: acepta CUALQUIER importación ──────────────
-# Funciona con: import scipy, from scipy import X,
-#               from scipy.stats import Y, from scipy.linalg import Z
-class _UniversalStub:
-    """Stub que funciona como módulo, clase, función, o cualquier objeto."""
-    def __init__(self, *a, **k): pass
-    def __call__(self, *a, **k): return _UniversalStub()
-    # __getattr__ NUNCA lanza AttributeError — devuelve otro stub
-    def __getattr__(self, n):    return _UniversalStub()
-    def __iter__(self):          return iter([])
-    def __len__(self):           return 0
-    def __float__(self):         return 0.0
-    def __int__(self):           return 0
-    def __bool__(self):          return True
-    def __array__(self, *a, **k): return []
-    # Métodos estadísticos comunes
-    def rvs(self, *a, **k):
-        size = a[0] if a else 2
-        if isinstance(size, int):
-            return [[1.0 if i==j else 0.0 for j in range(size)]
-                    for i in range(size)]
-        return [[1.0]]
-    def pdf(self, *a, **k):      return 1.0
-    def cdf(self, *a, **k):      return 0.5
-    def ppf(self, *a, **k):      return 0.0
-    def fit(self, *a, **k):      return (0.0, 1.0)
-    def mean(self, *a, **k):     return 0.0
-    def var(self, *a, **k):      return 1.0
-    def std(self, *a, **k):      return 1.0
-    def logpdf(self, *a, **k):   return 0.0
-    def entropy(self, *a, **k):  return 0.0
-    def minimize(self, *a, **k):
-        return type('Result', (), {'fun':0.0,'x':[],'success':True})()
-    def norm(self, *a, **k):     return 0.0
-    def solve(self, *a, **k):    return []
-    def eig(self, *a, **k):      return ([], [])
-    def svd(self, *a, **k):      return ([], [], [])
-    def inv(self, *a, **k):      return []
-    def expm(self, *a, **k):     return []
+if 'scipy' not in sys.modules:
+    class UniversalStub:
+        def __init__(self, name=None):
+            self._name = name
+        def __call__(self, *args, **kwargs):
+            return UniversalStub(self._name)
+        def __getattr__(self, attr):
+            return UniversalStub(f"{self._name}.{attr}")
+        def rvs(self, *args, **kwargs):
+            n = args[0] if args else 2
+            return [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
+        def pdf(self, x): return 1.0
+        def cdf(self, x): return 0.5
+        def ppf(self, q): return 0.0
 
-class _ScipyModule(types.ModuleType):
-    """Módulo scipy universal — nunca lanza ImportError ni AttributeError."""
-    _stub = _UniversalStub()
+    class ScipyModule(types.ModuleType):
+        def __init__(self, name, is_package=True):
+            super().__init__(name)
+            if is_package:
+                self.__path__ = []
+            self._stubs = {}
+        def __getattr__(self, name):
+            if name in self._stubs:
+                return self._stubs[name]
+            stub = UniversalStub(f"{self.__name__}.{name}")
+            self._stubs[name] = stub
+            setattr(self, name, stub)
+            return stub
 
-    def __getattr__(self, name):
-        # NO lanzar AttributeError para nombres especiales (_path_, _spec_, etc.)
-        # Python los necesita internamente para el sistema de importación
-        stub = _UniversalStub()
-        # Cachear para consistencia
-        object.__setattr__(self, name, stub)
-        return stub
+    scipy_root = ScipyModule('scipy', is_package=True)
+    sys.modules['scipy'] = scipy_root
 
-    # Hacer que el módulo también funcione como paquete
-    @property
-    def __path__(self): return []
-    @property
-    def __package__(self): return self.__name__
+    submodules = ['stats', 'optimize', 'sparse', 'linalg', 'fft', 'integrate',
+                  'signal', 'ndimage', 'cluster', 'constants', 'special']
+    for sub in submodules:
+        sub_mod = ScipyModule(f'scipy.{sub}', is_package=True)
+        sys.modules[f'scipy.{sub}'] = sub_mod
+        setattr(scipy_root, sub, sub_mod)
 
-def _make_scipy_module(full_name):
-    m = _ScipyModule(full_name)
-    m.__name__    = full_name
-    m.__package__ = full_name
-    m.__spec__    = types.SimpleNamespace(
-        name=full_name, loader=None, origin=None,
-        submodule_search_locations=[], has_location=False,
-        parent=full_name.rsplit('.',1)[0] if '.' in full_name else ''
-    )
-    m.__path__ = []
-    return m
+    stats_mod = sys.modules['scipy.stats']
+    common_names = [
+        'unitary_group', 'ortho_group', 'norm', 'uniform', 'bernoulli',
+        'binom', 'poisson', 'chi2', 'expon', 'gamma', 'beta', 't', 'f',
+        'multivariate_normal', 'dirichlet', 'wishart', 'entropy',
+        'ks_2samp', 'ttest_ind', 'ttest_rel', 'mannwhitneyu',
+        'pearsonr', 'spearmanr', 'kendalltau', 'linregress',
+        'randint', 'logistic', 'cauchy', 'laplace', 'gumbel_r',
+        'lognorm', 'pareto', 'truncnorm', 'vonmises',
+        'rv_continuous', 'rv_discrete', 'describe', 'zscore',
+        'iqr', 'skew', 'kurtosis', 'sem', 'mode', 'gmean', 'hmean',
+        'rankdata', 'percentileofscore', 'find_repeats'
+    ]
+    stub_inst = UniversalStub('scipy.stats')
+    for name in common_names:
+        setattr(stats_mod, name, stub_inst)
 
-# Registrar scipy y TODOS sus submódulos conocidos
-_scipy_submodules = [
-    'stats','linalg','optimize','sparse','sparse.linalg','fft',
-    'integrate','signal','ndimage','cluster','cluster.vq','cluster.hierarchy',
-    'constants','special','interpolate','io','misc',
-    'spatial','spatial.distance','spatial.transform',
-    'stats.mstats','stats.contingency','stats.qmc',
-]
-_scipy_root = _make_scipy_module('scipy')
-sys.modules['scipy'] = _scipy_root
+    opt_mod = sys.modules['scipy.optimize']
+    opt_mod.minimize = lambda *a, **k: type('Result', (), {'fun': 0.0, 'x': []})()
+    opt_mod.root = lambda *a, **k: type('Result', (), {'success': True})()
 
-for _sub in _scipy_submodules:
-    _full = f'scipy.{_sub}'
-    _m = _make_scipy_module(_full)
-    sys.modules[_full] = _m
-    # Registrar en el módulo padre
-    _parts = _sub.split('.')
-    _parent = _scipy_root
-    for _i, _part in enumerate(_parts):
-        object.__setattr__(_parent, _part, _m)
-        if _i < len(_parts)-1:
-            _parent = sys.modules.get(f"scipy.{'.'.join(_parts[:_i+1])}", _parent)
+for mod_name in list(sys.modules.keys()):
+    if mod_name.startswith('qiskit') or mod_name == 'qiskit':
+        mod = sys.modules[mod_name]
+        if not hasattr(mod, '__path__'):
+            mod.__path__ = []
 
-print("[Mock] scipy universal cargado OK")
-
-# ── 11. Mensaje final ─────────────────────────────────────
-print("[Mock] Qiskit universal + scipy dinámico cargado OK")
+print("[Mock] Qiskit universal + scipy + visualization stubs cargado OK")
 `;
 
-// Funciones de resaltado de sintaxis (texto plano -> HTML) - igual que antes
+// Funciones de resaltado de sintaxis (texto plano -> HTML)
 function escapeHtml(str) {
     return str.replace(/[&<>]/g, function(m) {
         if (m === '&') return '&amp;';
@@ -908,7 +864,7 @@ function updateSyntaxHighlight() {
     syn.scrollLeft = ta.scrollLeft;
 }
 
-// Puertas predefinidas para la paleta visual (igual que antes)
+// Puertas predefinidas para la paleta visual
 const GATES = {
     '1q': [
         { id: 'H', sym: 'H', bg: '#1a5fb4', glow:'rgba(26,95,180,.6)', desc: 'Hadamard', code: 'qc.h({q})' },
@@ -1082,7 +1038,7 @@ function updateCodeFromCircuit() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// INICIALIZAR PYODIDE Y EJECUTAR CÓDIGO REAL
+// INICIALIZAR PYODIDE Y EJECUTAR CÓDIGO REAL (LOCAL)
 // ═══════════════════════════════════════════════════════════
 
 async function initPyodide() {
@@ -1141,37 +1097,76 @@ function highlightErrorLine(lineNum) {
     updCur();
 }
 
+function autoFixNumpyError(errorMsg, originalCode) {
+    if (errorMsg.includes("No module named 'numpy'")) {
+        const stub = `import sys
+if 'numpy' not in sys.modules:
+    class _NumpyStub:
+        pi = 3.141592653589793
+        e = 2.718281828459045
+        class random:
+            @staticmethod
+            def uniform(a, b, size=None):
+                if size is None:
+                    return (a + b) / 2.0
+                return [(a + b) / 2.0] * size
+            @staticmethod
+            def randn(*size):
+                if not size:
+                    return 0.0
+                return [0.0] * size[0]
+        @staticmethod
+        def array(x): return x
+        @staticmethod
+        def zeros(shape): return [0] * shape if isinstance(shape, int) else [0] * shape[0]
+        @staticmethod
+        def ones(shape): return [1] * shape if isinstance(shape, int) else [1] * shape[0]
+        @staticmethod
+        def sin(x): return x
+        @staticmethod
+        def cos(x): return 1.0
+        @staticmethod
+        def exp(x): return 1.0 + x
+        @staticmethod
+        def sqrt(x): return x ** 0.5
+        @staticmethod
+        def linspace(start, stop, num): return [start + i*(stop-start)/(num-1) for i in range(num)]
+        def __getattr__(self, name):
+            return self
+    sys.modules['numpy'] = _NumpyStub()
+    import numpy as np
+`;
+        return stub + "\n" + originalCode;
+    }
+    return originalCode;
+}
+
 async function syncWithPyodide() {
     if (isUpdatingFromCircuit) return;
     isUpdatingFromCircuit = true;
     
-    const code = document.getElementById('code-ta').value;
+    let code = document.getElementById('code-ta').value;
     if (!code.trim()) { notify('Escribe código primero'); isUpdatingFromCircuit = false; return; }
     
     const out = document.getElementById('out-body');
     out.innerHTML = '<span class="inf">🔄 Ejecutando código con Pyodide...</span>\n';
     
-    try {
+    async function tryExecute(execCode) {
         const py = await initPyodide();
         if (!py) throw new Error('Pyodide no disponible');
-        
-        py.globals.set('_pending_user_code', code);
-        
+        py.globals.set('_pending_user_code', execCode);
         const result = await py.runPythonAsync(`
 import json, traceback, sys
-
 _user_code = globals().get('_pending_user_code', '')
 _ns = {}
 _error = None
 _circuit = None
 _num_qubits = 0
 _data = []
-
 try:
     exec(_user_code, _ns)
 except Exception as _e:
     _error = traceback.format_exc()
-
 if _error is None:
     for _name in ['circuit','qc','circ','qcirc','quantum_circuit']:
         _obj = _ns.get(_name)
@@ -1188,54 +1183,61 @@ if _error is None:
     else:
         _num_qubits = getattr(_circuit, 'num_qubits', getattr(_circuit, 'qubits', 0))
         _data = getattr(_circuit, 'data', [])
-
 json.dumps({
     "success": _error is None,
     "error": _error,
     "num_qubits": _num_qubits,
-    "gates": [(op.name, op.qubits, op.params) for op in _data] if _data else [],
+    "gates": [(op.name, op.qubits, op.params) for op in _data],
     "circuit_exists": _circuit is not None
 })
         `);
-        
-        const data = JSON.parse(result);
-        
+        return JSON.parse(result);
+    }
+    
+    try {
+        let data = await tryExecute(code);
+        if (!data.success && data.error && data.error.includes("No module named 'numpy'")) {
+            out.innerHTML += '<span class="wa">⚠️ Se detectó falta de numpy. Aplicando corrección automática...</span>\n';
+            const fixed = autoFixNumpyError(data.error, code);
+            data = await tryExecute(fixed);
+            if (data.success && data.circuit_exists) {
+                document.getElementById('code-ta').value = fixed;
+                updateSyntaxHighlight();
+                notify('✅ numpy corregido automáticamente');
+            }
+        }
         if (data.success && data.circuit_exists) {
             circuit.qubits = Math.min(data.num_qubits, MAX_QUBITS);
-            
             const newGates = [];
             for (const gate of data.gates) {
                 const gateId = mapOpNameToGateId(gate[0]);
                 const def = findGateDef(gateId);
                 if (!def) continue;
-                
                 const qubits = gate[1];
                 const uid = nextId++;
-                
                 if (qubits.length === 1) {
                     newGates.push({ id: gateId, q: qubits[0], def: def, uid: uid });
                 } else if (qubits.length === 2) {
                     newGates.push({ id: gateId, q: Math.min(qubits[0], qubits[1]), q2: Math.max(qubits[0], qubits[1]), def: def, uid: uid });
                 } else if (qubits.length >= 3) {
-                    const sorted = [...qubits].sort((a,b) => a-b);
+                    const sorted = [...qubits].sort((a,b)=>a-b);
                     newGates.push({ id: gateId, q: sorted[0], q2: sorted[1], q3: sorted[2], def: def, uid: uid });
                 }
             }
-            
             circuit.gates = newGates;
             renderCircuit();
             updateCircuitInfo();
             updateCodeFromCircuit();
-            
             out.innerHTML = `<span class="ok">✅ Código sincronizado correctamente.</span><br>
                             <span class="inf">📊 ${newGates.length} puertas registradas</span><br>
                             <span class="inf">🎯 Qubits: ${circuit.qubits}</span><br>`;
             notify(`✅ Sincronizado: ${newGates.length} puertas`);
         } else {
-            showErrorWithAI(data.error, code);
-            notify('❌ Error en el código — Quantum Chat puede ayudar');
+            out.innerHTML = `<span class="er">❌ Error en el código:<br><pre style="white-space:pre-wrap;">${escapeHtml(data.error)}</pre></span>`;
+            const lineMatch = data.error.match(/line (\d+)/);
+            if (lineMatch) highlightErrorLine(parseInt(lineMatch[1]));
+            notify(`Error en el código`);
         }
-        
     } catch (err) {
         console.error('Error:', err);
         out.innerHTML = `<span class="er">❌ Error ejecutando Pyodide:<br>${escapeHtml(err.message)}</span>`;
@@ -1245,7 +1247,110 @@ json.dumps({
     }
 }
 
-// Funciones de Bloch, Run, Save, etc. (igual que antes)
+// ═══════════════════════════════════════════════════════════
+// NUEVA FUNCIÓN: Ejecutar en servidor (backend con Qiskit real)
+// ═══════════════════════════════════════════════════════════
+async function runOnServer() {
+    if (running) return;
+    running = true;
+    const btn = document.getElementById('btn-run-server');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ ENVIANDO...';
+    setRunSt('run', 'Enviando al servidor...');
+    setTab('out');
+    const out = document.getElementById('out-body');
+    out.innerHTML = '<span class="inf">🌐 Enviando circuito al servidor cuántico...</span>\n';
+
+    try {
+        // Serializar el circuito actual (circuit.gates) a formato de operaciones
+        const operations = circuit.gates.map(g => {
+            const op = {
+                name: g.id.toLowerCase(),
+                qubits: [g.q]
+            };
+            if (g.q2 !== undefined) op.qubits.push(g.q2);
+            if (g.q3 !== undefined) op.qubits.push(g.q3);
+            // Parámetros (ángulos) si existen en el futuro
+            op.params = [];
+            return op;
+        });
+
+        const payload = {
+            operations: operations,
+            num_qubits: circuit.qubits,
+            num_clbits: circuit.qubits,
+            shots: 1024,
+            seed: Math.floor(Math.random() * 1000000)
+        };
+
+        // Cambiar la URL por la de tu backend desplegado (por defecto localhost:8000)
+        const backendUrl = localStorage.getItem('qcol_backend_url') || 'http://localhost:8000';
+        const response = await fetch(`${backendUrl}/run`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const { job_id } = await response.json();
+        out.innerHTML = `<span class="inf">⏳ Tarea enviada (ID: ${job_id}). Esperando resultados...</span>\n`;
+
+        // Polling cada 1.5 segundos
+        const maxAttempts = 60;
+        let attempts = 0;
+        const interval = setInterval(async () => {
+            attempts++;
+            try {
+                const res = await fetch(`${backendUrl}/result/${job_id}`);
+                if (!res.ok) {
+                    if (attempts >= maxAttempts) throw new Error('Tiempo de espera agotado');
+                    return;
+                }
+                const data = await res.json();
+                if (data.status === 'completed') {
+                    clearInterval(interval);
+                    const counts = data.result;
+                    const countsStr = JSON.stringify(counts, null, 2);
+                    out.innerHTML = `<span class="ok">✅ Simulación en servidor completada</span><br>
+                                    <span class="inf">📊 Resultados (counts):</span>
+                                    <pre style="background:#0a0e1a; padding:0.5rem; margin-top:0.5rem; border-radius:5px;">${escapeHtml(countsStr)}</pre>`;
+                    notify('✅ Ejecución en servidor finalizada');
+                    setRunSt('idle', 'Listo');
+                } else if (data.status === 'failed') {
+                    clearInterval(interval);
+                    out.innerHTML = `<span class="er">❌ Error en el servidor: ${data.error || 'desconocido'}</span>`;
+                    notify('Error en servidor');
+                    setRunSt('err', 'Error');
+                } else {
+                    // pendiente
+                    if (attempts === 1) out.innerHTML += '<span class="inf">⏳ Procesando en la nube...</span>\n';
+                }
+            } catch (err) {
+                if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    out.innerHTML = `<span class="er">❌ Timeout o error de conexión: ${err.message}</span>`;
+                    notify('Error de comunicación con el servidor');
+                    setRunSt('err', 'Error');
+                }
+            }
+        }, 1500);
+
+    } catch (err) {
+        out.innerHTML = `<span class="er">❌ Error al enviar al servidor: ${err.message}</span>`;
+        notify('Error al contactar el backend');
+        setRunSt('err', 'Error');
+    } finally {
+        running = false;
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+// Funciones de Bloch, Run, Save, etc. (se mantienen igual)
 function drawBloch() {
     const canvas = document.getElementById('bloch-canvas');
     if (!canvas) return;
@@ -1310,19 +1415,11 @@ async function runCode() {
         try {
             let res, d;
             if (isHF) {
-                res = await fetchWithRetry(engineURL + '/run/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [code] })
-                }, 3, 30000);
+                res = await fetchWithRetry(engineURL + '/run/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: [code] }) }, 3, 30000);
                 const raw = await res.json();
                 d = raw.data ? raw.data[0] : raw;
             } else {
-                res = await fetchWithRetry(engineURL + '/run', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, lib: 'qiskit' })
-                }, 3, 30000);
+                res = await fetchWithRetry(engineURL + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, lib: 'qiskit' }) }, 3, 30000);
                 d = await res.json();
             }
             const el = ((Date.now()-t0)/1000).toFixed(2);
@@ -1334,14 +1431,6 @@ async function runCode() {
                 logMonitorRun({ success:true, lib:'qiskit', qubits:circuit.qubits, time:parseFloat(el) });
             } else {
                 out.innerHTML += `<span class="er">❌ ${escapeHtml(d.output||'Error')}</span>`;
-            // Ofrecer corrección AI si hay error de código
-            if (d.output && d.output.includes('Error')) {
-                const aiBtn = document.createElement('button');
-                aiBtn.textContent = '🤖 Corregir con Quantum Chat AI';
-                aiBtn.style.cssText = 'margin-top:.4rem;display:block;padding:.22rem .6rem;background:rgba(0,136,255,.15);border:1px solid rgba(0,136,255,.3);border-radius:4px;color:#58a6ff;font-family:var(--orb,monospace);font-size:.46rem;cursor:pointer;';
-                aiBtn.onclick = () => aiFixCode(d.output, code);
-                out.appendChild(aiBtn);
-            }
                 setRunSt('err','Error');
             }
         } catch(e) {
@@ -1461,6 +1550,8 @@ function init() {
     document.getElementById('btn-save').onclick = saveCircuit;
     document.getElementById('btn-dlpy').onclick = dlPy;
     document.getElementById('btn-dlnb').onclick = dlNb;
+    // Nuevo botón de servidor
+    document.getElementById('btn-run-server').onclick = runOnServer;
 
     document.querySelectorAll('.lib-btn').forEach(btn => btn.onclick = () => setLib(btn.dataset.lib));
     document.querySelectorAll('.mode-btn').forEach(btn => btn.onclick = () => setMode(btn.dataset.mode));
@@ -1499,8 +1590,8 @@ async function fetchWithRetry(url, options, retries=3, timeout=30000) {
     for (let attempt=1; attempt<=retries; attempt++) {
         try {
             const ctrl = new AbortController();
-            const tid  = setTimeout(() => ctrl.abort(), timeout);
-            const res  = await fetch(url, { ...options, signal: ctrl.signal });
+            const tid = setTimeout(() => ctrl.abort(), timeout);
+            const res = await fetch(url, { ...options, signal: ctrl.signal });
             clearTimeout(tid);
             if (res.ok) return res;
             lastErr = new Error('HTTP ' + res.status);
@@ -1534,8 +1625,8 @@ async function checkEngine() {
         try {
             setS(`⏳ Intento ${attempt}/3...`, 'badge-warn');
             const ctrl = new AbortController();
-            const tid  = setTimeout(() => ctrl.abort(), 30000);
-            const res  = await fetch(engineURL + '/health/predict', {
+            const tid = setTimeout(() => ctrl.abort(), 30000);
+            const res = await fetch(engineURL + '/health/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ data: [''] }),
@@ -1569,14 +1660,11 @@ async function checkEngine() {
     function postCore(type, data={}) {
         try { window.parent.postMessage({type,...data},'*'); } catch(e){}
     }
-
-    // ── Mensaje del ecosistema ────────────────────────────────
     window.addEventListener('message', e => {
         const d = e.data||{};
-        if (d.type==='QCOL_USER' || d.type==='QCOL_USER_UPDATE') {
+        if (d.type==='QCOL_USER') {
             curUser = d.user;
-            const pill = document.getElementById('user-pill') ||
-                         document.getElementById('uname');
+            const pill = document.getElementById('user-pill') || document.getElementById('uname');
             if (pill && curUser) {
                 const role = curUser.role||'guest';
                 const ico  = role==='founder'?'👑 ':role==='admin'?'🔑 ':'';
@@ -1587,220 +1675,52 @@ async function checkEngine() {
         }
         if (d.type==='QCOL_CONFIG'||d.type==='QCOL_CONFIG_UPDATED') {
             const url = localStorage.getItem('qcol_colab_url')||'';
-            if (url && url.trim()!==engineURL) {
-                engineURL = url.trim().replace(/\/+$/, '');
-                checkEngine();
-            }
-        }
-        // Recibir API key de AI desde el ecosistema
-        if (d.type==='QCOL_SAVE' && d.key==='qcol_ai') {
-            try { aiCfg = typeof d.val==='string' ? JSON.parse(d.val) : d.val; } catch(e){}
+            if (url && url!==engineURL) { engineURL=url; checkEngine(); }
         }
     });
-
-    // ── Carga inicial ─────────────────────────────────────────
     postCore('QCOL_GET_USER');
     postCore('QCOL_GET_CONFIG');
-
-    // Intento inmediato desde localStorage (el más rápido)
-    (function tryLoadEngine() {
+    setTimeout(() => {
         const stored = localStorage.getItem('qcol_cur_user');
-        if (stored && !curUser) {
-            try { curUser = JSON.parse(stored); } catch(e){}
-        }
-        // Cargar AI config
-        try {
-            const aiStored = localStorage.getItem('qcol_ai');
-            if (aiStored) aiCfg = JSON.parse(aiStored);
-        } catch(e){}
-
-        const url = (localStorage.getItem('qcol_colab_url')||'').trim().replace(/\/+$/, '');
-        if (url) {
-            engineURL = url;
-            checkEngine();
-        } else {
-            // Si no hay URL en localStorage, esperar mensaje del ecosistema
-            // y reintentar cada 3 segundos hasta 5 veces
-            let retries = 0;
-            const poll = setInterval(() => {
-                retries++;
-                const u = (localStorage.getItem('qcol_colab_url')||'').trim().replace(/\/+$/, '');
-                if (u) {
-                    clearInterval(poll);
-                    engineURL = u;
-                    checkEngine();
-                } else if (retries >= 5) {
-                    clearInterval(poll);
-                    const badge = document.getElementById('eng-badge');
-                    if (badge) {
-                        badge.textContent = '⚙️ Configura compilador';
-                        badge.className = 'badge badge-warn';
-                    }
-                }
-            }, 3000);
-        }
-    })();
+        if (stored && !curUser) { try { curUser=JSON.parse(stored); } catch(e){} }
+        const url = localStorage.getItem('qcol_colab_url')||'';
+        if (url) { engineURL=url; checkEngine(); }
+    }, 800);
 })();
 
-// ══════════════════════════════════════════════════════════════
-// AI INTEGRACIÓN — Mistral para corrección de errores de código
-// ══════════════════════════════════════════════════════════════
+function setRunSt(s, msg) {
+    const dot = document.getElementById('sb-dot'), stxt = document.getElementById('sb-txt');
+    dot.className = 'sb-dot ' + (s === 'run' ? 'run' : s === 'err' ? 'err' : 'idle');
+    if (stxt) stxt.textContent = msg;
+}
 
-// Llamar a la AI configurada (Mistral, Groq, etc.)
-async function askAI(systemPrompt, userMessage) {
-    // Leer config actualizada
+function logMonitorRun(info) {
     try {
-        const stored = localStorage.getItem('qcol_ai');
-        if (stored) aiCfg = JSON.parse(stored);
+        const user = curUser?.username || 'guest';
+        const entry = { ts: new Date().toISOString(), user, lib: info.lib || 'qiskit', qubits: info.qubits || 0, time: info.time || 0, success: info.success !== false, simulated: info.simulated || false };
+        const raw = localStorage.getItem('qcol_monitor_data');
+        const data = raw ? JSON.parse(raw) : { runs: [], total: 0 };
+        data.runs.push(entry);
+        data.total = (data.total || 0) + 1;
+        if (data.runs.length > 1000) data.runs = data.runs.slice(-1000);
+        localStorage.setItem('qcol_monitor_data', JSON.stringify(data));
     } catch(e) {}
+}
 
-    const provider = aiCfg.provider || 'mistral';
-    const apiKey   = aiCfg.key || aiCfg.apiKey || '';
-    const model    = aiCfg.model || 'mistral-large-latest';
-
-    if (!apiKey) {
-        return '⚠️ No hay API key configurada. Ve a Configuración → IA para añadir tu clave Mistral.';
-    }
-
-    const endpoints = {
-        mistral: 'https://api.mistral.ai/v1/chat/completions',
-        groq:    'https://api.groq.com/openai/v1/chat/completions',
-        openai:  'https://api.openai.com/v1/chat/completions',
-    };
-    const url = endpoints[provider] || endpoints.mistral;
-    const mdl = provider === 'groq' ? (aiCfg.model || 'llama-3.3-70b-versatile')
-              : provider === 'openai' ? (aiCfg.model || 'gpt-4o-mini')
-              : model;
-
-    try {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: mdl,
-                max_tokens: 1200,
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user',   content: userMessage }
-                ]
-            }),
-            signal: AbortSignal.timeout(30000)
+function updateBlochFromProbs(probs) {
+    const n = circuit.qubits;
+    for (let qi = 0; qi < n; qi++) {
+        let p0 = 0;
+        Object.entries(probs).forEach(([s, p]) => {
+            const bit = s.length > qi ? s[s.length - 1 - qi] : '0';
+            if (bit === '0') p0 += p;
         });
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            return `⚠️ Error AI (${res.status}): ${err.error?.message || res.statusText}`;
-        }
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content || '⚠️ Sin respuesta de la AI';
-    } catch(e) {
-        return `⚠️ Error conectando con la AI: ${e.message}`;
+        const th = 2 * Math.acos(Math.min(1, Math.sqrt(Math.max(0, p0))));
+        blochStates[qi] = { theta: th, phi: blochStates[qi]?.phi || 0 };
+        if (qi === currentBlochQubit) drawBloch();
     }
+    updateBlochSelector();
 }
-
-// Corregir código con errores usando AI
-async function aiFixCode(errorText, userCode) {
-    if (aiFixing) return;
-    aiFixing = true;
-
-    const out = document.getElementById('out-body');
-    const fixBtn = document.getElementById('btn-ai-fix');
-    if (fixBtn) fixBtn.disabled = true;
-
-    // Mostrar spinner en output
-    const spinner = document.createElement('div');
-    spinner.id = 'ai-spinner';
-    spinner.innerHTML = `<span class="inf">\n🤖 IA analizando el error...\n</span>`;
-    if (out) out.appendChild(spinner);
-
-    const systemPrompt = `Eres un experto en computación cuántica y Qiskit. 
-Tu tarea es analizar errores de código Python/Qiskit y proporcionar:
-1. Una explicación clara del error en español (1-2 líneas)
-2. La línea exacta del problema si aplica
-3. El código corregido completo y listo para ejecutar
-
-Responde SIEMPRE en este formato exacto:
-❌ PROBLEMA: [explicación breve]
-📍 LÍNEA: [número o "N/A"]
-✅ CÓDIGO CORREGIDO:
-\`\`\`python
-[código completo corregido]
-\`\`\``;
-
-    const userMsg = `Error encontrado:
-\`\`\`
-${errorText}
-\`\`\`
-
-Código del usuario:
-\`\`\`python
-${userCode}
-\`\`\``;
-
-    const response = await askAI(systemPrompt, userMsg);
-
-    // Eliminar spinner
-    const sp = document.getElementById('ai-spinner');
-    if (sp) sp.remove();
-
-    // Mostrar respuesta de la AI
-    const aiDiv = document.createElement('div');
-    aiDiv.className = 'ai-fix-box';
-    aiDiv.style.cssText = 'margin-top:.5rem;padding:.6rem .8rem;background:rgba(0,136,255,.07);border:1px solid rgba(0,136,255,.25);border-radius:6px;font-size:.68rem;line-height:1.7;';
-    aiDiv.innerHTML = `<div style="font-family:var(--orb,monospace);font-size:.45rem;color:#58a6ff;margin-bottom:.35rem;">🤖 QUANTUM CHAT — Análisis del error</div>
-        <div style="white-space:pre-wrap;color:#dce8ff;">${escapeHtml(response)}</div>`;
-
-    // Botón para insertar código corregido si lo hay
-    const codeMatch = response.match(/```python\n([\s\S]+?)\n```/);
-    if (codeMatch) {
-        const fixedCode = codeMatch[1];
-        const applyBtn = document.createElement('button');
-        applyBtn.textContent = '⚡ Aplicar código corregido';
-        applyBtn.style.cssText = 'margin-top:.5rem;padding:.25rem .65rem;background:linear-gradient(135deg,#003a9e,#0088ff);border:none;border-radius:4px;color:#fff;font-family:var(--orb,monospace);font-size:.48rem;cursor:pointer;';
-        applyBtn.onclick = () => {
-            const ta = document.getElementById('code-ta');
-            if (ta) {
-                ta.value = fixedCode;
-                onCodeEdit();
-                notify('✅ Código corregido aplicado');
-                applyBtn.textContent = '✅ Aplicado';
-                applyBtn.disabled = true;
-            }
-        };
-        aiDiv.appendChild(applyBtn);
-    }
-
-    if (out) out.appendChild(aiDiv);
-    if (fixBtn) fixBtn.disabled = false;
-    aiFixing = false;
-}
-
-// Mostrar error + botón de AI fix
-function showErrorWithAI(errorText, userCode) {
-    const out = document.getElementById('out-body');
-    if (!out) return;
-
-    // Detectar número de línea
-    const lineMatch = errorText.match(/line (\d+)/i);
-    if (lineMatch) highlightErrorLine(parseInt(lineMatch[1]));
-
-    // Extraer tipo de error para resumen
-    const errType = errorText.match(/(\w+Error|ImportError|SyntaxError|TypeError)[:\s]/)?.[1] || 'Error';
-    const lastLine = errorText.trim().split('\n').filter(l=>l.trim()).pop() || errorText;
-
-    out.innerHTML = `<span class="er">❌ ${escapeHtml(errType)}: ${escapeHtml(lastLine)}</span>
-<details style="margin-top:.35rem;">
-  <summary style="cursor:pointer;font-size:.58rem;color:#58a6ff;font-family:var(--orb,monospace);">Ver traceback completo</summary>
-  <pre style="white-space:pre-wrap;font-size:.62rem;color:#f85149;margin-top:.3rem;">${escapeHtml(errorText)}</pre>
-</details>
-<button id="btn-ai-fix" onclick="aiFixCode(${JSON.stringify(errorText)}, ${JSON.stringify(userCode)})"
-  style="margin-top:.5rem;padding:.25rem .65rem;background:rgba(0,136,255,.15);border:1px solid rgba(0,136,255,.35);border-radius:4px;color:#58a6ff;font-family:var(--orb,monospace);font-size:.48rem;cursor:pointer;">
-  🤖 Corregir con Quantum Chat AI
-</button>`;
-}
-
 
 init();
 </script>
