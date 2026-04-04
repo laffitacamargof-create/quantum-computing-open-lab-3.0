@@ -108,6 +108,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
   <button class="tab" onclick="showTab('colab')">🤗 Compilador HuggingFace</button>
   <button class="tab" onclick="showTab('github')">⬡ GitHub</button>
   <button class="tab" onclick="showTab('ai')">🤖 IA</button>
+  <button class="tab" onclick="showTab('iaresolver')">🧠 IA Resolver</button>
   <button class="tab" onclick="showTab('users')">👥 Usuarios</button>
   <button class="tab" onclick="showTab('content')">📂 Contenido</button>
   <button class="tab" onclick="showTab('config')">⚙️ Sistema</button>
@@ -128,43 +129,43 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
           <td style="font-size:.62rem;color:var(--mu);">Núcleo — une todo el ecosistema</td>
           <td><span class="rb rba">ACTIVO</span></td>
           <td><button class="bsm" onclick="downloadModule('core')">📥 Core</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Proyectos</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-projects.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks desde GitHub</td>
           <td><span class="rb" id="st-projects" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('projects')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Arquitecto</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Editor Qiskit · Cirq · QuTiP + GPU HuggingFace</td>
           <td><span class="rb" id="st-architect" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Arquitecto Pro</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect-pro.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks completos — Admin+</td>
           <td><span class="rb" id="st-archpro" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect-pro')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Librería</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-library.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Recursos educativos desde GitHub</td>
           <td><span class="rb" id="st-library" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('library')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Cuenta</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-account.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Perfil y circuitos guardados</td>
           <td><span class="rb" id="st-account" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('account')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Ayuda</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-help.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Documentación del ecosistema</td>
           <td><span class="rb" id="st-help" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('help')">📥</button></td>
-        </tr>
+         </tr>
       </tbody>
     </table>
     <div class="btn-row" style="margin-top:.8rem;">
@@ -466,6 +467,70 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
       <textarea class="fi" id="ai-prompt" rows="5">Eres el asistente de QCOL (Quantum Computing Open Lab), creado por Franci Laffita Camargo, estudiante de Física Nuclear. Ayudas con Qiskit, Cirq, PennyLane, QuTiP, circuitos cuánticos y física cuántica. Responde en español, de forma concisa y técnicamente precisa.</textarea>
     </div>
     <div class="btn-row"><button class="btn btn-pri" onclick="saveAI()">💾 Guardar prompt</button></div>
+  </div>
+</div>
+
+<!-- ════════════ IA RESOLVER (NUEVO) ════════════ -->
+<div class="panel" id="tab-iaresolver">
+  <div class="sec">
+    <div class="sec-title">🧠 IA Resolver — Clasificación automática de errores</div>
+    <div class="alert alert-info">
+      Este módulo permite al editor <strong>Arquitecto Cuántico</strong> clasificar errores de código usando Mistral 3.
+      Los atributos clasificados como "innecesarios" se ignorarán permanentemente en todo el ecosistema.
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div class="fg">
+          <label class="fl">🔑 API Key de Mistral</label>
+          <input class="fi" id="mistral-key" type="password" placeholder="Ingresa tu API key de Mistral">
+          <div style="font-size:.58rem;color:var(--mu);margin-top:.25rem;">
+            Obtén tu clave gratis en <a onclick="window.open('https://console.mistral.ai','_blank')" style="color:var(--gr);cursor:pointer;">console.mistral.ai</a> → API Keys → Create
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-pri" onclick="saveMistralKey()">💾 Guardar API Key</button>
+        </div>
+      </div>
+      <div>
+        <div class="tog-row">
+          <div>
+            <div class="tog-name">🧠 Clasificación automática de errores</div>
+            <div class="tog-desc">Permite a Mistral 3 clasificar errores y silenciar los innecesarios</div>
+          </div>
+          <label class="tog">
+            <input type="checkbox" id="mistral-toggle">
+            <span class="tog-sl"></span>
+          </label>
+        </div>
+        <div class="status-row">
+          <div class="sdot" id="mistral-dot"></div>
+          <div class="stxt" id="mistral-status">Cargando...</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ok" onclick="syncIgnoredAttrsWithCloud()">☁️ Sincronizar con la nube</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">📊 Estadísticas de llamadas a Mistral</div>
+    <div class="status-row">
+      <div class="sdot ok"></div>
+      <div class="stxt" id="mistral-calls-count">0 llamadas realizadas</div>
+      <button class="bsm" onclick="resetMistralCalls()" style="margin-left:auto;">Reiniciar contador</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">📋 Atributos ignorados permanentemente</div>
+    <div class="alert alert-info">
+      Estos atributos/métodos han sido clasificados como <strong>innecesarios</strong> por Mistral y serán ignorados en el editor.
+    </div>
+    <div id="ignored-attrs-table" style="font-size:.65rem;color:var(--mu);">
+      Cargando lista...
+    </div>
   </div>
 </div>
 
@@ -782,6 +847,10 @@ function showTab(id) {
   event.target.classList.add('active');
   if (id === 'users') renderUsers();
   if (id === 'content') renderProjs();
+  if (id === 'iaresolver') {
+    loadIgnoredAttrsTable();
+    updateMistralUI();
+  }
   loadSaved();
 }
 
@@ -817,6 +886,13 @@ function loadSaved() {
     document.getElementById('plt-title').value = cfg.authorTitle || '';
     document.getElementById('plt-version').value = cfg.version || '2.0.0';
   }
+  // Cargar datos de IA Resolver
+  const mistralKey = localStorage.getItem('qcol_mistral_key') || '';
+  if (document.getElementById('mistral-key')) document.getElementById('mistral-key').value = mistralKey;
+  const toggle = document.getElementById('mistral-toggle');
+  if (toggle) toggle.checked = localStorage.getItem('qcol_mistral_enabled') === 'true';
+  updateMistralUI();
+  loadIgnoredAttrsTable();
 }
 
 // ══ HELPERS ══
@@ -862,10 +938,6 @@ function saveColab() {
   notify('✅ URL del compilador guardada');
   addSysLog('Compilador HuggingFace URL guardada', 'ok');
 }
-
-// copyColabCode removed - using HuggingFace
-
-// downloadColabNb removed — usando HuggingFace
 
 function downloadTemplate(lib) {
   const installs = {
@@ -1160,6 +1232,162 @@ async function testAI() {
   }
 }
 
+// ══ IA RESOLVER — NUEVAS FUNCIONES ══
+function saveMistralKey() {
+  const key = document.getElementById('mistral-key').value.trim();
+  localStorage.setItem('qcol_mistral_key', key);
+  notify('✅ API Key de Mistral guardada');
+  addSysLog('Mistral API key actualizada', 'ok');
+  updateMistralUI();
+}
+
+function toggleMistralEnabled() {
+  const enabled = document.getElementById('mistral-toggle').checked;
+  localStorage.setItem('qcol_mistral_enabled', enabled);
+  notify(enabled ? '🧠 Clasificación automática activada' : '🧠 Clasificación automática desactivada');
+  addSysLog('Mistral clasificación: ' + (enabled ? 'activada' : 'desactivada'), 'info');
+  updateMistralUI();
+}
+
+function updateMistralUI() {
+  const enabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
+  const hasKey = !!localStorage.getItem('qcol_mistral_key');
+  const dot = document.getElementById('mistral-dot');
+  const status = document.getElementById('mistral-status');
+  if (dot) {
+    if (enabled && hasKey) dot.className = 'sdot ok';
+    else if (enabled && !hasKey) dot.className = 'sdot warn';
+    else dot.className = 'sdot off';
+  }
+  if (status) {
+    if (enabled && hasKey) status.textContent = '✅ Activo · Clasificando errores automáticamente';
+    else if (enabled && !hasKey) status.textContent = '⚠️ Activado sin API key';
+    else status.textContent = '⏸️ Desactivado';
+  }
+  // Actualizar contador de llamadas
+  const calls = parseInt(localStorage.getItem('qcol_mistral_calls') || '0');
+  const callsSpan = document.getElementById('mistral-calls-count');
+  if (callsSpan) callsSpan.textContent = calls + ' llamadas realizadas';
+}
+
+function resetMistralCalls() {
+  localStorage.setItem('qcol_mistral_calls', '0');
+  notify('Contador de llamadas reiniciado');
+  updateMistralUI();
+}
+
+function loadIgnoredAttrsTable() {
+  const container = document.getElementById('ignored-attrs-table');
+  if (!container) return;
+  const attrsRaw = localStorage.getItem('qcol_ignored_attrs');
+  let attrs = [];
+  try {
+    attrs = attrsRaw ? JSON.parse(attrsRaw) : [];
+  } catch(e) { attrs = []; }
+  if (attrs.length === 0) {
+    container.innerHTML = '<div style="padding:.5rem;color:var(--mu);">No hay atributos ignorados aún.</div>';
+    return;
+  }
+  // Intentar cargar razones desde localStorage extendido (opcional)
+  let reasons = {};
+  const reasonsRaw = localStorage.getItem('qcol_ignored_attrs_reasons');
+  if (reasonsRaw) {
+    try { reasons = JSON.parse(reasonsRaw); } catch(e) {}
+  }
+  let html = `<table class="tbl" style="width:100%;">
+    <thead><tr><th>Atributo</th><th>Razón</th><th>Fecha</th><th></th></tr></thead>
+    <tbody>`;
+  for (let attr of attrs) {
+    const reason = reasons[attr] || 'Clasificado por Mistral';
+    const date = new Date().toLocaleDateString();
+    html += `<tr>
+      <td style="font-family:var(--mono);font-size:.65rem;">${escapeHtml(attr)}</td>
+      <td style="font-size:.6rem;color:var(--mu);">${escapeHtml(reason)}</td>
+      <td style="font-size:.6rem;">${date}</td>
+      <td><button class="bsm red" onclick="removeIgnoredAttr('${escapeHtml(attr)}')">✕ Revertir</button></td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function removeIgnoredAttr(attr) {
+  if (!confirm(`¿Eliminar "${attr}" de la lista de atributos ignorados?`)) return;
+  let attrs = [];
+  const raw = localStorage.getItem('qcol_ignored_attrs');
+  try { attrs = raw ? JSON.parse(raw) : []; } catch(e) {}
+  const newAttrs = attrs.filter(a => a !== attr);
+  localStorage.setItem('qcol_ignored_attrs', JSON.stringify(newAttrs));
+  // También eliminar razón asociada
+  let reasons = {};
+  const reasonsRaw = localStorage.getItem('qcol_ignored_attrs_reasons');
+  if (reasonsRaw) {
+    try { reasons = JSON.parse(reasonsRaw); } catch(e) {}
+    delete reasons[attr];
+    localStorage.setItem('qcol_ignored_attrs_reasons', JSON.stringify(reasons));
+  }
+  // Opcional: notificar a la nube (endpoint de eliminación)
+  const engineURL = localStorage.getItem('qcol_colab_url');
+  if (engineURL) {
+    fetch(engineURL.replace(/\/$/, '') + '/run/remove_ignored_attr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: [attr] })
+    }).catch(e => console.warn('No se pudo eliminar en la nube', e));
+  }
+  notify(`✅ "${attr}" eliminado de la lista de ignorados`);
+  loadIgnoredAttrsTable();
+  // Actualizar variable global en el editor (si está abierto)
+  postToCore('QCOL_REFRESH_IGNORED', { attrs: newAttrs });
+}
+
+async function syncIgnoredAttrsWithCloud() {
+  const engineURL = localStorage.getItem('qcol_colab_url');
+  if (!engineURL) {
+    notify('❌ No hay URL del compilador configurada');
+    return;
+  }
+  notify('☁️ Sincronizando con la nube...');
+  try {
+    const base = engineURL.replace(/\/+$/, '');
+    const res = await fetch(base + '/run/get_ignored_attrs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: [] })
+    });
+    if (res.ok) {
+      const raw = await res.json();
+      const cloudList = raw.data ? raw.data[0] : raw;
+      if (Array.isArray(cloudList)) {
+        // Fusionar con local
+        let local = [];
+        const localRaw = localStorage.getItem('qcol_ignored_attrs');
+        try { local = localRaw ? JSON.parse(localRaw) : []; } catch(e) {}
+        const merged = [...new Set([...local, ...cloudList])];
+        localStorage.setItem('qcol_ignored_attrs', JSON.stringify(merged));
+        loadIgnoredAttrsTable();
+        notify(`✅ Sincronizado: ${merged.length} atributos ignorados`);
+        postToCore('QCOL_REFRESH_IGNORED', { attrs: merged });
+      } else {
+        notify('⚠️ Formato de respuesta inesperado');
+      }
+    } else {
+      throw new Error('HTTP ' + res.status);
+    }
+  } catch(e) {
+    notify('❌ Error sincronizando: ' + e.message);
+  }
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
 // ══ USERS ══
 function renderUsers() {
   const tbody = document.getElementById('users-tbody');
@@ -1204,7 +1432,6 @@ function changeFounderPass() {
 }
 
 // ══ PROJECTS ══
-// Proyectos — comienzan VACÍOS. El fundador/admin los agrega desde aquí.
 function getProjs() { return JSON.parse(localStorage.getItem('qcol_projs')||'[]'); }
 function renderProjs() {
   const tbody=document.getElementById('projs-tbody');if(!tbody)return;
@@ -1253,15 +1480,13 @@ function saveSystem() {
   addSysLog('Sistema actualizado','ok');
 }
 
-// ══ MONITOR ══════════════════════════════════════
-
+// ══ MONITOR ══
 function getMonitorConfig(){
   return JSON.parse(localStorage.getItem('qcol_monitor_cfg')||'{"maxRuns":50,"maxQubits":20,"maxTime":60,"mode":"open"}');
 }
 function getMonitorData(){
   return JSON.parse(localStorage.getItem('qcol_monitor_data')||'{"runs":[],"total":0}');
 }
-
 function saveMonitorConfig(){
   const cfg = {
     maxRuns:   parseInt(document.getElementById('mon-max-runs')?.value||'50'),
@@ -1280,7 +1505,6 @@ function saveMonitorConfig(){
   addSysLog('Monitor: límites actualizados','ok');
   syncMonitorToGitHub();
 }
-
 function loadMonitorConfig(){
   const cfg = getMonitorConfig();
   const mr = document.getElementById('mon-max-runs');
@@ -1294,7 +1518,6 @@ function loadMonitorConfig(){
   if(mm) mm.value = cfg.mode||'open';
   if(eu) eu.textContent = (localStorage.getItem('qcol_colab_url')||'Sin configurar').substring(0,35)+'...';
 }
-
 function refreshMonitor(){
   const data = getMonitorData();
   const today = new Date().toDateString();
@@ -1308,7 +1531,6 @@ function refreshMonitor(){
   if(tot) tot.textContent = data.total||0;
   loadMonitorConfig();
 }
-
 function loadUserStats(){
   const data = getMonitorData();
   const runs = data.runs||[];
@@ -1317,7 +1539,6 @@ function loadUserStats(){
       '<div style="color:var(--mu);padding:.5rem;">Sin datos de uso aún.</div>';
     return;
   }
-  // Agrupar por usuario
   const byUser = {};
   runs.forEach(r=>{
     if(!byUser[r.user]) byUser[r.user]={runs:0,libs:{},lastRun:r.ts,qubits:0};
@@ -1344,11 +1565,10 @@ function loadUserStats(){
         <th style="padding:.3rem .5rem;text-align:left;color:var(--bl2);">Libs usadas</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Qubits</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Último uso</th>
-      </tr></thead>
+      </table></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
-
 function loadHistorial(){
   const data = getMonitorData();
   let runs = data.runs||[];
@@ -1365,7 +1585,6 @@ function loadHistorial(){
     return `[${d}] ${ok} <span style="color:var(--bl2);">${r.user}</span> · ${r.lib} · ${r.qubits}q · ${r.time}s`;
   }).join('\n');
 }
-
 function exportMonitorData(){
   const data = getMonitorData();
   const runs = data.runs||[];
@@ -1377,7 +1596,6 @@ function exportMonitorData(){
   a.download='qcol_monitor_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
   notify('📥 CSV exportado');
 }
-
 async function syncMonitorToGitHub(){
   const gh=getGH();
   if(!gh.token||!gh.user||!gh.repo){ notify('Configura el token GitHub primero'); return; }
@@ -1400,7 +1618,6 @@ async function syncMonitorToGitHub(){
     else{const e=await res.json();notify('❌ '+e.message);}
   }catch(e){notify('❌ '+e.message);}
 }
-
 async function loadMonitorFromGitHub(){
   const gh=getGH();
   if(!gh.user||!gh.repo) return;
@@ -1418,7 +1635,6 @@ async function loadMonitorFromGitHub(){
     }
   }catch(e){}
 }
-
 function clearMonitorData(){
   if(!confirm('¿Limpiar todo el historial de ejecuciones?')) return;
   localStorage.setItem('qcol_monitor_data',JSON.stringify({runs:[],total:0}));
@@ -1492,7 +1708,6 @@ function downloadAll() {
 
 function getCustomModules(){return JSON.parse(localStorage.getItem('qcol_custom_modules')||'[]');}
 function saveCustomModules(m){localStorage.setItem('qcol_custom_modules',JSON.stringify(m));}
-
 function createModule(){
   const name=document.getElementById('nm-name').value.trim();
   const id=document.getElementById('nm-id').value.trim().replace(/\s/g,'-').toLowerCase();
@@ -1510,7 +1725,6 @@ function createModule(){
   addSysLog('Módulo creado: '+name+' → '+file,'ok');
   ['nm-name','nm-id','nm-file','nm-icon','nm-desc'].forEach(k=>document.getElementById(k).value='');
 }
-
 function renderCustomModules(){
   const div=document.getElementById('custom-modules-list');if(!div)return;
   const mods=getCustomModules();
@@ -1524,7 +1738,6 @@ function renderCustomModules(){
     <button class="bsm red" onclick="deleteModule(${i})">✕ Eliminar</button>
   </div>`).join('');
 }
-
 function deleteModule(i){
   if(!confirm('¿Eliminar este módulo del menú?'))return;
   const mods=getCustomModules();mods.splice(i,1);saveCustomModules(mods);renderCustomModules();notify('Módulo eliminado del menú');addSysLog('Módulo eliminado','warn');
@@ -1541,6 +1754,11 @@ loadMonitorFromGitHub();
 
 // Pedir configuración al core
 postToCore('QCOL_GET_CONFIG');
+
+// Inicializar UI de IA Resolver
+const toggle = document.getElementById('mistral-toggle');
+if (toggle) toggle.addEventListener('change', toggleMistralEnabled);
+updateMistralUI();
 </script>
 </body>
 </html>
