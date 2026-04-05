@@ -566,7 +566,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
         <table class="tbl" id="users-tbl">
           <thead><tr><th>USUARIO</th><th>ROL</th><th>UPLOAD</th><th>ACCIONES</th></tr></thead>
           <tbody id="users-tbody">
-            <tr><td style="font-size:.62rem;">franci_laffita — Franci Laffita</td><td><span class="rb rbf">FUNDADOR</span></td><td style="color:var(--gr)">✅</td><td>—</td></tr>
+            <tr><td style="font-size:.62rem;">franci_laffita — Franci Laffita</td><td><span class="rb rbf">FUNDADOR</span></td><td style="color:var(--gr)">✅</td><td>—</td>
           </tbody>
         </table>
       </div>
@@ -984,7 +984,6 @@ async function testMistralConnection() {
   let apiKey = localStorage.getItem('qcol_mistral_key');
   if (!apiKey) { notify('❌ No hay API key configurada'); return; }
   apiKey = apiKey.trim();
-  // Forzar DeepSeek
   const url = 'https://api.deepseek.com/v1/chat/completions';
   const model = 'deepseek-chat';
   notify('🔄 Probando conexión con DeepSeek...');
@@ -998,16 +997,45 @@ async function testMistralConnection() {
         max_tokens: 5
       })
     });
-    const data = await res.json();
+
+    // CRÍTICO: leer como texto primero, nunca directo .json()
+    const rawText = await res.text();
+
+    // Si empieza con < es HTML = CORS bloqueado
+    if (rawText.trim().startsWith('<') || rawText.trim().startsWith('<!')) {
+      notify('❌ CORS bloqueado — DeepSeek no acepta llamadas directas desde el navegador en este contexto');
+      addSysLog('DeepSeek: bloqueado por CORS', 'err');
+      return;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch(parseErr) {
+      notify('❌ Respuesta no válida de DeepSeek: ' + rawText.slice(0, 80));
+      addSysLog('DeepSeek: respuesta no JSON', 'err');
+      return;
+    }
+
     if (res.ok) {
       notify('✅ Conexión exitosa con DeepSeek');
       addSysLog('DeepSeek: conexión probada correctamente', 'ok');
     } else {
-      throw new Error(data.error?.message || 'Error desconocido');
+      throw new Error(data.error?.message || `HTTP ${res.status}`);
     }
   } catch (err) {
-    notify('❌ Error conectando con DeepSeek: ' + err.message);
-    addSysLog('DeepSeek: error de conexión', 'err');
+    // Si es TypeError de CORS, dar mensaje específico
+    const isCors = err.message.includes('NetworkError') || 
+                   err.message.includes('Failed to fetch') ||
+                   err.message.includes('CORS') ||
+                   err.name === 'TypeError';
+    if (isCors) {
+      notify('❌ CORS bloqueado — la API de DeepSeek no permite llamadas directas desde el navegador. Esto es normal en GitHub Pages.');
+      addSysLog('DeepSeek: bloqueado por CORS (expected en GitHub Pages)', 'warn');
+    } else {
+      notify('❌ Error conectando con DeepSeek: ' + err.message);
+      addSysLog('DeepSeek: error de conexión — ' + err.message, 'err');
+    }
   }
 }
 
@@ -1453,7 +1481,16 @@ async function testAI() {
       body:JSON.stringify(body),
       signal:AbortSignal.timeout(15000)
     });
-    const d = await res.json();
+    const rawText = await res.text();
+    if (rawText.trim().startsWith('<') || rawText.trim().startsWith('<!')) {
+      notify('❌ CORS bloqueado — ' + ai.provider + ' no acepta llamadas directas desde el navegador');
+      return;
+    }
+    let d;
+    try { d = JSON.parse(rawText); } catch(e) {
+      notify('❌ Respuesta no válida: ' + rawText.slice(0, 60));
+      return;
+    }
     if (res.ok) {
       const resp = d.choices?.[0]?.message?.content?.trim()
                 || d.generated_text
@@ -1528,7 +1565,7 @@ function renderProjs() {
     <td><span class="rb ${p.type==='nb'?'rba':'rbu'}">${p.type==='nb'?'NB':'PDF'}</span></td>
     <td style="font-family:var(--mono);font-size:.58rem;color:var(--mu);">${p.id}</td>
     <td><button class="bsm red" onclick="delProj('${p.id}')">✕ Eliminar</button></td>
-   </tr>`).join('');
+  </tr>`).join('');
 }
 function addProj() {
   const t=document.getElementById('pj-t').value.trim(),id=document.getElementById('pj-id').value.trim().replace(/\s/g,'_').toLowerCase(),type=document.getElementById('pj-type').value,tags=document.getElementById('pj-tags').value.trim(),desc=document.getElementById('pj-desc').value.trim();
@@ -1638,7 +1675,7 @@ function loadUserStats(){
         <td style="padding:.3rem .5rem;color:var(--mu);">${Object.entries(s.libs).map(([l,n])=>l+':'+n).join(', ')}</td>
         <td style="padding:.3rem .5rem;color:var(--mu);">${s.qubits} max</td>
         <td style="padding:.3rem .5rem;color:var(--mu);">${new Date(s.lastRun).toLocaleDateString()}</td>
-       </tr>`).join('');
+      </tr>`).join('');
   document.getElementById('user-stats-table').innerHTML=`
     <table style="width:100%;border-collapse:collapse;font-size:.6rem;">
       <thead><tr style="background:rgba(0,0,0,.3);">
@@ -1647,7 +1684,7 @@ function loadUserStats(){
         <th style="padding:.3rem .5rem;text-align:left;color:var(--bl2);">Libs usadas</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Qubits</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Último uso</th>
-        </tr></thead>
+       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }

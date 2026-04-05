@@ -509,7 +509,7 @@ async function saveIgnoredAttrLocal(attr, reason) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// FUNCIÓN CLASIFICADORA CON DEEPSEEK (en lugar de Mistral)
+// FUNCIÓN CLASIFICADORA CON DEEPSEEK (en lugar de Mistral) — MODIFICADA PARA MANEJAR CORS
 // ═══════════════════════════════════════════════════════════════════════
 async function callMistralClassifier(errorPayload) {
     // Leer configuración desde localStorage (mismas claves, pero ahora usamos DeepSeek)
@@ -563,21 +563,40 @@ NO añadas nada más. Solo esa línea.`;
         });
         clearTimeout(timeoutId);
 
-        if (!response.ok) {
-            let errorText = '';
-            try {
-                const errorData = await response.json();
-                errorText = errorData.error?.message || JSON.stringify(errorData);
-            } catch(e) {
-                errorText = await response.text();
-            }
-            console.error('DeepSeek API error:', response.status, errorText);
+        // ── PROTECCIÓN CORS: leer texto primero, nunca .json() directo ──
+        const rawText = await response.text();
+
+        // Detectar bloqueo CORS (respuesta HTML en lugar de JSON)
+        if (rawText.trim().startsWith('<') || rawText.trim().startsWith('<!')) {
             const out = document.getElementById('out-body');
-            if (out) out.innerHTML += `<span class="er">❌ Error de DeepSeek (${response.status}): ${errorText}</span>\n`;
+            if (out) out.innerHTML += `<span class="er">❌ DeepSeek bloqueado por CORS — la API no acepta llamadas directas desde el navegador (GitHub Pages).<br><small>Esto es esperado. El sistema IA no puede funcionar sin un proxy. El error original se mostrará.</small></span>\n`;
             return null;
         }
 
-        const data = await response.json();
+        // Detectar respuesta de error HTTP antes de parsear
+        if (!response.ok) {
+            let errorMsg = '';
+            try {
+                const errData = JSON.parse(rawText);
+                errorMsg = errData.error?.message || rawText.slice(0, 200);
+            } catch(e) {
+                errorMsg = rawText.slice(0, 200);
+            }
+            const out = document.getElementById('out-body');
+            if (out) out.innerHTML += `<span class="er">❌ Error de DeepSeek (${response.status}): ${errorMsg}</span>\n`;
+            return null;
+        }
+
+        // Parsear JSON de forma segura
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch(parseErr) {
+            const out = document.getElementById('out-body');
+            if (out) out.innerHTML += `<span class="er">❌ Respuesta no válida de DeepSeek: ${rawText.slice(0, 100)}</span>\n`;
+            return null;
+        }
+
         const content = data.choices?.[0]?.message?.content?.trim() || '';
         console.log('DeepSeek respuesta cruda:', content);
 
