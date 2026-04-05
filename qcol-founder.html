@@ -129,43 +129,43 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
           <td style="font-size:.62rem;color:var(--mu);">Núcleo — une todo el ecosistema</td>
           <td><span class="rb rba">ACTIVO</span></td>
           <td><button class="bsm" onclick="downloadModule('core')">📥 Core</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Proyectos</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-projects.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks desde GitHub</td>
           <td><span class="rb" id="st-projects" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('projects')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Arquitecto</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Editor Qiskit · Cirq · QuTiP + GPU HuggingFace</td>
           <td><span class="rb" id="st-architect" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Arquitecto Pro</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect-pro.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks completos — Admin+</td>
           <td><span class="rb" id="st-archpro" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect-pro')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Librería</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-library.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Recursos educativos desde GitHub</td>
           <td><span class="rb" id="st-library" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('library')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Cuenta</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-account.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Perfil y circuitos guardados</td>
           <td><span class="rb" id="st-account" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('account')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Ayuda</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-help.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Documentación del ecosistema</td>
           <td><span class="rb" id="st-help" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('help')">📥</button></td>
-         </tr>
+        </tr>
       </tbody>
     </table>
     <div class="btn-row" style="margin-top:.8rem;">
@@ -475,8 +475,8 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
   <div class="sec">
     <div class="sec-title">🧠 IA Resolver — Clasificación automática de errores</div>
     <div class="alert alert-info">
-      Este módulo permite al editor <strong>Arquitecto Cuántico</strong> clasificar errores de código usando Mistral 3.
-      Los atributos clasificados como "innecesarios" se ignorarán permanentemente en todo el ecosistema.
+      El editor <strong>Arquitecto Cuántico</strong> puede consultar a <strong>Mistral 3</strong> para clasificar atributos no reconocidos durante la sincronización.
+      Los atributos considerados <strong>innecesarios</strong> para dibujar el circuito se ignorarán permanentemente, evitando futuras consultas.
     </div>
 
     <div class="grid2">
@@ -488,8 +488,21 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
             Obtén tu clave gratis en <a onclick="window.open('https://console.mistral.ai','_blank')" style="color:var(--gr);cursor:pointer;">console.mistral.ai</a> → API Keys → Create
           </div>
         </div>
+        <div class="fg">
+          <label class="fl">🤖 Modelo de Mistral</label>
+          <select class="fi" id="mistral-model">
+            <option value="mistral-large-latest">Mistral Large (mejor calidad)</option>
+            <option value="mistral-small-latest">Mistral Small (más rápido)</option>
+            <option value="open-mistral-nemo">Mistral Nemo (rápido y eficiente)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">⏱️ Timeout (segundos)</label>
+          <input class="fi" id="mistral-timeout" type="number" min="5" max="30" value="10" style="width:100px;">
+        </div>
         <div class="btn-row">
-          <button class="btn btn-pri" onclick="saveMistralKey()">💾 Guardar API Key</button>
+          <button class="btn btn-pri" onclick="saveMistralSettings()">💾 Guardar configuración</button>
+          <button class="btn btn-ok" onclick="testMistralConnection()">🧪 Probar conexión</button>
         </div>
       </div>
       <div>
@@ -509,7 +522,16 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
         </div>
         <div class="btn-row">
           <button class="btn btn-ok" onclick="syncIgnoredAttrsWithCloud()">☁️ Sincronizar con la nube</button>
+          <button class="btn btn-sec" onclick="resetMistralCalls()">🔄 Reiniciar contador</button>
         </div>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">📝 Prompt del sistema (opcional)</label>
+      <textarea class="fi" id="mistral-prompt" rows="4" placeholder="Deja en blanco para usar el prompt por defecto"></textarea>
+      <div style="font-size:.58rem;color:var(--mu);margin-top:.25rem;">
+        El prompt por defecto ya está optimizado para el Arquitecto Cuántico. Solo modifícalo si sabes lo que haces.
       </div>
     </div>
   </div>
@@ -527,6 +549,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
     <div class="sec-title">📋 Atributos ignorados permanentemente</div>
     <div class="alert alert-info">
       Estos atributos/métodos han sido clasificados como <strong>innecesarios</strong> por Mistral y serán ignorados en el editor.
+      Puedes eliminarlos de la lista si quieres que se reconsideren.
     </div>
     <div id="ignored-attrs-table" style="font-size:.65rem;color:var(--mu);">
       Cargando lista...
@@ -854,6 +877,165 @@ function showTab(id) {
   loadSaved();
 }
 
+// ══ CARGAR CONFIGURACIÓN DE MISTRAL ══
+function loadMistralSettings() {
+  const enabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
+  const key = localStorage.getItem('qcol_mistral_key') || '';
+  const model = localStorage.getItem('qcol_mistral_model') || 'mistral-large-latest';
+  const timeout = localStorage.getItem('qcol_mistral_timeout') || '10';
+  const prompt = localStorage.getItem('qcol_mistral_prompt') || '';
+  document.getElementById('mistral-toggle').checked = enabled;
+  document.getElementById('mistral-key').value = key;
+  document.getElementById('mistral-model').value = model;
+  document.getElementById('mistral-timeout').value = timeout;
+  document.getElementById('mistral-prompt').value = prompt;
+  updateMistralUI();
+}
+
+function saveMistralSettings() {
+  localStorage.setItem('qcol_mistral_enabled', document.getElementById('mistral-toggle').checked);
+  localStorage.setItem('qcol_mistral_key', document.getElementById('mistral-key').value.trim());
+  localStorage.setItem('qcol_mistral_model', document.getElementById('mistral-model').value);
+  localStorage.setItem('qcol_mistral_timeout', document.getElementById('mistral-timeout').value);
+  localStorage.setItem('qcol_mistral_prompt', document.getElementById('mistral-prompt').value);
+  updateMistralUI();
+  notify('✅ Configuración de Mistral guardada');
+  addSysLog('Mistral: configuración actualizada', 'ok');
+}
+
+async function testMistralConnection() {
+  const apiKey = localStorage.getItem('qcol_mistral_key');
+  if (!apiKey) { notify('❌ No hay API key configurada'); return; }
+  const model = localStorage.getItem('qcol_mistral_model') || 'mistral-large-latest';
+  notify('🔄 Probando conexión con Mistral...');
+  try {
+    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: model,
+        messages: [{ role: 'user', content: 'Di "OK"' }],
+        max_tokens: 5
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      notify('✅ Conexión exitosa con Mistral');
+      addSysLog('Mistral: conexión probada correctamente', 'ok');
+    } else {
+      throw new Error(data.error?.message || 'Error desconocido');
+    }
+  } catch (err) {
+    notify('❌ Error conectando con Mistral: ' + err.message);
+    addSysLog('Mistral: error de conexión', 'err');
+  }
+}
+
+function updateMistralUI() {
+  const enabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
+  const hasKey = !!localStorage.getItem('qcol_mistral_key');
+  const dot = document.getElementById('mistral-dot');
+  const status = document.getElementById('mistral-status');
+  if (dot) {
+    if (enabled && hasKey) dot.className = 'sdot ok';
+    else if (enabled && !hasKey) dot.className = 'sdot warn';
+    else dot.className = 'sdot off';
+  }
+  if (status) {
+    if (enabled && hasKey) status.textContent = '✅ Activo · Clasificando errores automáticamente';
+    else if (enabled && !hasKey) status.textContent = '⚠️ Activado sin API key';
+    else status.textContent = '⏸️ Desactivado';
+  }
+  const calls = parseInt(localStorage.getItem('qcol_mistral_calls') || '0');
+  const callsSpan = document.getElementById('mistral-calls-count');
+  if (callsSpan) callsSpan.textContent = calls + ' llamadas realizadas';
+  loadIgnoredAttrsTable();
+}
+
+function loadIgnoredAttrsTable() {
+  const container = document.getElementById('ignored-attrs-table');
+  if (!container) return;
+  let attrs = [];
+  const raw = localStorage.getItem('qcol_ignored_attrs');
+  try { attrs = raw ? JSON.parse(raw) : []; } catch(e) { attrs = []; }
+  if (attrs.length === 0) {
+    container.innerHTML = '<div style="padding:.5rem;color:var(--mu);">No hay atributos ignorados aún.</div>';
+    return;
+  }
+  let reasons = {};
+  const reasonsRaw = localStorage.getItem('qcol_ignored_attrs_reasons');
+  if (reasonsRaw) try { reasons = JSON.parse(reasonsRaw); } catch(e) {}
+  let html = `<table class="tbl" style="width:100%;">
+    <thead><tr><th>Atributo</th><th>Razón</th><th>Fecha</th><th></th></tr></thead>
+    <tbody>`;
+  for (let attr of attrs) {
+    const reason = reasons[attr] || 'Clasificado por Mistral';
+    const date = new Date().toLocaleDateString();
+    html += `<tr>
+      <td style="font-family:var(--mono);font-size:.65rem;">${escapeHtml(attr)}</td>
+      <td style="font-size:.6rem;color:var(--mu);">${escapeHtml(reason)}</td>
+      <td style="font-size:.6rem;">${date}</td>
+      <td><button class="bsm red" onclick="removeIgnoredAttr('${escapeHtml(attr)}')">✕ Revertir</button></td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function removeIgnoredAttr(attr) {
+  if (!confirm(`¿Eliminar "${attr}" de la lista de atributos ignorados?`)) return;
+  let attrs = [];
+  const raw = localStorage.getItem('qcol_ignored_attrs');
+  try { attrs = raw ? JSON.parse(raw) : []; } catch(e) {}
+  const newAttrs = attrs.filter(a => a !== attr);
+  localStorage.setItem('qcol_ignored_attrs', JSON.stringify(newAttrs));
+  let reasons = {};
+  const reasonsRaw = localStorage.getItem('qcol_ignored_attrs_reasons');
+  if (reasonsRaw) try { reasons = JSON.parse(reasonsRaw); } catch(e) {}
+  delete reasons[attr];
+  localStorage.setItem('qcol_ignored_attrs_reasons', JSON.stringify(reasons));
+  loadIgnoredAttrsTable();
+  notify(`✅ "${attr}" eliminado de la lista de ignorados`);
+  window.parent.postMessage({ type: 'QCOL_REFRESH_IGNORED', attrs: newAttrs }, '*');
+}
+
+function resetMistralCalls() {
+  localStorage.setItem('qcol_mistral_calls', '0');
+  updateMistralUI();
+  notify('Contador de llamadas reiniciado');
+}
+
+function syncIgnoredAttrsWithCloud() {
+  const engineURL = localStorage.getItem('qcol_colab_url');
+  if (!engineURL) {
+    notify('❌ No hay URL del compilador configurada');
+    return;
+  }
+  notify('☁️ Sincronizando con la nube...');
+  fetch(engineURL.replace(/\/$/, '') + '/run/get_ignored_attrs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: [] })
+  })
+  .then(res => res.json())
+  .then(raw => {
+    const cloudList = raw.data ? raw.data[0] : raw;
+    if (Array.isArray(cloudList)) {
+      let local = [];
+      const localRaw = localStorage.getItem('qcol_ignored_attrs');
+      try { local = localRaw ? JSON.parse(localRaw) : []; } catch(e) {}
+      const merged = [...new Set([...local, ...cloudList])];
+      localStorage.setItem('qcol_ignored_attrs', JSON.stringify(merged));
+      loadIgnoredAttrsTable();
+      notify(`✅ Sincronizado: ${merged.length} atributos ignorados`);
+      window.parent.postMessage({ type: 'QCOL_REFRESH_IGNORED', attrs: merged }, '*');
+    } else {
+      notify('⚠️ Formato de respuesta inesperado');
+    }
+  })
+  .catch(e => notify('❌ Error sincronizando: ' + e.message));
+}
+
 function loadSaved() {
   const gh = getGH();
   const el = document.getElementById('gh-user');
@@ -886,13 +1068,17 @@ function loadSaved() {
     document.getElementById('plt-title').value = cfg.authorTitle || '';
     document.getElementById('plt-version').value = cfg.version || '2.0.0';
   }
-  // Cargar datos de IA Resolver
-  const mistralKey = localStorage.getItem('qcol_mistral_key') || '';
-  if (document.getElementById('mistral-key')) document.getElementById('mistral-key').value = mistralKey;
-  const toggle = document.getElementById('mistral-toggle');
-  if (toggle) toggle.checked = localStorage.getItem('qcol_mistral_enabled') === 'true';
-  updateMistralUI();
-  loadIgnoredAttrsTable();
+  // Inicializar valores por defecto de Mistral
+  if (localStorage.getItem('qcol_mistral_enabled') === null) {
+    localStorage.setItem('qcol_mistral_enabled', 'true');
+  }
+  if (localStorage.getItem('qcol_mistral_model') === null) {
+    localStorage.setItem('qcol_mistral_model', 'mistral-large-latest');
+  }
+  if (localStorage.getItem('qcol_mistral_timeout') === null) {
+    localStorage.setItem('qcol_mistral_timeout', '10');
+  }
+  loadMistralSettings();
 }
 
 // ══ HELPERS ══
@@ -1232,162 +1418,6 @@ async function testAI() {
   }
 }
 
-// ══ IA RESOLVER — NUEVAS FUNCIONES ══
-function saveMistralKey() {
-  const key = document.getElementById('mistral-key').value.trim();
-  localStorage.setItem('qcol_mistral_key', key);
-  notify('✅ API Key de Mistral guardada');
-  addSysLog('Mistral API key actualizada', 'ok');
-  updateMistralUI();
-}
-
-function toggleMistralEnabled() {
-  const enabled = document.getElementById('mistral-toggle').checked;
-  localStorage.setItem('qcol_mistral_enabled', enabled);
-  notify(enabled ? '🧠 Clasificación automática activada' : '🧠 Clasificación automática desactivada');
-  addSysLog('Mistral clasificación: ' + (enabled ? 'activada' : 'desactivada'), 'info');
-  updateMistralUI();
-}
-
-function updateMistralUI() {
-  const enabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
-  const hasKey = !!localStorage.getItem('qcol_mistral_key');
-  const dot = document.getElementById('mistral-dot');
-  const status = document.getElementById('mistral-status');
-  if (dot) {
-    if (enabled && hasKey) dot.className = 'sdot ok';
-    else if (enabled && !hasKey) dot.className = 'sdot warn';
-    else dot.className = 'sdot off';
-  }
-  if (status) {
-    if (enabled && hasKey) status.textContent = '✅ Activo · Clasificando errores automáticamente';
-    else if (enabled && !hasKey) status.textContent = '⚠️ Activado sin API key';
-    else status.textContent = '⏸️ Desactivado';
-  }
-  // Actualizar contador de llamadas
-  const calls = parseInt(localStorage.getItem('qcol_mistral_calls') || '0');
-  const callsSpan = document.getElementById('mistral-calls-count');
-  if (callsSpan) callsSpan.textContent = calls + ' llamadas realizadas';
-}
-
-function resetMistralCalls() {
-  localStorage.setItem('qcol_mistral_calls', '0');
-  notify('Contador de llamadas reiniciado');
-  updateMistralUI();
-}
-
-function loadIgnoredAttrsTable() {
-  const container = document.getElementById('ignored-attrs-table');
-  if (!container) return;
-  const attrsRaw = localStorage.getItem('qcol_ignored_attrs');
-  let attrs = [];
-  try {
-    attrs = attrsRaw ? JSON.parse(attrsRaw) : [];
-  } catch(e) { attrs = []; }
-  if (attrs.length === 0) {
-    container.innerHTML = '<div style="padding:.5rem;color:var(--mu);">No hay atributos ignorados aún.</div>';
-    return;
-  }
-  // Intentar cargar razones desde localStorage extendido (opcional)
-  let reasons = {};
-  const reasonsRaw = localStorage.getItem('qcol_ignored_attrs_reasons');
-  if (reasonsRaw) {
-    try { reasons = JSON.parse(reasonsRaw); } catch(e) {}
-  }
-  let html = `<table class="tbl" style="width:100%;">
-    <thead><tr><th>Atributo</th><th>Razón</th><th>Fecha</th><th></th></tr></thead>
-    <tbody>`;
-  for (let attr of attrs) {
-    const reason = reasons[attr] || 'Clasificado por Mistral';
-    const date = new Date().toLocaleDateString();
-    html += `<tr>
-      <td style="font-family:var(--mono);font-size:.65rem;">${escapeHtml(attr)}</td>
-      <td style="font-size:.6rem;color:var(--mu);">${escapeHtml(reason)}</td>
-      <td style="font-size:.6rem;">${date}</td>
-      <td><button class="bsm red" onclick="removeIgnoredAttr('${escapeHtml(attr)}')">✕ Revertir</button></td>
-    </tr>`;
-  }
-  html += `</tbody></table>`;
-  container.innerHTML = html;
-}
-
-function removeIgnoredAttr(attr) {
-  if (!confirm(`¿Eliminar "${attr}" de la lista de atributos ignorados?`)) return;
-  let attrs = [];
-  const raw = localStorage.getItem('qcol_ignored_attrs');
-  try { attrs = raw ? JSON.parse(raw) : []; } catch(e) {}
-  const newAttrs = attrs.filter(a => a !== attr);
-  localStorage.setItem('qcol_ignored_attrs', JSON.stringify(newAttrs));
-  // También eliminar razón asociada
-  let reasons = {};
-  const reasonsRaw = localStorage.getItem('qcol_ignored_attrs_reasons');
-  if (reasonsRaw) {
-    try { reasons = JSON.parse(reasonsRaw); } catch(e) {}
-    delete reasons[attr];
-    localStorage.setItem('qcol_ignored_attrs_reasons', JSON.stringify(reasons));
-  }
-  // Opcional: notificar a la nube (endpoint de eliminación)
-  const engineURL = localStorage.getItem('qcol_colab_url');
-  if (engineURL) {
-    fetch(engineURL.replace(/\/$/, '') + '/run/remove_ignored_attr', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: [attr] })
-    }).catch(e => console.warn('No se pudo eliminar en la nube', e));
-  }
-  notify(`✅ "${attr}" eliminado de la lista de ignorados`);
-  loadIgnoredAttrsTable();
-  // Actualizar variable global en el editor (si está abierto)
-  postToCore('QCOL_REFRESH_IGNORED', { attrs: newAttrs });
-}
-
-async function syncIgnoredAttrsWithCloud() {
-  const engineURL = localStorage.getItem('qcol_colab_url');
-  if (!engineURL) {
-    notify('❌ No hay URL del compilador configurada');
-    return;
-  }
-  notify('☁️ Sincronizando con la nube...');
-  try {
-    const base = engineURL.replace(/\/+$/, '');
-    const res = await fetch(base + '/run/get_ignored_attrs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: [] })
-    });
-    if (res.ok) {
-      const raw = await res.json();
-      const cloudList = raw.data ? raw.data[0] : raw;
-      if (Array.isArray(cloudList)) {
-        // Fusionar con local
-        let local = [];
-        const localRaw = localStorage.getItem('qcol_ignored_attrs');
-        try { local = localRaw ? JSON.parse(localRaw) : []; } catch(e) {}
-        const merged = [...new Set([...local, ...cloudList])];
-        localStorage.setItem('qcol_ignored_attrs', JSON.stringify(merged));
-        loadIgnoredAttrsTable();
-        notify(`✅ Sincronizado: ${merged.length} atributos ignorados`);
-        postToCore('QCOL_REFRESH_IGNORED', { attrs: merged });
-      } else {
-        notify('⚠️ Formato de respuesta inesperado');
-      }
-    } else {
-      throw new Error('HTTP ' + res.status);
-    }
-  } catch(e) {
-    notify('❌ Error sincronizando: ' + e.message);
-  }
-}
-
-function escapeHtml(str) {
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
-}
-
 // ══ USERS ══
 function renderUsers() {
   const tbody = document.getElementById('users-tbody');
@@ -1403,7 +1433,8 @@ function renderUsers() {
     r += `<tr><td style="font-size:.62rem;">${u.username}<br><span style="color:var(--mu);font-size:.58rem;">${u.name}</span></td>
       <td><span class="rb ${u.role==='admin'?'rba':'rbu'}">${u.role.toUpperCase()}</span></td>
       <td style="color:${u.canUpload?'var(--gr)':'var(--mu)'}">${u.canUpload?'✅':'❌'}</td>
-      <td>${rb}${upb}<button class="bsm red" onclick="delUser('${u.username}')">✕</button></td></tr>`;
+      <td>${rb}${upb}<button class="bsm red" onclick="delUser('${u.username}')">✕</button></td>
+    </tr>`;
   });
   tbody.innerHTML = r;
 }
@@ -1757,7 +1788,7 @@ postToCore('QCOL_GET_CONFIG');
 
 // Inicializar UI de IA Resolver
 const toggle = document.getElementById('mistral-toggle');
-if (toggle) toggle.addEventListener('change', toggleMistralEnabled);
+if (toggle) toggle.addEventListener('change', saveMistralSettings);
 updateMistralUI();
 </script>
 </body>
