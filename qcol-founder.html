@@ -129,43 +129,43 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
           <td style="font-size:.62rem;color:var(--mu);">Núcleo — une todo el ecosistema</td>
           <td><span class="rb rba">ACTIVO</span></td>
           <td><button class="bsm" onclick="downloadModule('core')">📥 Core</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Proyectos</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-projects.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks desde GitHub</td>
           <td><span class="rb" id="st-projects" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('projects')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Arquitecto</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Editor Qiskit · Cirq · QuTiP + GPU HuggingFace</td>
           <td><span class="rb" id="st-architect" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Arquitecto Pro</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect-pro.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks completos — Admin+</td>
           <td><span class="rb" id="st-archpro" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect-pro')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Librería</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-library.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Recursos educativos desde GitHub</td>
           <td><span class="rb" id="st-library" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('library')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Cuenta</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-account.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Perfil y circuitos guardados</td>
           <td><span class="rb" id="st-account" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('account')">📥</button></td>
-         </tr>
+        </tr>
         <tr>
           <td><strong>Ayuda</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-help.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Documentación del ecosistema</td>
           <td><span class="rb" id="st-help" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('help')">📥</button></td>
-         </tr>
+        </tr>
       </tbody>
     </table>
     <div class="btn-row" style="margin-top:.8rem;">
@@ -476,25 +476,24 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
   <div class="sec">
     <div class="sec-title">🧠 IA Resolver — Clasificación automática de errores</div>
     <div class="alert alert-info">
-      El editor <strong>Arquitecto Cuántico</strong> puede consultar a <strong>Mistral 3</strong> para clasificar atributos no reconocidos durante la sincronización.
+      El editor <strong>Arquitecto Cuántico</strong> puede consultar a <strong>DeepSeek</strong> para clasificar atributos no reconocidos durante la sincronización.
       Los atributos considerados <strong>innecesarios</strong> para dibujar el circuito se ignorarán permanentemente, evitando futuras consultas.
     </div>
 
     <div class="grid2">
       <div>
         <div class="fg">
-          <label class="fl">🔑 API Key de Mistral</label>
-          <input class="fi" id="mistral-key" type="password" placeholder="Ingresa tu API key de Mistral">
+          <label class="fl">🔑 API Key de DeepSeek</label>
+          <input class="fi" id="mistral-key" type="password" placeholder="Ingresa tu API key de DeepSeek">
           <div style="font-size:.58rem;color:var(--mu);margin-top:.25rem;">
-            Obtén tu clave gratis en <a onclick="window.open('https://console.mistral.ai','_blank')" style="color:var(--gr);cursor:pointer;">console.mistral.ai</a> → API Keys → Create
+            Obtén tu clave gratis en <a onclick="window.open('https://platform.deepseek.com/api_keys','_blank')" style="color:var(--gr);cursor:pointer;">platform.deepseek.com/api_keys</a>
           </div>
         </div>
         <div class="fg">
-          <label class="fl">🤖 Modelo de Mistral</label>
+          <label class="fl">🤖 Modelo de IA</label>
           <select class="fi" id="mistral-model">
-            <option value="mistral-large-latest">Mistral Large (mejor calidad)</option>
-            <option value="mistral-small-latest">Mistral Small (más rápido)</option>
-            <option value="open-mistral-nemo">Mistral Nemo (rápido y eficiente)</option>
+            <option value="deepseek-chat">DeepSeek Chat (recomendado)</option>
+            <option value="deepseek-coder">DeepSeek Coder</option>
           </select>
         </div>
         <div class="fg">
@@ -510,7 +509,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
         <div class="tog-row">
           <div>
             <div class="tog-name">🧠 Clasificación automática de errores</div>
-            <div class="tog-desc">Permite a Mistral 3 clasificar errores y silenciar los innecesarios</div>
+            <div class="tog-desc">Permite a DeepSeek clasificar errores y silenciar los innecesarios</div>
           </div>
           <label class="tog">
             <input type="checkbox" id="mistral-toggle">
@@ -538,7 +537,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
   </div>
 
   <div class="sec">
-    <div class="sec-title">📊 Estadísticas de llamadas a Mistral</div>
+    <div class="sec-title">📊 Estadísticas de llamadas a DeepSeek</div>
     <div class="status-row">
       <div class="sdot ok"></div>
       <div class="stxt" id="mistral-calls-count">0 llamadas realizadas</div>
@@ -549,7 +548,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
   <div class="sec">
     <div class="sec-title">📋 Atributos ignorados permanentemente</div>
     <div class="alert alert-info">
-      Estos atributos/métodos han sido clasificados como <strong>innecesarios</strong> por Mistral y serán ignorados en el editor.
+      Estos atributos/métodos han sido clasificados como <strong>innecesarios</strong> por DeepSeek y serán ignorados en el editor.
       Puedes eliminarlos de la lista si quieres que se reconsideren.
     </div>
     <div id="ignored-attrs-table" style="font-size:.65rem;color:var(--mu);">
@@ -955,11 +954,11 @@ function saveColab() {
   setTimeout(() => checkEngine(), 500);
 }
 
-// ══ CARGAR CONFIGURACIÓN DE MISTRAL ══
+// ══ CARGAR CONFIGURACIÓN DE MISTRAL (AHORA DEEPSEEK) ══
 function loadMistralSettings() {
   const enabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
   const key = localStorage.getItem('qcol_mistral_key') || '';
-  const model = localStorage.getItem('qcol_mistral_model') || 'mistral-large-latest';
+  const model = localStorage.getItem('qcol_mistral_model') || 'deepseek-chat';
   const timeout = localStorage.getItem('qcol_mistral_timeout') || '10';
   const prompt = localStorage.getItem('qcol_mistral_prompt') || '';
   document.getElementById('mistral-toggle').checked = enabled;
@@ -977,17 +976,20 @@ function saveMistralSettings() {
   localStorage.setItem('qcol_mistral_timeout', document.getElementById('mistral-timeout').value);
   localStorage.setItem('qcol_mistral_prompt', document.getElementById('mistral-prompt').value);
   updateMistralUI();
-  notify('✅ Configuración de Mistral guardada');
-  addSysLog('Mistral: configuración actualizada', 'ok');
+  notify('✅ Configuración de DeepSeek guardada');
+  addSysLog('DeepSeek: configuración actualizada', 'ok');
 }
 
 async function testMistralConnection() {
-  const apiKey = localStorage.getItem('qcol_mistral_key');
+  let apiKey = localStorage.getItem('qcol_mistral_key');
   if (!apiKey) { notify('❌ No hay API key configurada'); return; }
-  const model = localStorage.getItem('qcol_mistral_model') || 'mistral-large-latest';
-  notify('🔄 Probando conexión con Mistral...');
+  apiKey = apiKey.trim();
+  // Forzar DeepSeek
+  const url = 'https://api.deepseek.com/v1/chat/completions';
+  const model = 'deepseek-chat';
+  notify('🔄 Probando conexión con DeepSeek...');
   try {
-    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -998,14 +1000,14 @@ async function testMistralConnection() {
     });
     const data = await res.json();
     if (res.ok) {
-      notify('✅ Conexión exitosa con Mistral');
-      addSysLog('Mistral: conexión probada correctamente', 'ok');
+      notify('✅ Conexión exitosa con DeepSeek');
+      addSysLog('DeepSeek: conexión probada correctamente', 'ok');
     } else {
       throw new Error(data.error?.message || 'Error desconocido');
     }
   } catch (err) {
-    notify('❌ Error conectando con Mistral: ' + err.message);
-    addSysLog('Mistral: error de conexión', 'err');
+    notify('❌ Error conectando con DeepSeek: ' + err.message);
+    addSysLog('DeepSeek: error de conexión', 'err');
   }
 }
 
@@ -1047,7 +1049,7 @@ function loadIgnoredAttrsTable() {
     <thead><tr><th>Atributo</th><th>Razón</th><th>Fecha</th><th></th></tr></thead>
     <tbody>`;
   for (let attr of attrs) {
-    const reason = reasons[attr] || 'Clasificado por Mistral';
+    const reason = reasons[attr] || 'Clasificado por DeepSeek';
     const date = new Date().toLocaleDateString();
     html += `<tr>
       <td style="font-family:var(--mono);font-size:.65rem;">${escapeHtml(attr)}</td>
@@ -1056,7 +1058,8 @@ function loadIgnoredAttrsTable() {
       <td><button class="bsm red" onclick="removeIgnoredAttr('${escapeHtml(attr)}')">✕ Revertir</button></td>
     </tr>`;
   }
-  html += `</tbody></table>`;
+  html += `</tbody>
+  </table>`;
   container.innerHTML = html;
 }
 
@@ -1146,12 +1149,12 @@ function loadSaved() {
     document.getElementById('plt-title').value = cfg.authorTitle || '';
     document.getElementById('plt-version').value = cfg.version || '2.0.0';
   }
-  // Inicializar valores por defecto de Mistral
+  // Inicializar valores por defecto de DeepSeek
   if (localStorage.getItem('qcol_mistral_enabled') === null) {
     localStorage.setItem('qcol_mistral_enabled', 'true');
   }
   if (localStorage.getItem('qcol_mistral_model') === null) {
-    localStorage.setItem('qcol_mistral_model', 'mistral-large-latest');
+    localStorage.setItem('qcol_mistral_model', 'deepseek-chat');
   }
   if (localStorage.getItem('qcol_mistral_timeout') === null) {
     localStorage.setItem('qcol_mistral_timeout', '10');
@@ -1482,7 +1485,7 @@ function renderUsers() {
       <td><span class="rb ${u.role==='admin'?'rba':'rbu'}">${u.role.toUpperCase()}</span></td>
       <td style="color:${u.canUpload?'var(--gr)':'var(--mu)'}">${u.canUpload?'✅':'❌'}</td>
       <td>${rb}${upb}<button class="bsm red" onclick="delUser('${u.username}')">✕</button></td>
-    </tr>`;
+     </tr>`;
   });
   tbody.innerHTML = r;
 }
@@ -1525,7 +1528,7 @@ function renderProjs() {
     <td><span class="rb ${p.type==='nb'?'rba':'rbu'}">${p.type==='nb'?'NB':'PDF'}</span></td>
     <td style="font-family:var(--mono);font-size:.58rem;color:var(--mu);">${p.id}</td>
     <td><button class="bsm red" onclick="delProj('${p.id}')">✕ Eliminar</button></td>
-  </tr>`).join('');
+   </tr>`).join('');
 }
 function addProj() {
   const t=document.getElementById('pj-t').value.trim(),id=document.getElementById('pj-id').value.trim().replace(/\s/g,'_').toLowerCase(),type=document.getElementById('pj-type').value,tags=document.getElementById('pj-tags').value.trim(),desc=document.getElementById('pj-desc').value.trim();
@@ -1635,7 +1638,7 @@ function loadUserStats(){
         <td style="padding:.3rem .5rem;color:var(--mu);">${Object.entries(s.libs).map(([l,n])=>l+':'+n).join(', ')}</td>
         <td style="padding:.3rem .5rem;color:var(--mu);">${s.qubits} max</td>
         <td style="padding:.3rem .5rem;color:var(--mu);">${new Date(s.lastRun).toLocaleDateString()}</td>
-      </tr>`).join('');
+       </tr>`).join('');
   document.getElementById('user-stats-table').innerHTML=`
     <table style="width:100%;border-collapse:collapse;font-size:.6rem;">
       <thead><tr style="background:rgba(0,0,0,.3);">
@@ -1644,9 +1647,9 @@ function loadUserStats(){
         <th style="padding:.3rem .5rem;text-align:left;color:var(--bl2);">Libs usadas</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Qubits</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Último uso</th>
-       </tr></thead>
+        </tr></thead>
       <tbody>${rows}</tbody>
-     </table>`;
+    </table>`;
 }
 function loadHistorial(){
   const data = getMonitorData();
