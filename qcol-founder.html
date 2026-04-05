@@ -129,43 +129,43 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
           <td style="font-size:.62rem;color:var(--mu);">Núcleo — une todo el ecosistema</td>
           <td><span class="rb rba">ACTIVO</span></td>
           <td><button class="bsm" onclick="downloadModule('core')">📥 Core</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Proyectos</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-projects.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks desde GitHub</td>
           <td><span class="rb" id="st-projects" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('projects')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Arquitecto</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Editor Qiskit · Cirq · QuTiP + GPU HuggingFace</td>
           <td><span class="rb" id="st-architect" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Arquitecto Pro</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect-pro.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks completos — Admin+</td>
           <td><span class="rb" id="st-archpro" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect-pro')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Librería</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-library.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Recursos educativos desde GitHub</td>
           <td><span class="rb" id="st-library" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('library')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Cuenta</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-account.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Perfil y circuitos guardados</td>
           <td><span class="rb" id="st-account" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('account')">📥</button></td>
-        </tr>
+         </tr>
         <tr>
           <td><strong>Ayuda</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-help.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Documentación del ecosistema</td>
           <td><span class="rb" id="st-help" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('help')">📥</button></td>
-        </tr>
+         </tr>
       </tbody>
     </table>
     <div class="btn-row" style="margin-top:.8rem;">
@@ -225,6 +225,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
       <div style="display:flex;gap:.4rem;">
         <input class="fi" id="colab-url" placeholder="https://[usuario]-qcol-compilador.hf.space">
         <button class="btn btn-ok" onclick="testColab()" style="white-space:nowrap;">🧪 PROBAR</button>
+        <button class="btn btn-ok" onclick="checkEngine()" style="white-space:nowrap;">🔄 RECONECTAR</button>
       </div>
       <div style="font-size:.58rem;color:var(--mu);margin-top:.28rem;">
         Ejemplo: <code style="color:var(--gr);">https://laffitacamargo-qcol-compilador.hf.space</code>
@@ -566,7 +567,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
         <table class="tbl" id="users-tbl">
           <thead><tr><th>USUARIO</th><th>ROL</th><th>UPLOAD</th><th>ACCIONES</th></tr></thead>
           <tbody id="users-tbody">
-            <tr><td>franci_laffita</td><td><span class="rb rbf">FUNDADOR</span></td><td style="color:var(--gr)">✅</td><td>—</td></tr>
+            <tr><td style="font-size:.62rem;">franci_laffita — Franci Laffita</td><td><span class="rb rbf">FUNDADOR</span></td><td style="color:var(--gr)">✅</td><td>—</td></tr>
           </tbody>
         </table>
       </div>
@@ -825,7 +826,6 @@ window.addEventListener('message', (e) => {
   const d = e.data;
   if (!d || !d.type) return;
   if (d.type === 'QCOL_CONFIG') {
-    // Recibir configuración del core
     if (d.ghUser) {
       document.getElementById('gh-user').value = d.ghUser;
       document.getElementById('gh-repo').value = d.ghRepo;
@@ -875,6 +875,84 @@ function showTab(id) {
     updateMistralUI();
   }
   loadSaved();
+}
+
+// ══ FETCH CON REINTENTOS ══
+async function fetchWithRetry(url, options, retries = 3, delay = 4000, timeout = 30000) {
+  let lastError;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) return res;
+      lastError = new Error(`HTTP ${res.status}`);
+      if (attempt < retries) {
+        addColabLog(`⏳ Intento ${attempt}/${retries} falló (${lastError.message}). Reintentando en ${delay/1000}s...`);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    } catch (e) {
+      lastError = e;
+      if (e.name === 'AbortError') lastError = new Error(`Timeout (${timeout/1000}s)`);
+      if (attempt < retries) {
+        addColabLog(`⚠️ Intento ${attempt}/${retries}: ${lastError.message}. Reintentando...`);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
+async function checkEngine() {
+  const url = document.getElementById('colab-url').value.trim();
+  if (!url) {
+    document.getElementById('colab-dot').className = 'sdot off';
+    document.getElementById('colab-status').textContent = 'Sin URL';
+    return false;
+  }
+  const baseURL = url.replace(/\/$/, '');
+  const healthURL = baseURL + '/health/predict';
+  document.getElementById('colab-dot').className = 'sdot warn';
+  document.getElementById('colab-status').textContent = 'Conectando...';
+  addColabLog(`🔄 Conectando a ${baseURL} (3 intentos, 30s c/u)...`);
+
+  try {
+    const res = await fetchWithRetry(healthURL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: [''] })
+    }, 3, 4000, 30000);
+    const raw = await res.json();
+    const d = raw.data ? raw.data[0] : raw;
+    const engine = d.engine || 'qiskit';
+    const libs = (d.libs || []).slice(0, 4).join(', ');
+    document.getElementById('colab-dot').className = 'sdot ok';
+    document.getElementById('colab-status').textContent = `✅ Conectado — ${engine}`;
+    document.getElementById('colab-sub').textContent = libs;
+    addColabLog(`✅ Compilador activo: ${engine} · ${libs}`);
+    return true;
+  } catch (err) {
+    document.getElementById('colab-dot').className = 'sdot err';
+    document.getElementById('colab-status').textContent = `❌ Error: ${err.message}`;
+    addColabLog(`❌ ${err.message}`);
+    return false;
+  }
+}
+
+async function testColab() {
+  const success = await checkEngine();
+  if (success) notify('✅ Compilador HuggingFace conectado');
+  else notify('❌ No se pudo conectar al compilador después de 3 intentos');
+}
+
+function saveColab() {
+  const url = document.getElementById('colab-url').value.trim();
+  localStorage.setItem('qcol_colab_url', url);
+  postToCore('QCOL_SAVE_CONFIG', { key: 'colab_url', value: url });
+  notify('✅ URL del compilador guardada');
+  addSysLog('Compilador HuggingFace URL guardada', 'ok');
+  setTimeout(() => checkEngine(), 500);
 }
 
 // ══ CARGAR CONFIGURACIÓN DE MISTRAL ══
@@ -1079,6 +1157,13 @@ function loadSaved() {
     localStorage.setItem('qcol_mistral_timeout', '10');
   }
   loadMistralSettings();
+
+  // Conectar automáticamente si hay URL guardada
+  const savedUrl = localStorage.getItem('qcol_colab_url');
+  if (savedUrl) {
+    document.getElementById('colab-url').value = savedUrl;
+    setTimeout(() => checkEngine(), 1000);
+  }
 }
 
 // ══ HELPERS ══
@@ -1091,40 +1176,9 @@ function getConfig() { return JSON.parse(localStorage.getItem('qcol_cfg') || '{}
 function getUsers() { return JSON.parse(localStorage.getItem('qcol_users') || '[]'); }
 function saveUsersFn(u) { localStorage.setItem('qcol_users', JSON.stringify(u)); }
 
-// ══ COLAB ══
-async function testColab() {
-  const url = document.getElementById('colab-url').value.trim().replace(/\/$/,'');
-  if (!url) { notify('Ingresa la URL'); return; }
-  document.getElementById('colab-dot').className = 'sdot warn';
-  document.getElementById('colab-status').textContent = 'Probando...';
-  addColabLog('Conectando a: ' + url);
-  try {
-    const res = await fetch(url + '/health', { signal: AbortSignal.timeout(10000) });
-    if (res.ok) {
-      const d = await res.json();
-      document.getElementById('colab-dot').className = 'sdot ok';
-      document.getElementById('colab-status').textContent = '✅ Conectado — ' + d.engine;
-      document.getElementById('colab-sub').textContent = d.libs?.join(', ') || '';
-      addColabLog('✅ Compilador activo: ' + d.engine);
-      notify('✅ Compilador HuggingFace conectado');
-      addSysLog('Compilador HuggingFace: ' + url, 'ok');
-    } else throw new Error('HTTP ' + res.status);
-  } catch(e) {
-    document.getElementById('colab-dot').className = 'sdot err';
-    document.getElementById('colab-status').textContent = '❌ Error: ' + e.message;
-    addColabLog('❌ Error: ' + e.message);
-    notify('❌ ' + e.message);
-  }
-}
-
-function saveColab() {
-  const url = document.getElementById('colab-url').value.trim();
-  localStorage.setItem('qcol_colab_url', url);
-  postToCore('QCOL_SAVE_CONFIG', { key: 'colab_url', value: url });
-  notify('✅ URL del compilador guardada');
-  addSysLog('Compilador HuggingFace URL guardada', 'ok');
-}
-
+// ══ COLAB (funciones antiguas, se mantienen pero ya no se usan directamente) ══
+// Nota: testColab y saveColab ya fueron reemplazadas arriba.
+// Se conservan las funciones auxiliares de descarga de templates y otras.
 function downloadTemplate(lib) {
   const installs = {
     qiskit: '!pip install qiskit qiskit-aer qiskit-ibm-runtime matplotlib numpy scipy sympy -q',
@@ -1186,7 +1240,6 @@ async function testGH() {
 }
 function openGH() { const gh = getGH(); window.open(`https://github.com/${gh.user}/${gh.repo}`, '_blank'); }
 
-// ── SUBIR ARCHIVO A GITHUB VÍA API ─────────────────
 function previewUpload(input) {
   const preview = document.getElementById('gh-file-preview');
   if (input.files.length > 0) {
@@ -1194,7 +1247,6 @@ function previewUpload(input) {
     const kb = (f.size/1024).toFixed(1);
     preview.textContent = `📄 ${f.name} — ${kb} KB`;
     preview.style.color = 'var(--gr)';
-    // Sugerir carpeta según tipo
     const folder = document.getElementById('gh-folder');
     if (!folder.value) {
       if (f.name.endsWith('.pdf')) folder.value = 'docs/';
@@ -1238,7 +1290,6 @@ async function uploadToGitHub() {
   notify('📤 Subiendo a GitHub...');
 
   try {
-    // Leer archivo como base64
     const base64 = await new Promise((res, rej) => {
       const reader = new FileReader();
       reader.onload = () => res(reader.result.split(',')[1]);
@@ -1246,7 +1297,6 @@ async function uploadToGitHub() {
       reader.readAsDataURL(file);
     });
 
-    // Verificar si el archivo ya existe (para actualizar)
     let sha = undefined;
     try {
       const check = await fetch(apiURL, {
@@ -1262,7 +1312,6 @@ async function uploadToGitHub() {
       }
     } catch(e) {}
 
-    // Subir o actualizar
     const body = { message: msg, content: base64 };
     if (sha) body.sha = sha;
 
@@ -1282,7 +1331,6 @@ async function uploadToGitHub() {
       addGHLog(`📎 URL: ${d.content?.html_url || '—'}`, 'ok');
       notify(`✅ ${file.name} subido a GitHub`);
       addSysLog(`Archivo subido a GitHub: ${path}`, 'ok');
-      // Limpiar
       fileInput.value = '';
       document.getElementById('gh-file-preview').textContent = '';
     } else {
@@ -1423,7 +1471,7 @@ function renderUsers() {
   const tbody = document.getElementById('users-tbody');
   if (!tbody) return;
   const all = getUsers();
-  let r = `<tr><td>franci_laffita — Franci Laffita</td><td><span class="rb rbf">FUNDADOR</span></td><td style="color:var(--gr)">✅</td><td>—</td></tr>`;
+  let r = `<tr><td style="font-size:.62rem;">franci_laffita — Franci Laffita</td><td><span class="rb rbf">FUNDADOR</span></td><td style="color:var(--gr)">✅</td><td>—</td></tr>`;
   all.forEach(u => {
     const upb = u.canUpload ? `<button class="bsm" onclick="toggleUp('${u.username}',false)">✕Up</button>`
       : `<button class="bsm" onclick="toggleUp('${u.username}',true)">+Up</button>`;
@@ -1596,9 +1644,9 @@ function loadUserStats(){
         <th style="padding:.3rem .5rem;text-align:left;color:var(--bl2);">Libs usadas</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Qubits</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Último uso</th>
-      </table></thead>
+       </tr></thead>
       <tbody>${rows}</tbody>
-    </table>`;
+     </table>`;
 }
 function loadHistorial(){
   const data = getMonitorData();
@@ -1783,10 +1831,8 @@ loadMonitorConfig();
 refreshMonitor();
 loadMonitorFromGitHub();
 
-// Pedir configuración al core
 postToCore('QCOL_GET_CONFIG');
 
-// Inicializar UI de IA Resolver
 const toggle = document.getElementById('mistral-toggle');
 if (toggle) toggle.addEventListener('change', saveMistralSettings);
 updateMistralUI();
