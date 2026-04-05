@@ -1569,10 +1569,11 @@ async function runServerCode() {
     try {
         let res, d;
         if (isHF) {
+            // ⬇️ ÚNICO CAMBIO: añadido fn_index: 0
             res = await fetchWithRetry(engineURL + '/run/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [code] })
+                body: JSON.stringify({ data: [code], fn_index: 0 })
             }, 3, 30000);
             const raw = await res.json();
             d = raw.data ? raw.data[0] : raw;
