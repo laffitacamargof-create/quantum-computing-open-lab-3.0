@@ -440,15 +440,11 @@ let blochStates = {};
 let currentBlochQubit = 0;
 
 // ═══════════════════════════════════════════════════════════
-// NUEVAS VARIABLES GLOBALES PARA EL SISTEMA DE CLASIFICACIÓN
+// VARIABLES GLOBALES PARA EL SISTEMA DE CLASIFICACIÓN
 // ═══════════════════════════════════════════════════════════
-let QCOL_IGNORED_ATTRS = new Set();   // atributos que ya sabemos que son innecesarios
-let mistralApiKey = localStorage.getItem('qcol_mistral_key') || '';
-let mistralEnabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
+let QCOL_IGNORED_ATTRS = new Set();
 
-// Función para cargar atributos ignorados desde localStorage y desde la nube
 async function loadIgnoredAttrs() {
-    // Cargar desde localStorage primero
     const local = localStorage.getItem('qcol_ignored_attrs');
     if (local) {
         try {
@@ -456,7 +452,6 @@ async function loadIgnoredAttrs() {
             QCOL_IGNORED_ATTRS = new Set(arr);
         } catch(e) {}
     }
-    // Si hay URL del Space configurada, intentar descargar la lista global
     if (engineURL && engineURL.trim()) {
         try {
             const base = engineURL.replace(/\/+$/, '');
@@ -470,7 +465,6 @@ async function loadIgnoredAttrs() {
                 const cloudList = raw.data ? raw.data[0] : raw;
                 if (Array.isArray(cloudList)) {
                     cloudList.forEach(attr => QCOL_IGNORED_ATTRS.add(attr));
-                    // Guardar fusión en localStorage
                     localStorage.setItem('qcol_ignored_attrs', JSON.stringify([...QCOL_IGNORED_ATTRS]));
                 }
             }
@@ -478,11 +472,17 @@ async function loadIgnoredAttrs() {
     }
 }
 
-// Función para guardar un atributo ignorado localmente y en la nube
+window.addEventListener('storage', (e) => {
+    if (e.key === 'qcol_ignored_attrs') {
+        loadIgnoredAttrs().then(() => {
+            if (pyodide) injectIgnoredAttrsIntoPython(pyodide);
+        });
+    }
+});
+
 async function saveIgnoredAttrLocal(attr, reason) {
     QCOL_IGNORED_ATTRS.add(attr);
     localStorage.setItem('qcol_ignored_attrs', JSON.stringify([...QCOL_IGNORED_ATTRS]));
-    // Si hay Space configurado, enviar a la nube
     if (engineURL && engineURL.trim()) {
         try {
             const base = engineURL.replace(/\/+$/, '');
@@ -502,61 +502,119 @@ async function saveIgnoredAttrLocal(attr, reason) {
             });
         } catch(e) { /* silencioso */ }
     }
-    // Mostrar mensaje discreto en el panel de salida
     const out = document.getElementById('out-body');
     if (out) {
         out.innerHTML += `<span class="ok">✅ Atributo ignorado permanentemente: ${attr}</span>\n`;
     }
 }
 
-// Función para clasificar un error con Mistral 3
+// ═══════════════════════════════════════════════════════════════════════
+// FUNCIÓN CALLMISTRALCLASSIFIER CORREGIDA (texto plano, manejo de errores)
+// ═══════════════════════════════════════════════════════════════════════
 async function callMistralClassifier(errorPayload) {
-    if (!mistralApiKey || !mistralEnabled) return null;
+    const apiKey = localStorage.getItem('qcol_mistral_key') || '';
+    const enabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
+    if (!enabled || !apiKey) return null;
+    let model = localStorage.getItem('qcol_mistral_model') || 'mistral-small-latest';
+    const timeoutSec = parseInt(localStorage.getItem('qcol_mistral_timeout') || '10');
+    const timeoutMs = timeoutSec * 1000;
+    const customPrompt = localStorage.getItem('qcol_mistral_prompt') || '';
+
+    // Forzar modelo gratuito si se configuró large sin créditos
+    if (model === 'mistral-large-latest') {
+        console.warn('Modelo large no disponible en cuentas gratuitas. Cambiando a mistral-small-latest');
+        model = 'mistral-small-latest';
+    }
+
+    const defaultPrompt = `Eres un clasificador de errores de Qiskit. Recibirás el traceback de un error Python. Tu tarea es responder ÚNICAMENTE con una línea en el formato exacto:
+
+- Si el error es por un atributo o método que NO es necesario para dibujar el circuito (por ejemplo, métodos de simulación, visualización, metadatos, o errores de lógica del usuario), responde exactamente: "NO_ESENCIAL:nombre_del_atributo"
+- Si el error es crítico y el atributo es necesario para la estructura del circuito (puertas, qubits, conexiones), responde exactamente: "CRITICO:nombre_del_atributo"
+
+Ejemplos:
+- Para "AttributeError: 'QuantumCircuit' object has no attribute 'draw'", responde: "NO_ESENCIAL:draw"
+- Para "NameError: name 'q' is not defined", responde: "NO_ESENCIAL:q"
+- Para "AttributeError: 'QuantumCircuit' object has no attribute 'cx'", responde: "CRITICO:cx"
+
+NO añadas nada más. Solo esa línea.`;
+
+    const systemPrompt = customPrompt || defaultPrompt;
+    const userMessage = `Error: ${errorPayload.error_msg || ''}\nAtributo sospechoso: ${errorPayload.attribute_name || 'desconocido'}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     try {
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${mistralApiKey}`
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: 'mistral-small-latest',
+                model: model,
                 messages: [
-                    {
-                        role: 'system',
-                        content: 'Eres un clasificador de errores de Qiskit. Recibirás el traceback de un error Python. Tu única tarea es responder con UN SOLO JSON sin markdown: {"classification": "unnecessary" | "critical", "attribute": "nombre_del_atributo", "reason": "explicación corta"}. Un error es unnecessary si el atributo o método que falla NO afecta la estructura del circuito cuántico (puertas, qubits, conexiones). Es critical si sí la afecta.'
-                    },
-                    {
-                        role: 'user',
-                        content: JSON.stringify(errorPayload)
-                    }
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userMessage }
                 ],
-                temperature: 0.1,
-                max_tokens: 200
-            })
+                temperature: 0.0,
+                max_tokens: 20
+            }),
+            signal: controller.signal
         });
-        if (!response.ok) return null;
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            let errorText = '';
+            try {
+                const errorData = await response.json();
+                errorText = errorData.error?.message || JSON.stringify(errorData);
+            } catch(e) {
+                errorText = await response.text();
+            }
+            console.error('Mistral API error:', response.status, errorText);
+            const out = document.getElementById('out-body');
+            if (out) out.innerHTML += `<span class="er">❌ Error de Mistral (${response.status}): ${errorText}</span>\n`;
+            return null;
+        }
+
         const data = await response.json();
-        const content = data.choices[0]?.message?.content;
-        if (!content) return null;
-        // Extraer JSON (puede venir con markdown, pero nos aseguramos)
-        const jsonMatch = content.match(/\{.*\}/s);
-        if (!jsonMatch) return null;
-        return JSON.parse(jsonMatch[0]);
-    } catch(e) {
-        console.error('Mistral error:', e);
+        const content = data.choices?.[0]?.message?.content?.trim() || '';
+        console.log('Mistral respuesta cruda:', content);
+
+        const match = content.match(/^(NO_ESENCIAL|CRITICO):([a-zA-Z_][a-zA-Z0-9_]*)/i);
+        if (match) {
+            const classification = match[1].toUpperCase() === 'NO_ESENCIAL' ? 'unnecessary' : 'critical';
+            const attribute = match[2];
+            return { classification, attribute, reason: 'Clasificado por Mistral' };
+        }
+
+        if (content.toUpperCase() === 'NO') {
+            return { classification: 'unnecessary', attribute: errorPayload.attribute_name || 'unknown', reason: 'Respuesta "NO"' };
+        }
+        if (content.toUpperCase() === 'SI') {
+            return { classification: 'critical', attribute: errorPayload.attribute_name || 'unknown', reason: 'Respuesta "SI"' };
+        }
+
+        console.warn('Respuesta no reconocida:', content);
+        const out = document.getElementById('out-body');
+        if (out) out.innerHTML += `<span class="er">⚠️ Respuesta inesperada de Mistral: ${content}</span>\n`;
         return null;
+    } catch (err) {
+        console.error('Mistral fetch error:', err);
+        const out = document.getElementById('out-body');
+        if (out) out.innerHTML += `<span class="er">❌ Error de red al consultar Mistral: ${err.message}</span>\n`;
+        return null;
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 
-// Inyectar la lista de atributos ignorados en el namespace de Python antes de cada ejecución
 async function injectIgnoredAttrsIntoPython(py) {
     if (!py) return;
     const attrsList = JSON.stringify([...QCOL_IGNORED_ATTRS]);
     await py.runPythonAsync(`
 import sys
 _IGNORED_ATTRS = set(${attrsList})
-# Parchear __getattr__ de QuantumCircuit para ignorar esos atributos
 if 'QuantumCircuit' in globals():
     _orig_getattr = QuantumCircuit.__getattr__
     def _patched_getattr(self, name):
@@ -648,7 +706,6 @@ function placeGate(gateId, qubit) {
   updateCodeFromCircuit();
   isUpdatingFromCircuit = false;
   notify(`${gateId} → q[${qubit}]`);
-  // No ejecutamos automáticamente para no interferir con el modo seleccionado
 }
 
 function removeGate(uid) {
@@ -1267,11 +1324,9 @@ async function initPyodide() {
         await pyodide.loadPackage('matplotlib');
         await pyodide.loadPackage('pandas');
         await pyodide.loadPackage('scikit-learn');
-        // Inyectar la lista de atributos ignorados en el mock recién cargado
         await injectIgnoredAttrsIntoPython(pyodide);
         out.innerHTML = '<span class="ok">✅ Pyodide listo (numpy, scipy, matplotlib disponibles localmente)</span>\n';
         notify('✅ Pyodide listo');
-        // Forzar sincronización inicial si hay código
         if (document.getElementById('code-ta').value.trim()) {
             syncWithPyodide().catch(console.error);
         }
@@ -1297,10 +1352,8 @@ function mapOpNameToGateId(opName) {
 
 // ═══════════════════════════════════════════════════════════════════
 // PRE-PROCESADOR UNIVERSAL DE CÓDIGO (CAPA 0 — JS, antes de exec)
-// Sanea el código antes de enviarlo a Python para evitar SyntaxErrors
 // ═══════════════════════════════════════════════════════════════════
 function preprocessCode(code) {
-    // 1. Reemplazar caracteres Unicode no-ASCII en identificadores
     let out = '';
     for (let i = 0; i < code.length; i++) {
         const cp = code.codePointAt(i);
@@ -1353,21 +1406,24 @@ function preprocessCode(code) {
     return out;
 }
 
-// Nueva función para extraer atributo problemático del traceback
+// ═══════════════════════════════════════════════════════════════════
+// EXTRAE EL ATRIBUTO PROBLEMÁTICO DEL TRACEBACK (incluye NameError)
+// ═══════════════════════════════════════════════════════════════════
 function extractOffendingAttribute(errorText) {
-    // Buscar patrones comunes: 'AttributeError: 'XXX' object has no attribute 'YYY'
-    const match = errorText.match(/has no attribute ['"]([^'"]+)['"]/);
+    let match = errorText.match(/NameError: name ['"]([^'"]+)['"] is not defined/);
     if (match) return match[1];
-    // 'NameError: name 'XXX' is not defined'
-    const nameMatch = errorText.match(/NameError: name ['"]([^'"]+)['"] is not defined/);
-    if (nameMatch) return nameMatch[1];
-    // 'TypeError: 'XXX' object is not callable' - quizás atributo
-    const typeMatch = errorText.match(/TypeError: '(\w+)' object is not callable/);
-    if (typeMatch) return typeMatch[1];
+    match = errorText.match(/has no attribute ['"]([^'"]+)['"]/);
+    if (match) return match[1];
+    match = errorText.match(/object has no attribute ['"]([^'"]+)['"]/);
+    if (match) return match[1];
+    if (errorText.includes('object is not subscriptable') || 
+        errorText.includes('object is not iterable') ||
+        errorText.includes('object is not callable')) {
+        return 'unknown_attribute';
+    }
     return null;
 }
 
-// Versión modificada de syncWithPyodide con el sistema de clasificación
 async function syncWithPyodide(retryCount = 0) {
     if (isUpdatingFromCircuit) return;
     isUpdatingFromCircuit = true;
@@ -1389,7 +1445,6 @@ _circuit = None
 _num_qubits = 0
 _data = []
 
-# ── CAPA 0 Python: pre-sanitización adicional ──────────────────
 def _sanitize(code):
     lines = code.splitlines()
     out = []
@@ -1400,11 +1455,9 @@ def _sanitize(code):
 
 _clean_code = _sanitize(_user_code)
 
-# ── CAPA 1: exec normal ────────────────────────────────────────
 try:
     exec(compile(_clean_code, '<qcol>', 'exec'), _ns)
 except SyntaxError as _se:
-    # CAPA 2: si hay SyntaxError, intentar quitar la línea problemática
     _bad_line = getattr(_se, 'lineno', None)
     if _bad_line is not None:
         _lines = _clean_code.splitlines()
@@ -1418,7 +1471,6 @@ except SyntaxError as _se:
 except Exception as _e:
     _error = traceback.format_exc()
 
-# ── Buscar circuito en el namespace ───────────────────────────
 if _error is None:
     for _cname in ['circuit','qc','circ','qcirc','c','circ1','qcircuit','qc1','main_circuit']:
         _obj = _ns.get(_cname)
@@ -1497,11 +1549,10 @@ json.dumps({
             out.innerHTML += `<span class="ok">✅ Sincronizado — ${data.num_qubits} qubits · ${newGates.length} puertas</span>\n`;
             notify(`Circuito actualizado: ${newGates.length} puertas`);
         } else {
-            // Hubo un error, ver si podemos clasificarlo
             const errText = data.error || '';
             const offendingAttr = extractOffendingAttribute(errText);
+            const mistralEnabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
             if (offendingAttr && QCOL_IGNORED_ATTRS.has(offendingAttr)) {
-                // Ya está en la lista de ignorados, reintentar silenciosamente
                 out.innerHTML += `<span class="inf">ℹ️ Atributo '${offendingAttr}' ya clasificado como innecesario. Reintentando...</span>\n`;
                 isUpdatingFromCircuit = false;
                 setTimeout(() => syncWithPyodide(), 500);
@@ -1523,7 +1574,6 @@ json.dumps({
                     const attr = classification.attribute || offendingAttr;
                     const reason = classification.reason || 'Clasificado por Mistral';
                     await saveIgnoredAttrLocal(attr, reason);
-                    // Reinyectar la nueva lista en Pyodide
                     await injectIgnoredAttrsIntoPython(py);
                     out.innerHTML += `<span class="ok">✅ Atributo '${attr}' clasificado como innecesario. Reintentando sincronización...</span>\n`;
                     isUpdatingFromCircuit = false;
@@ -1533,7 +1583,6 @@ json.dumps({
                     out.innerHTML += `<span class="er">⚠️ Mistral clasificó el error como crítico o no se pudo clasificar. Mostrando error original.</span>\n`;
                 }
             }
-            // Si llegamos aquí, mostramos el error
             out.innerHTML += `<span class="er">❌ Error en el código:<br>${escapeHtml(errText.slice(0,800))}</span>\n`;
         }
     } catch (err) {
@@ -1569,7 +1618,6 @@ async function runServerCode() {
     try {
         let res, d;
         if (isHF) {
-            // ⬇️ ÚNICO CAMBIO: añadido fn_index: 0
             res = await fetchWithRetry(engineURL + '/run/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1609,7 +1657,6 @@ async function runServerCode() {
     out.scrollTop = out.scrollHeight;
 }
 
-// Función principal runCode (siempre ejecuta en servidor)
 async function runCode() {
     if (running) return;
     await runServerCode();
@@ -1779,7 +1826,7 @@ function logMonitorRun(info) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// BLOCH, QUBITS, GUARDADO, ETC. (sin cambios significativos)
+// BLOCH, QUBITS, GUARDADO, ETC. (sin cambios)
 // ═══════════════════════════════════════════════════════════
 function drawBloch() {
     const canvas = document.getElementById('bloch-canvas');
@@ -2046,9 +2093,7 @@ function initResize() {
 }
 
 function init() {
-    // Cargar atributos ignorados antes de cualquier sincronización
     loadIgnoredAttrs().then(() => {
-        // Si ya tenemos Pyodide cargado, inyectar la lista
         if (pyodide) injectIgnoredAttrsIntoPython(pyodide);
     });
     for (let i = 0; i < circuit.qubits; i++) blochStates[i] = { theta: 0, phi: 0 };
@@ -2107,9 +2152,6 @@ window.loadCircuit = loadCircuit;
 window.deleteCircuit = deleteCircuit;
 window.removeFromQueue = removeFromQueue;
 
-// ══════════════════════════════════════════════════
-// ECOSISTEMA — Comunicación con index.html
-// ══════════════════════════════════════════════════
 function postCore(type, data={}) {
     try { window.parent.postMessage({type, ...data}, '*'); } catch(e) {}
 }
@@ -2186,7 +2228,6 @@ window.addEventListener('message', e => {
     }
 });
 
-// Al cargar: pedir usuario y config del ecosistema
 postCore('QCOL_GET_USER');
 postCore('QCOL_GET_CONFIG');
 setTimeout(() => {
