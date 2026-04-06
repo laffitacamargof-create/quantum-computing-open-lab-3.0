@@ -131,37 +131,43 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
           <td><button class="bsm" onclick="downloadModule('core')">📥 Core</button></td>
         </tr>
         <tr>
-          <td><strong>Proyectos</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-projects.html</td>
+          <td><strong>Proyectos</strong></td>
+          <td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-projects.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks desde GitHub</td>
           <td><span class="rb" id="st-projects" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('projects')">📥</button></td>
         </tr>
         <tr>
-          <td><strong>Arquitecto</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect.html</td>
+          <td><strong>Arquitecto</strong></td>
+          <td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Editor Qiskit · Cirq · QuTiP + GPU HuggingFace</td>
           <td><span class="rb" id="st-architect" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect')">📥</button></td>
         </tr>
         <tr>
-          <td><strong>Arquitecto Pro</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect-pro.html</td>
+          <td><strong>Arquitecto Pro</strong></td>
+          <td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-architect-pro.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Notebooks completos — Admin+</td>
           <td><span class="rb" id="st-archpro" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('architect-pro')">📥</button></td>
         </tr>
         <tr>
-          <td><strong>Librería</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-library.html</td>
+          <td><strong>Librería</strong></td>
+          <td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-library.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Recursos educativos desde GitHub</td>
           <td><span class="rb" id="st-library" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('library')">📥</button></td>
         </tr>
         <tr>
-          <td><strong>Cuenta</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-account.html</td>
+          <td><strong>Cuenta</strong></td>
+          <td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-account.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Perfil y circuitos guardados</td>
           <td><span class="rb" id="st-account" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('account')">📥</button></td>
         </tr>
         <tr>
-          <td><strong>Ayuda</strong></td><td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-help.html</td>
+          <td><strong>Ayuda</strong></td>
+          <td style="font-family:var(--mono);font-size:.6rem;color:var(--gr);">qcol-help.html</td>
           <td style="font-size:.62rem;color:var(--mu);">Documentación del ecosistema</td>
           <td><span class="rb" id="st-help" style="background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.3);">PENDIENTE</span></td>
           <td><button class="bsm" onclick="downloadModule('help')">📥</button></td>
@@ -566,7 +572,11 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
         <table class="tbl" id="users-tbl">
           <thead><tr><th>USUARIO</th><th>ROL</th><th>UPLOAD</th><th>ACCIONES</th></tr></thead>
           <tbody id="users-tbody">
-            <tr><td style="font-size:.62rem;">franci_laffita — Franci Laffita</td><td><span class="rb rbf">FUNDADOR</span></td><td style="color:var(--gr)">✅</td><td>—</td>
+            <tr><td style="font-size:.62rem;">franci_laffita — Franci Laffita</td>
+              <td><span class="rb rbf">FUNDADOR</span></td>
+              <td style="color:var(--gr)">✅</td>
+              <td>—</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -969,74 +979,76 @@ function loadMistralSettings() {
   updateMistralUI();
 }
 
+// MEJORA: sanitizar API key al guardar y mostrar preview
 function saveMistralSettings() {
-  localStorage.setItem('qcol_mistral_enabled', document.getElementById('mistral-toggle').checked);
-  localStorage.setItem('qcol_mistral_key', document.getElementById('mistral-key').value.trim());
-  localStorage.setItem('qcol_mistral_model', document.getElementById('mistral-model').value);
-  localStorage.setItem('qcol_mistral_timeout', document.getElementById('mistral-timeout').value);
-  localStorage.setItem('qcol_mistral_prompt', document.getElementById('mistral-prompt').value);
-  updateMistralUI();
-  notify('✅ Configuración de DeepSeek guardada');
-  addSysLog('DeepSeek: configuración actualizada', 'ok');
+    // Obtener la clave del campo
+    let rawKey = document.getElementById('mistral-key').value;
+    // Limpiar: eliminar espacios, comillas dobles/simples, saltos de línea, tabuladores
+    let cleanKey = rawKey.replace(/[\s"'\n\r\t]/g, '').trim();
+    // Actualizar el campo visual con la clave limpia
+    document.getElementById('mistral-key').value = cleanKey;
+    
+    const enabled = document.getElementById('mistral-toggle').checked;
+    const model = document.getElementById('mistral-model').value;
+    const timeout = document.getElementById('mistral-timeout').value;
+    let prompt = document.getElementById('mistral-prompt').value;
+    
+    localStorage.setItem('qcol_mistral_enabled', enabled);
+    localStorage.setItem('qcol_mistral_key', cleanKey);
+    localStorage.setItem('qcol_mistral_model', model);
+    localStorage.setItem('qcol_mistral_timeout', timeout);
+    localStorage.setItem('qcol_mistral_prompt', prompt);
+    
+    updateMistralUI();
+    // Mostrar los primeros 8 caracteres de la clave (para debug)
+    const keyPreview = cleanKey.slice(0, 8) + (cleanKey.length > 8 ? '...' : '');
+    notify(`✅ Configuración de DeepSeek guardada — clave: ${keyPreview}`);
+    addSysLog('DeepSeek: configuración actualizada', 'ok');
 }
 
+// MEJORA: test con DeepSeek, sanitización y lectura como texto
 async function testMistralConnection() {
-  let apiKey = localStorage.getItem('qcol_mistral_key');
-  if (!apiKey) { notify('❌ No hay API key configurada'); return; }
-  apiKey = apiKey.trim();
-  const url = 'https://api.deepseek.com/v1/chat/completions';
-  const model = 'deepseek-chat';
-  notify('🔄 Probando conexión con DeepSeek...');
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: model,
-        messages: [{ role: 'user', content: 'Di "OK"' }],
-        max_tokens: 5
-      })
-    });
-
-    // CRÍTICO: leer como texto primero, nunca directo .json()
-    const rawText = await res.text();
-
-    // Si empieza con < es HTML = CORS bloqueado
-    if (rawText.trim().startsWith('<') || rawText.trim().startsWith('<!')) {
-      notify('❌ CORS bloqueado — DeepSeek no acepta llamadas directas desde el navegador en este contexto');
-      addSysLog('DeepSeek: bloqueado por CORS', 'err');
-      return;
-    }
-
-    let data;
+    // Leer y sanitizar la API key
+    let apiKey = localStorage.getItem('qcol_mistral_key');
+    if (!apiKey) { notify('❌ No hay API key configurada'); return; }
+    apiKey = apiKey.replace(/[\s"'\n\r\t]/g, '').trim();
+    // Forzar endpoint y modelo de DeepSeek
+    const url = 'https://api.deepseek.com/v1/chat/completions';
+    const model = 'deepseek-chat';
+    notify(`🔄 Probando conexión con DeepSeek (clave: ${apiKey.slice(0,8)}...)`);
     try {
-      data = JSON.parse(rawText);
-    } catch(parseErr) {
-      notify('❌ Respuesta no válida de DeepSeek: ' + rawText.slice(0, 80));
-      addSysLog('DeepSeek: respuesta no JSON', 'err');
-      return;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [{ role: 'user', content: 'Di "OK"' }],
+                max_tokens: 5
+            })
+        });
+        // Leer como texto primero para depurar
+        const text = await res.text();
+        console.log('Respuesta cruda de DeepSeek:', text);
+        if (res.ok) {
+            try {
+                const data = JSON.parse(text);
+                notify('✅ Conexión exitosa con DeepSeek');
+                addSysLog('DeepSeek: conexión probada correctamente', 'ok');
+            } catch (e) {
+                notify('⚠️ Respuesta no JSON: ' + text.substring(0, 100));
+                addSysLog('DeepSeek: respuesta no JSON', 'err');
+            }
+        } else {
+            notify(`❌ Error HTTP ${res.status}: ${text.substring(0, 200)}`);
+            addSysLog(`DeepSeek: HTTP ${res.status}`, 'err');
+        }
+    } catch (err) {
+        notify('❌ Error de red: ' + err.message);
+        addSysLog('DeepSeek: error de conexión', 'err');
     }
-
-    if (res.ok) {
-      notify('✅ Conexión exitosa con DeepSeek');
-      addSysLog('DeepSeek: conexión probada correctamente', 'ok');
-    } else {
-      throw new Error(data.error?.message || `HTTP ${res.status}`);
-    }
-  } catch (err) {
-    // Si es TypeError de CORS, dar mensaje específico
-    const isCors = err.message.includes('NetworkError') || 
-                   err.message.includes('Failed to fetch') ||
-                   err.message.includes('CORS') ||
-                   err.name === 'TypeError';
-    if (isCors) {
-      notify('❌ CORS bloqueado — la API de DeepSeek no permite llamadas directas desde el navegador. Esto es normal en GitHub Pages.');
-      addSysLog('DeepSeek: bloqueado por CORS (expected en GitHub Pages)', 'warn');
-    } else {
-      notify('❌ Error conectando con DeepSeek: ' + err.message);
-      addSysLog('DeepSeek: error de conexión — ' + err.message, 'err');
-    }
-  }
 }
 
 function updateMistralUI() {
@@ -1511,7 +1523,11 @@ function renderUsers() {
   const tbody = document.getElementById('users-tbody');
   if (!tbody) return;
   const all = getUsers();
-  let r = `<tr><td style="font-size:.62rem;">franci_laffita — Franci Laffita</td><td><span class="rb rbf">FUNDADOR</span></td><td style="color:var(--gr)">✅</td><td>—</td></tr>`;
+  let r = `<tr><td style="font-size:.62rem;">franci_laffita — Franci Laffita</td>
+      <td><span class="rb rbf">FUNDADOR</span></td>
+      <td style="color:var(--gr)">✅</td>
+      <td>—</td>
+    </tr>`;
   all.forEach(u => {
     const upb = u.canUpload ? `<button class="bsm" onclick="toggleUp('${u.username}',false)">✕Up</button>`
       : `<button class="bsm" onclick="toggleUp('${u.username}',true)">+Up</button>`;
@@ -1522,7 +1538,7 @@ function renderUsers() {
       <td><span class="rb ${u.role==='admin'?'rba':'rbu'}">${u.role.toUpperCase()}</span></td>
       <td style="color:${u.canUpload?'var(--gr)':'var(--mu)'}">${u.canUpload?'✅':'❌'}</td>
       <td>${rb}${upb}<button class="bsm red" onclick="delUser('${u.username}')">✕</button></td>
-     </tr>`;
+    </tr>`;
   });
   tbody.innerHTML = r;
 }
@@ -1684,7 +1700,7 @@ function loadUserStats(){
         <th style="padding:.3rem .5rem;text-align:left;color:var(--bl2);">Libs usadas</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Qubits</th>
         <th style="padding:.3rem .5rem;color:var(--bl2);">Último uso</th>
-       </tr></thead>
+        </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
