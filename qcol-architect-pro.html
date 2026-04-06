@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QCOL — Arquitecto Profesional</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500;600&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Módulo 4 — CDNs para Markdown + Highlight.js + MathJax -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/markdown-it@14/dist/markdown-it.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/highlight.min.js"></script>
 <style>
 :root{
   --bg:#0a0e1a;--bg2:#0d1117;--bg3:#0d1220;
@@ -50,7 +54,6 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .tb-q{font-family:var(--orb);font-size:.72rem;font-weight:900;color:var(--cy);}
 .tb-pro{font-family:var(--orb);font-size:.48rem;color:var(--pu);letter-spacing:.06em;}
 .tb-sep{width:1px;height:18px;background:var(--bd);flex-shrink:0;}
-/* Notebook name editable */
 .nb-name-inp{
   background:transparent;border:none;outline:none;
   font-family:var(--mono);font-size:.72rem;color:var(--tx);
@@ -59,8 +62,14 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 }
 .nb-name-inp:focus{background:rgba(255,255,255,.05);color:var(--cy);}
 .nb-name-inp::placeholder{color:var(--mu);}
-/* Top buttons */
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:.3rem;}
+/* Módulo 1 — input URL motor */
+.engine-url-input{
+  background:rgba(0,0,0,.5);border:1px solid var(--bd2);border-radius:6px;
+  padding:.2rem .5rem;font-family:var(--mono);font-size:.55rem;
+  color:var(--tx2);width:180px;outline:none;
+}
+.engine-url-input:focus{border-color:var(--bl2);color:var(--cy);}
 .tbtn{
   display:flex;align-items:center;gap:.3rem;
   padding:.25rem .6rem;background:transparent;
@@ -128,7 +137,6 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .nb-cell.active{border-color:rgba(189,147,249,.4);}
 .nb-cell.running{border-color:rgba(0,136,255,.5);}
 
-/* Número de celda / botón ejecutar */
 .cell-gutter{
   width:52px;flex-shrink:0;display:flex;flex-direction:column;
   align-items:center;padding:.6rem .3rem 0;
@@ -150,13 +158,11 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .cell-run-btn.spinning{border-color:var(--gr);color:var(--gr);animation:sp .7s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg);}}
 
-/* Contenido de la celda */
 .cell-body{
   flex:1;display:flex;flex-direction:column;
   min-width:0;padding:.4rem 0;
 }
 
-/* Tipo badge */
 .cell-type-badge{
   display:inline-flex;align-items:center;gap:.3rem;
   font-family:var(--orb);font-size:.44rem;color:var(--mu);
@@ -165,7 +171,6 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .ctb-code{color:var(--bl2);}
 .ctb-md{color:var(--gr);}
 
-/* Editor de código dentro de celda */
 .cell-code-area{
   position:relative;background:var(--bg2);
   border:1px solid var(--bd);border-radius:6px;
@@ -189,50 +194,81 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .cell-textarea::-webkit-scrollbar{width:4px;height:4px;}
 .cell-textarea::-webkit-scrollbar-thumb{background:var(--bd2);}
 
-/* Markdown textarea */
-.cell-md-area{
-  background:var(--bg2);border:1px solid var(--bd);border-radius:6px;
-  width:100%;padding:.6rem .8rem;font-family:var(--mono);font-size:.72rem;
-  line-height:1.65;color:var(--tx2);border:none;outline:none;resize:none;
-  overflow:auto;min-height:48px;
-}
-.nb-cell.active .cell-md-area{border-color:rgba(0,255,136,.35);}
-
-/* Markdown renderizado */
-.cell-md-rendered{
-  padding:.5rem .8rem;font-size:.78rem;line-height:1.75;color:var(--tx);
-  cursor:pointer;background:var(--bg2);border-radius:6px;
+/* Módulo 2 — output rico por celda */
+.cell-output-area{
+  margin-top:.35rem;
+  background:#060a10;
   border:1px solid var(--bd);
+  border-radius:6px;
+  font-family:var(--mono);
+  overflow:hidden;
 }
-.cell-md-rendered h1{font-family:var(--orb);font-size:1rem;color:var(--bl2);margin-bottom:.5rem;}
-.cell-md-rendered h2{font-family:var(--orb);font-size:.85rem;color:var(--bl2);margin-bottom:.4rem;}
-.cell-md-rendered h3{font-family:var(--orb);font-size:.75rem;color:var(--pu);margin-bottom:.35rem;}
-.cell-md-rendered p{margin-bottom:.5rem;color:var(--tx2);}
-.cell-md-rendered code{background:rgba(0,136,255,.1);padding:.1rem .3rem;border-radius:3px;font-family:var(--mono);font-size:.7rem;color:var(--cy);}
-.cell-md-rendered strong{color:var(--tx);font-weight:600;}
-.cell-md-rendered em{color:var(--mu);font-style:italic;}
-
-/* Output de celda */
-.cell-output{
-  margin-top:.35rem;padding:.55rem .8rem;
-  background:#060a10;border:1px solid var(--bd);border-radius:6px;
-  font-family:var(--mono);font-size:.68rem;line-height:1.65;
-  white-space:pre-wrap;max-height:280px;overflow-y:auto;
-  display:none;
+.out-text{
+  padding:.55rem .8rem;
+  font-size:.68rem;
+  line-height:1.65;
+  white-space:pre-wrap;
+  max-height:280px;
+  overflow-y:auto;
+  border-bottom:1px solid var(--bd);
+  margin:0;
 }
-.cell-output::-webkit-scrollbar{width:4px;}
-.cell-output::-webkit-scrollbar-thumb{background:var(--bd2);}
-.cell-output.show{display:block;}
-.out-ok{color:#3fb950;text-shadow:0 0 8px rgba(63,185,80,.2);}
-.out-err{color:#f85149;}
-.out-inf{color:#58a6ff;}
-.out-warn{color:#d29922;}
-.err-line{background:rgba(248,81,73,.12);border-left:3px solid #f85149;padding:.1rem .5rem;display:block;margin:.1rem 0;border-radius:0 4px 4px 0;}
-.err-arrow{color:#f85149;font-weight:bold;}
-.err-msg{color:#ffa198;}
-.out-warn{color:var(--yw);}
+.out-text:empty{display:none;}
+.out-circuit{
+  width:100%;
+  background:#0a0e1a;
+  border-bottom:1px solid var(--bd);
+  display:block;
+}
+.out-plot{
+  max-width:100%;
+  display:block;
+  background:#0a0e1a;
+  border-bottom:1px solid var(--bd);
+}
 
-/* Toolbar de celda (hover) */
+/* Módulo 4 — markdown con dos paneles */
+.md-split{
+  display:flex;
+  gap:.5rem;
+  background:var(--bg2);
+  border:1px solid var(--bd);
+  border-radius:6px;
+  min-height:150px;
+}
+.md-editor-pane{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid var(--bd);
+}
+.md-preview-pane{
+  flex:1;
+  padding:.6rem;
+  overflow-y:auto;
+  max-height:400px;
+  font-size:.75rem;
+  line-height:1.6;
+  color:var(--tx2);
+}
+.md-preview-pane h1{font-family:var(--orb);font-size:1rem;color:var(--bl2);}
+.md-preview-pane h2{font-size:.85rem;color:var(--bl2);}
+.md-preview-pane code{background:rgba(0,136,255,.1);padding:.1rem .3rem;border-radius:3px;font-family:var(--mono);color:var(--cy);}
+.md-preview-pane pre{background:var(--bg);padding:.5rem;border-radius:5px;overflow-x:auto;}
+.md-preview-pane .hljs{background:transparent;}
+.cell-md-split-area{
+  width:100%;
+  background:var(--bg2);
+  border:none;
+  padding:.6rem;
+  font-family:var(--mono);
+  font-size:.72rem;
+  line-height:1.65;
+  color:var(--tx2);
+  resize:vertical;
+  outline:none;
+}
+
 .cell-toolbar{
   display:none;position:absolute;top:.3rem;right:.5rem;
   gap:.2rem;align-items:center;z-index:5;
@@ -249,7 +285,6 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .ct-btn:hover{border-color:var(--bl2);color:var(--bl2);}
 .ct-btn.danger:hover{border-color:var(--rd);color:var(--rd);}
 
-/* Add cell between cells */
 .add-cell-row{
   width:min(900px,96%);margin:.05rem auto;height:18px;
   display:flex;align-items:center;justify-content:center;
@@ -265,7 +300,6 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 }
 .add-btn:hover{background:rgba(189,147,249,.08);}
 
-/* Bottom add area */
 .nb-bottom{
   width:min(900px,96%);margin:.5rem auto 2rem;
   display:flex;gap:.5rem;
@@ -331,8 +365,8 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .sb-run{background:var(--gr);animation:puls 1.5s infinite;}
 .sb-err{background:var(--rd);}
 .sb-right{margin-left:auto;display:flex;gap:.65rem;}
+#sb-save-status{color:var(--gr);}
 
-/* ── MODAL ── */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);
   z-index:800;align-items:center;justify-content:center;}
 .modal-ov.open{display:flex;}
@@ -356,7 +390,6 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
   border:1px solid var(--bd2);border-radius:7px;color:var(--mu);
   font-family:var(--orb);font-size:.54rem;cursor:pointer;}
 
-/* Syntax highlight */
 .kw{color:var(--kw);font-weight:600;}.fn{color:var(--fn);}
 .st{color:var(--st);}.nm{color:var(--nm);}.cm{color:var(--cm);font-style:italic;}
 .cl{color:var(--cl);}
@@ -368,7 +401,6 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
 .nb-cell[draggable]{cursor:grab;}
 .nb-cell[draggable]:active{cursor:grabbing;}
 
-/* Mobile */
 @media(max-width:700px){
   .nb-cell{width:98%;}
   .nb-bottom{width:98%;}
@@ -381,8 +413,6 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
 </head>
 <body>
 <div class="notif" id="notif"></div>
-
-<!-- ACCESS DENIED -->
 <div class="access-denied" id="access-denied">
   <div class="denied-icon">🔒</div>
   <div class="denied-title">ACCESO RESTRINGIDO</div>
@@ -393,7 +423,6 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
   <button class="btn-back" onclick="postCore('QCOL_NAV',{screen:'home'})">← Volver al menú</button>
 </div>
 
-<!-- TOP BAR -->
 <div class="topbar" id="topbar" style="display:none;">
   <div class="tb-logo">
     <span class="tb-q">Q</span><span style="font-family:var(--orb);font-size:.72rem;font-weight:900;color:var(--bl2);">COL</span>
@@ -402,13 +431,14 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
   <div class="tb-sep"></div>
   <input class="nb-name-inp" id="nb-name-inp" placeholder="Sin título" value="Nuevo Notebook">
   <div class="tb-right">
+    <!-- Módulo 1 — input URL motor -->
+    <input type="text" id="engine-url-input" class="engine-url-input" placeholder="https://...hf.space" onchange="setEngineURL(this.value)">
     <div class="eng-pill" id="eng-badge">● SIN COMPILADOR</div>
     <div class="admin-pill" id="admin-pill" style="display:none;">ADMIN+</div>
     <div class="user-pill" id="user-pill">—</div>
   </div>
 </div>
 
-<!-- SECONDARY BAR -->
 <div class="secbar" id="secbar" style="display:none;">
   <button class="stab on" id="stab-1" onclick="setView('notebook')">📝 NOTEBOOK</button>
   <button class="stab" id="stab-2" onclick="setView('manage')">📂 MIS NOTEBOOKS</button>
@@ -418,6 +448,8 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
     <button class="tbtn" onclick="importNb()" title="Subir .ipynb desde tu PC">📂 Abrir .ipynb</button>
     <input type="file" id="import-file" style="display:none;" accept=".ipynb" onchange="handleImport(event)">
     <button class="tbtn" onclick="downloadNb()" title="Descargar .ipynb">📥 .ipynb</button>
+    <!-- Módulo 5 — botón guardar -->
+    <button class="tbtn" onclick="saveCurrentNb(true)" title="Guardar (Ctrl+S)">💾 GUARDAR</button>
     <button class="tbtn pub" onclick="showPublish()"><span>📤 PUBLICAR</span></button>
     <div style="width:1px;height:18px;background:var(--bd);margin:0 .1rem;"></div>
     <button class="tbtn run" onclick="runCurCell()" id="btn-run-cur">▶ EJECUTAR</button>
@@ -425,21 +457,15 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main" id="main-area" style="display:none;">
-
-  <!-- NOTEBOOK VIEW -->
   <div id="view-notebook" style="display:flex;">
     <div class="nb-scroll" id="nb-scroll">
-      <!-- Celdas se insertan aquí dinámicamente -->
       <div class="nb-bottom">
         <button class="nb-add-big" onclick="addCellAt(-1,'code')">＋ Añadir celda de código</button>
         <button class="nb-add-big" onclick="addCellAt(-1,'markdown')">＋ Añadir celda de texto</button>
       </div>
     </div>
   </div>
-
-  <!-- MANAGE VIEW -->
   <div id="view-manage">
     <div class="manage-wrap">
       <div class="manage-bar">
@@ -450,21 +476,19 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
       <div class="nb-grid" id="nb-grid"></div>
     </div>
   </div>
-
 </div>
 
-<!-- STATUS BAR -->
 <div class="statusbar" id="statusbar" style="display:none;">
   <div class="sb-dot sb-idle" id="sb-dot"></div>
   <span id="sb-txt">Listo</span>
   <span>Python · <span id="sb-lib">Qiskit</span></span>
   <div class="sb-right">
     <span id="sb-cells-info">0 celdas</span>
+    <span id="sb-save-status">─</span>
     <span id="sb-cur">Ln 1, Col 1</span>
   </div>
 </div>
 
-<!-- PUBLISH MODAL -->
 <div class="modal-ov" id="pub-modal">
   <div class="modal">
     <div class="modal-title">📤 Publicar Notebook</div>
@@ -487,12 +511,10 @@ textarea.fi{resize:vertical;min-height:65px;line-height:1.5;}
 
 <script>
 // ══════════════════════════════════════════════════
-// QCOL ARQUITECTO PROFESIONAL v3 — Notebook IDE
-// Estilo Google Colab · Solo Admin/Founder
+// QCOL ARQUITECTO PROFESIONAL v3 — Con DeepSeek Full Implementation
 // ══════════════════════════════════════════════════
 
-// Detectar si está dentro del ecosistema o abierto directamente
-const STANDALONE = window.parent === window;
+let STANDALONE = window.parent === window;
 let curUser = null;
 let engineURL = '', engineOK = false, running = false;
 let curView = 'notebook';
@@ -500,31 +522,91 @@ let cells = [];
 let curCellId = null;
 let execCounter = 0;
 let _initialized = false;
+let lastSaveTime = Date.now();
+let debounceTimer = null;
 
-// ── CORE COMM ──────────────────────────────────────
-function postCore(type, data={}){
-  try{ window.parent.postMessage({type,...data},'*'); }catch(e){}
-}
-function notify(msg,ms=2800){
-  const el=document.getElementById('notif');
-  el.textContent=msg; el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),ms);
+function postCore(type, data={}){ try{ window.parent.postMessage({type,...data},'*'); }catch(e){} }
+function notify(msg,ms=2800){ const el=document.getElementById('notif'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),ms); }
+
+// Módulo 1 — checkEngine real
+async function checkEngine(){
+  if(!engineURL) return;
+  const badge=document.getElementById('eng-badge');
+  try{
+    const resp=await fetch(engineURL+'/run/predict',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({data:[''], fn_index:1}),
+      signal:AbortSignal.timeout(12000)
+    });
+    if(resp.ok){
+      const raw=await resp.json();
+      if(raw && raw.data && (raw.data[0] !== undefined)){
+        engineOK=true;
+        badge.textContent='● MOTOR ACTIVO';
+        badge.className='eng-pill on';
+      } else throw new Error('Respuesta inválida');
+    } else throw new Error('HTTP '+resp.status);
+  }catch(e){
+    engineOK=false;
+    badge.textContent='● SIN COMPILADOR';
+    badge.className='eng-pill';
+  }
 }
 
-// ── SHOW UI ────────────────────────────────────────
+function setEngineURL(url){
+  engineURL=url;
+  localStorage.setItem('qcol_colab_url',url);
+  checkEngine();
+  notify('🌐 Motor actualizado');
+}
+
+// Módulo 3 — drawCircuitBars
+function drawCircuitBars(canvas, probabilities){
+  if(!canvas || !probabilities) return;
+  const states=Object.keys(probabilities);
+  const values=Object.values(probabilities);
+  const h=Math.max(120, states.length*32);
+  canvas.width=600; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#090d18'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  const maxProb=Math.max(...values,0.01);
+  const barWidth=24; const startX=120; let y=20;
+  for(let i=0;i<states.length;i++){
+    const prob=values[i];
+    const barLen=Math.max(2, (prob/maxProb)*(canvas.width-startX-80));
+    ctx.fillStyle='#0088ff';
+    const grad=ctx.createLinearGradient(startX,y,startX+barLen,y);
+    grad.addColorStop(0,'#0088ff'); grad.addColorStop(1,'#00ffdd');
+    ctx.fillStyle=grad;
+    ctx.fillRect(startX,y,barLen,barWidth-4);
+    ctx.fillStyle='#e2ecff';
+    ctx.font='12px monospace';
+    ctx.fillText(states[i], startX-70, y+16);
+    ctx.fillStyle='#00ffdd';
+    ctx.fillText((prob*100).toFixed(1)+'%', startX+barLen+8, y+16);
+    y+=32;
+  }
+}
+
+function drawPlot(canvas, base64png){
+  if(!canvas || !base64png) return;
+  const img=new Image();
+  img.onload=()=>{
+    canvas.width=img.width; canvas.height=img.height;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,img.width,img.height);
+  };
+  img.src='data:image/png;base64,'+base64png;
+}
+
 function showUI(user){
-  // Permitir re-inicializar si llega un usuario con más permisos
   const newRole = user?.role || 'guest';
-  const isUpgrade = _initialized && 
-    (newRole==='founder'||newRole==='admin') &&
-    (curUser?.role!=='founder' && curUser?.role!=='admin');
-
+  const isUpgrade = _initialized && (newRole==='founder'||newRole==='admin') && (curUser?.role!=='founder' && curUser?.role!=='admin');
   if(_initialized && !isUpgrade) return;
   _initialized = true;
   curUser = user;
   const role = newRole;
-
-  // SEGURIDAD: bloquear si no es admin o founder
   if(role !== 'admin' && role !== 'founder'){
     document.getElementById('access-denied').classList.add('show');
     document.getElementById('topbar').style.display='none';
@@ -533,35 +615,28 @@ function showUI(user){
     document.getElementById('statusbar').style.display='none';
     return;
   }
-  // Ocultar access-denied si estaba visible
   document.getElementById('access-denied').classList.remove('show');
-
-  ['topbar','secbar','main-area','statusbar'].forEach(id=>{
-    document.getElementById(id).style.display='flex';
-  });
-
+  ['topbar','secbar','main-area','statusbar'].forEach(id=>{ document.getElementById(id).style.display='flex'; });
   const pill = document.getElementById('user-pill');
   const ico = role==='founder'?'👑 ':role==='admin'?'🔑 ':'';
   pill.textContent = ico + (curUser.name||'—').split(' ')[0];
   document.getElementById('admin-pill').style.display='';
-
-  engineURL = localStorage.getItem('qcol_colab_url')||'';
-  if(engineURL) checkEngine();
+  // Módulo 1 — restaurar URL
+  const storedURL = localStorage.getItem('qcol_colab_url')||'';
+  if(storedURL){
+    engineURL=storedURL;
+    const urlInput=document.getElementById('engine-url-input');
+    if(urlInput) urlInput.value=storedURL;
+    checkEngine();
+  }
   refreshNbs();
   if(cells.length===0) addCellAt(-1,'code');
 }
 
-// ── AUTH ───────────────────────────────────────────
 window.addEventListener('message',e=>{
   const d = e.data||{};
-  if(d.type==='QCOL_USER'){
-    showUI(d.user);
-  }
-  if(d.type==='QCOL_CONFIG_UPDATED'){
-    engineURL = localStorage.getItem('qcol_colab_url')||'';
-    if(engineURL) checkEngine();
-  }
-  // Cargar notebook desde Proyectos
+  if(d.type==='QCOL_USER'){ showUI(d.user); }
+  if(d.type==='QCOL_CONFIG_UPDATED'){ const url=localStorage.getItem('qcol_colab_url'); if(url){ engineURL=url; checkEngine(); } }
   if(d.type==='QCOL_LOAD_NB' && d.nb){
     if(!requireAuth()) return;
     const nb = d.nb;
@@ -570,178 +645,67 @@ window.addEventListener('message',e=>{
       cells = nb.cells.map(c=>({...c, id:genId(), output:'', exec_count:null, mdEdit:false}));
       renderCells();
       if(cells[0]) focusCell(cells[0].id);
-    } else {
-      cells=[];
-      addCellAt(-1,'code');
-    }
+    } else { cells=[]; addCellAt(-1,'code'); }
     setView('notebook');
     notify('📂 Cargado: '+nb.title);
   }
 });
-
-// Pedir usuario al ecosistema
 postCore('QCOL_GET_USER');
+setTimeout(()=>{ if(!_initialized){ const stored = localStorage.getItem('qcol_cur_user'); const user = stored ? JSON.parse(stored) : null; showUI(user); } }, 2000);
+window.addEventListener('message', e=>{ const d=e.data||{}; if(d.type==='QCOL_USER_UPDATE'){ const role=d.user?.role||'guest'; if(role==='admin'||role==='founder'){ _initialized=false; showUI(d.user); } } });
 
-// Fallback: si en 2s no llegó QCOL_USER, leer de localStorage
-setTimeout(()=>{
-  if(!_initialized){
-    const stored = localStorage.getItem('qcol_cur_user');
-    const user = stored ? JSON.parse(stored) : null;
-    showUI(user);
-  }
-}, 2000);
+function requireAuth(){ const role=curUser?.role||'guest'; if(role!=='admin'&&role!=='founder'){ notify('❌ Requiere cuenta Admin o Founder'); postCore('QCOL_LOGIN'); return false; } return true; }
 
-// Escuchar también QCOL_USER_UPDATE (por si el usuario hace login después)
-window.addEventListener('message', e=>{
-  const d = e.data||{};
-  if(d.type==='QCOL_USER_UPDATE'){
-    // Si ahora es admin/founder, mostrar UI
-    const role = d.user?.role||'guest';
-    if(role==='admin'||role==='founder'){
-      _initialized = false; // reset para permitir re-init
-      showUI(d.user);
-    }
-  }
-});
-
-// ── SEGURIDAD — verificar en cada operación crítica ──
-function requireAuth(){
-  const role = curUser?.role||'guest';
-  if(role!=='admin'&&role!=='founder'){
-    notify('❌ Requiere cuenta Admin o Founder');
-    postCore('QCOL_LOGIN');
-    return false;
-  }
-  return true;
-}
-
-// ── COMPILADOR ─────────────────────────────────────
-async function checkEngine(){
-  if(!engineURL) return;
-  const isHF=engineURL.includes('hf.space')||engineURL.includes('huggingface');
-  const badge=document.getElementById('eng-badge');
-  try{
-    let ok=false;
-    if(isHF){
-      const r=await fetch(engineURL+'/health/predict',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({data:['']}),signal:AbortSignal.timeout(12000)
-      });
-      ok=r.ok;
-    } else {
-      const r=await fetch(engineURL+'/health',{signal:AbortSignal.timeout(5000)});
-      ok=r.ok;
-    }
-    if(ok){
-      engineOK=true;
-      badge.textContent='● COMPILADOR ACTIVO';
-      badge.className='eng-pill on';
-    }
-  }catch(e){
-    engineOK=false;
-    badge.textContent='● SIN COMPILADOR';
-    badge.className='eng-pill';
-  }
-}
-
-// ── VIEW ───────────────────────────────────────────
-function setView(v){
-  curView=v;
-  document.getElementById('view-notebook').style.display=v==='notebook'?'flex':'none';
-  document.getElementById('view-manage').style.display=v==='manage'?'flex':'none';
-  document.getElementById('stab-1').classList.toggle('on',v==='notebook');
-  document.getElementById('stab-2').classList.toggle('on',v==='manage');
-  if(v==='manage') refreshNbs();
-}
-
-// ── CELL MANAGEMENT ────────────────────────────────
 function genId(){ return 'c'+Date.now()+Math.random().toString(36).slice(2,6); }
 
 function addCellAt(afterIdx, type='code'){
   const cell={id:genId(),type,code:type==='code'?'':'',output:'',exec_count:null,mdEdit:false};
-  if(afterIdx===-1||afterIdx>=cells.length){
-    cells.push(cell);
-  } else {
-    cells.splice(afterIdx+1,0,cell);
-  }
+  if(afterIdx===-1||afterIdx>=cells.length) cells.push(cell);
+  else cells.splice(afterIdx+1,0,cell);
   renderCells();
   focusCell(cell.id);
   updateStatus();
 }
 
-function deleteCell(id){
-  if(cells.length<=1){ notify('Debes tener al menos 1 celda'); return; }
-  cells=cells.filter(c=>c.id!==id);
-  if(curCellId===id) curCellId=cells[0]?.id||null;
-  renderCells();
-  updateStatus();
+function deleteCell(id){ if(cells.length<=1){ notify('Debes tener al menos 1 celda'); return; } cells=cells.filter(c=>c.id!==id); if(curCellId===id) curCellId=cells[0]?.id||null; renderCells(); updateStatus(); }
+function moveCellUp(id){ const i=cells.findIndex(c=>c.id===id); if(i<=0) return; [cells[i-1],cells[i]]=[cells[i],cells[i-1]]; renderCells(); focusCell(id); }
+function moveCellDown(id){ const i=cells.findIndex(c=>c.id===id); if(i<0||i>=cells.length-1) return; [cells[i],cells[i+1]]=[cells[i+1],cells[i]]; renderCells(); focusCell(id); }
+
+function syncCellCode(id){ const cell=cells.find(c=>c.id===id); if(!cell) return; const ta=document.getElementById('ta-'+id); const mta=document.getElementById('mta-'+id); if(ta) cell.code=ta.value; if(mta) cell.code=mta.value; }
+function focusCell(id){ curCellId=id; document.querySelectorAll('.nb-cell').forEach(el=>{ el.classList.toggle('active',el.dataset.id===id); }); const ta=document.getElementById('ta-'+id)||document.getElementById('mta-'+id); if(ta) ta.focus(); }
+
+// Módulo 4 — renderizado markdown con preview y LaTeX
+let md=null;
+function initMarkdown(){ if(!window.markdownit) return; md=window.markdownit({html:true,linkify:true,highlight:function(str,lang){ if(lang && hljs.getLanguage(lang)){ try{ return hljs.highlight(str,{language:lang}).value; }catch(e){} } return ''; } }); }
+async function renderMdPreview(cellId){
+  const cell=cells.find(c=>c.id===cellId);
+  if(!cell || cell.type!=='markdown') return;
+  const previewDiv=document.getElementById(`md-preview-${cellId}`);
+  if(!previewDiv) return;
+  const src=cell.code||'';
+  if(!md) initMarkdown();
+  const html=md ? md.render(src) : `<pre>${escH(src)}</pre>`;
+  previewDiv.innerHTML=html;
+  if(window.hljs) document.querySelectorAll('#md-preview-'+cellId+' pre code').forEach((block)=>{ hljs.highlightElement(block); });
+  if(window.MathJax){ try{ await window.MathJax.typesetPromise([previewDiv]); }catch(e){} }
 }
 
-function moveCellUp(id){
-  const i=cells.findIndex(c=>c.id===id);
-  if(i<=0) return;
-  [cells[i-1],cells[i]]=[cells[i],cells[i-1]];
-  renderCells(); focusCell(id);
-}
-function moveCellDown(id){
-  const i=cells.findIndex(c=>c.id===id);
-  if(i<0||i>=cells.length-1) return;
-  [cells[i],cells[i+1]]=[cells[i+1],cells[i]];
-  renderCells(); focusCell(id);
-}
+function editMd(id){ const cell=cells.find(c=>c.id===id); if(cell){ cell.mdEdit=true; renderCells(); focusCell(id); } }
 
-function getCellCode(id){
-  const ta=document.getElementById('ta-'+id);
-  return ta?ta.value:'';
-}
-function syncCellCode(id){
-  const cell=cells.find(c=>c.id===id);
-  if(!cell) return;
-  const ta=document.getElementById('ta-'+id);
-  const mta=document.getElementById('mta-'+id);
-  if(ta) cell.code=ta.value;
-  if(mta) cell.code=mta.value;
-}
-
-function focusCell(id){
-  curCellId=id;
-  document.querySelectorAll('.nb-cell').forEach(el=>{
-    el.classList.toggle('active',el.dataset.id===id);
-  });
-  const ta=document.getElementById('ta-'+id)||document.getElementById('mta-'+id);
-  if(ta) ta.focus();
-}
-
-// ── RENDER CELLS ───────────────────────────────────
 function renderCells(){
   const scroll=document.getElementById('nb-scroll');
   const bottom=scroll.querySelector('.nb-bottom');
-  // Quitar celdas anteriores
   scroll.querySelectorAll('.nb-cell,.add-cell-row').forEach(el=>el.remove());
-  // Insertar celdas antes del .nb-bottom
-  cells.forEach((cell,i)=>{
-    const row=buildAddRow(i-1);
-    scroll.insertBefore(row,bottom);
-    const el=buildCellEl(cell,i);
-    scroll.insertBefore(el,bottom);
-  });
+  cells.forEach((cell,i)=>{ const row=buildAddRow(i-1); scroll.insertBefore(row,bottom); const el=buildCellEl(cell,i); scroll.insertBefore(el,bottom); });
   const row=buildAddRow(cells.length-1);
   scroll.insertBefore(row,bottom);
-  // Re-activar celda actual
   if(curCellId) focusCell(curCellId);
   updateStatus();
 }
 
 function buildAddRow(afterIdx){
-  const row=document.createElement('div');
-  row.className='add-cell-row';
-  row.innerHTML=`
-    <div class="add-cell-line"></div>
-    <div class="add-cell-btns">
-      <button class="add-btn" onclick="addCellAt(${afterIdx},'code')">＋ Código</button>
-      <button class="add-btn" onclick="addCellAt(${afterIdx},'markdown')">＋ Texto</button>
-    </div>
-    <div class="add-cell-line"></div>`;
+  const row=document.createElement('div'); row.className='add-cell-row';
+  row.innerHTML=`<div class="add-cell-line"></div><div class="add-cell-btns"><button class="add-btn" onclick="addCellAt(${afterIdx},'code')">＋ Código</button><button class="add-btn" onclick="addCellAt(${afterIdx},'markdown')">＋ Texto</button></div><div class="add-cell-line"></div>`;
   return row;
 }
 
@@ -751,270 +715,39 @@ function buildCellEl(cell,i){
   el.dataset.id=cell.id;
   el.draggable=true;
   el.onclick=()=>focusCell(cell.id);
-  el.ondragstart=e=>onCellDragStart(e,cell.id);
-  el.ondragend=e=>onCellDragEnd(e,cell.id);
-  el.ondragover=e=>onCellDragOver(e,cell.id);
-  el.ondrop=e=>onCellDrop(e,cell.id);
-
+  el.ondragstart=e=>{ dragSrcId=cell.id; e.dataTransfer.setData('text/plain',cell.id); };
+  el.ondragend=e=>{ dragSrcId=null; document.querySelectorAll('.nb-cell').forEach(c=>c.classList.remove('drag-over')); };
+  el.ondragover=e=>{ e.preventDefault(); if(dragSrcId && dragSrcId!==cell.id) e.dataTransfer.dropEffect='move'; };
+  el.ondrop=e=>{ e.preventDefault(); if(!dragSrcId||dragSrcId===cell.id) return; const srcIdx=cells.findIndex(c=>c.id===dragSrcId); const dstIdx=cells.findIndex(c=>c.id===cell.id); if(srcIdx<0||dstIdx<0) return; const [moved]=cells.splice(srcIdx,1); cells.splice(dstIdx,0,moved); renderCells(); focusCell(dragSrcId); notify('↕ Celda movida'); };
   const isCode=cell.type==='code';
   const execLbl=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]';
-
-  // Toolbar de celda
-  const toolbar=`
-    <div class="cell-toolbar">
-      <button class="ct-btn" onclick="event.stopPropagation();moveCellUp('${cell.id}')" title="Subir">↑</button>
-      <button class="ct-btn" onclick="event.stopPropagation();moveCellDown('${cell.id}')" title="Bajar">↓</button>
-      <button class="ct-btn" onclick="event.stopPropagation();changeCellType('${cell.id}')" title="Cambiar tipo">${isCode?'Md':'{ }'}
-      </button>
-      <button class="ct-btn danger" onclick="event.stopPropagation();deleteCell('${cell.id}')" title="Eliminar">✕</button>
-    </div>`;
-
+  const toolbar=`<div class="cell-toolbar"><button class="ct-btn" onclick="event.stopPropagation();moveCellUp('${cell.id}')">↑</button><button class="ct-btn" onclick="event.stopPropagation();moveCellDown('${cell.id}')">↓</button><button class="ct-btn" onclick="event.stopPropagation();changeCellType('${cell.id}')">${isCode?'Md':'{ }'}</button><button class="ct-btn danger" onclick="event.stopPropagation();deleteCell('${cell.id}')">✕</button></div>`;
   if(isCode){
-    const escapedCode=escH(cell.code||'');
     const highlighted=highlight(cell.code||'');
-    const outputHtml=cell.output
-      ?`<div class="cell-output show" id="out-${cell.id}">${cell.output}</div>`
-      :`<div class="cell-output" id="out-${cell.id}"></div>`;
-
-    el.innerHTML=`
-      ${toolbar}
-      <div class="cell-gutter">
-        <div class="cell-num">${execLbl}</div>
-        <button class="cell-run-btn" id="rbtn-${cell.id}"
-          onclick="event.stopPropagation();runCell('${cell.id}')"
-          title="Ejecutar celda (Shift+Enter)">▶</button>
-      </div>
-      <div class="cell-body">
-        <div class="cell-type-badge ctb-code">{ } Python</div>
-        <div class="cell-code-area" id="area-${cell.id}">
-          <div class="cell-syn-layer" id="syn-${cell.id}">${highlighted}</div>
-          <textarea class="cell-textarea" id="ta-${cell.id}"
-            spellcheck="false"
-            oninput="onCellInput('${cell.id}')"
-            onkeydown="onCellKeydown(event,'${cell.id}')"
-            onfocus="focusCell('${cell.id}')">${escapedCode}</textarea>
-        </div>
-        ${outputHtml}
-      </div>`;
+    el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num">${execLbl}</div><button class="cell-run-btn" id="rbtn-${cell.id}" onclick="event.stopPropagation();runCell('${cell.id}')">▶</button></div><div class="cell-body"><div class="cell-type-badge ctb-code">{ } Python</div><div class="cell-code-area" id="area-${cell.id}"><div class="cell-syn-layer" id="syn-${cell.id}">${highlighted}</div><textarea class="cell-textarea" id="ta-${cell.id}" spellcheck="false" oninput="onCellInput('${cell.id}')" onkeydown="onCellKeydown(event,'${cell.id}')" onfocus="focusCell('${cell.id}')">${escH(cell.code||'')}</textarea></div><div class="cell-output-area" id="output-area-${cell.id}"></div></div>`;
   } else {
-    // Markdown
-    const mdContent=cell.code||'';
-    if(cell.mdEdit||!mdContent){
-      el.innerHTML=`
-        ${toolbar}
-        <div class="cell-gutter">
-          <div class="cell-num" style="color:var(--gr)">Md</div>
-        </div>
-        <div class="cell-body">
-          <div class="cell-type-badge ctb-md">✦ Markdown / LaTeX</div>
-          <textarea class="cell-md-area" id="mta-${cell.id}"
-            placeholder="# Título&#10;Escribe Markdown o LaTeX: $E=mc^2$"
-            oninput="syncCellCode('${cell.id}')"
-            onkeydown="onMdKeydown(event,'${cell.id}')"
-            onfocus="focusCell('${cell.id}')"
-            rows="4">${escH(mdContent)}</textarea>
-        </div>`;
+    if(cell.mdEdit){
+      el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num" style="color:var(--gr)">Md</div></div><div class="cell-body"><div class="cell-type-badge ctb-md">✦ Markdown / LaTeX</div><div class="md-split"><div class="md-editor-pane"><textarea class="cell-md-split-area" id="mta-${cell.id}" placeholder="# Título&#10;Escribe Markdown o LaTeX: $E=mc^2$" oninput="syncCellCode('${cell.id}');renderMdPreview('${cell.id}')" onkeydown="onMdKeydown(event,'${cell.id}')" rows="6">${escH(cell.code||'')}</textarea></div><div class="md-preview-pane" id="md-preview-${cell.id}"></div></div></div>`;
+      setTimeout(()=>renderMdPreview(cell.id),10);
     } else {
-      el.innerHTML=`
-        ${toolbar}
-        <div class="cell-gutter">
-          <div class="cell-num" style="color:var(--gr)">Md</div>
-        </div>
-        <div class="cell-body">
-          <div class="cell-type-badge ctb-md">✦ Markdown</div>
-          <div class="cell-md-rendered" id="mren-${cell.id}"
-            ondblclick="editMd('${cell.id}')"
-            title="Doble clic para editar">
-            ${renderMd(mdContent)}
-          </div>
-        </div>`;
+      el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num" style="color:var(--gr)">Md</div></div><div class="cell-body"><div class="cell-type-badge ctb-md">✦ Markdown</div><div class="cell-md-rendered" id="mren-${cell.id}" ondblclick="editMd('${cell.id}')">${renderMd(cell.code||'')}</div></div>`;
     }
   }
-
-  // Auto-resize textarea
-  setTimeout(()=>{
-    const ta=document.getElementById('ta-'+cell.id);
-    if(ta) autoResize(ta);
-  },0);
-
+  setTimeout(()=>{ const ta=document.getElementById('ta-'+cell.id); if(ta) autoResize(ta); },0);
   return el;
 }
 
+function onMdKeydown(e,id){ if(e.key==='Escape'){ syncCellCode(id); const cell=cells.find(c=>c.id===id); if(cell){ cell.mdEdit=false; renderCells(); } } if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); syncCellCode(id); const cell=cells.find(c=>c.id===id); if(cell){ cell.mdEdit=false; renderCells(); } const idx=cells.findIndex(c=>c.id===id); if(idx<cells.length-1) focusCell(cells[idx+1].id); } }
+
 function escH(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function highlight(code){ const KW=['import','from','as','def','class','return','if','else','elif','for','while','in','not','and','or','True','False','None','with','try','except','finally','lambda','pass','break','continue','yield','raise','del','global','assert']; let h=escH(code); h=h.replace(/(#[^\n]*)/g,'<span class="cm">$1</span>'); h=h.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"[^"]*"|'[^']*')/g,'<span class="st">$1</span>'); h=h.replace(/\b(\d+\.?\d*)\b/g,'<span class="nm">$1</span>'); KW.forEach(k=>{ const re=new RegExp(`\\b(${k})\\b`,'g'); h=h.replace(re,'<span class="kw">$1</span>'); }); h=h.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g,'<span class="fn">$1</span>'); return h; }
+function onCellInput(id){ const ta=document.getElementById('ta-'+id); const syn=document.getElementById('syn-'+id); if(ta&&syn){ const cell=cells.find(c=>c.id===id); if(cell) cell.code=ta.value; syn.innerHTML=highlight(ta.value); autoResize(ta); syn.scrollTop=ta.scrollTop; syn.scrollLeft=ta.scrollLeft; } if(debounceTimer) clearTimeout(debounceTimer); debounceTimer=setTimeout(()=>{ if(curUser&&cells.length) saveCurrentNb(false); },3000); }
+function autoResize(ta){ ta.style.height='auto'; const h=Math.max(48,ta.scrollHeight); ta.style.height=h+'px'; const area=ta.closest('.cell-code-area'); if(area) area.style.height=h+'px'; const syn=ta.parentElement?.querySelector('.cell-syn-layer'); if(syn) syn.style.height=h+'px'; }
+function onCellKeydown(e,id){ const ta=document.getElementById('ta-'+id); if(e.key==='Tab'){ e.preventDefault(); const s=ta.selectionStart,en=ta.selectionEnd; ta.value=ta.value.substring(0,s)+'    '+ta.value.substring(en); ta.selectionStart=ta.selectionEnd=s+4; onCellInput(id); return; } if(e.shiftKey&&e.key==='Enter'){ e.preventDefault(); runCell(id); const idx=cells.findIndex(c=>c.id===id); if(idx<cells.length-1) focusCell(cells[idx+1].id); else addCellAt(-1,'code'); return; } if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); runCell(id); } }
+function changeCellType(id){ const cell=cells.find(c=>c.id===id); if(!cell) return; cell.type=cell.type==='code'?'markdown':'code'; cell.mdEdit=true; renderCells(); focusCell(id); }
+function renderMd(text){ let html=escH(text); html=html.replace(/^### (.+)/gm,'<h3>$1</h3>'); html=html.replace(/^## (.+)/gm,'<h2>$1</h2>'); html=html.replace(/^# (.+)/gm,'<h1>$1</h1>'); html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); html=html.replace(/\*(.+?)\*/g,'<em>$1</em>'); html=html.replace(/`(.+?)`/g,'<code>$1</code>'); html=html.replace(/\n/g,'<br>'); return html; }
 
-function formatProError(errText, code){
-  const lines = code ? code.split('\n') : [];
-  const lineMatch = errText.match(/line[^\d]*(\d+)/i)||errText.match(/línea[^\d]*(\d+)/i);
-  const errLine = lineMatch ? parseInt(lineMatch[1]) : null;
-  const types = {'SyntaxError':'Sintaxis','NameError':'Variable no definida','TypeError':'Tipo incorrecto','ValueError':'Valor inválido','ImportError':'Importación fallida','AttributeError':'Atributo no existe','IndentationError':'Indentación incorrecta'};
-  const typeMatch = errText.match(/(SyntaxError|NameError|TypeError|ValueError|ImportError|AttributeError|IndentationError)/);
-  const errType = typeMatch ? typeMatch[1] : 'Error';
-  const tips = {'SyntaxError':'Revisa paréntesis, dos puntos o indentación.','NameError':'Variable no definida — ¿escribiste bien el nombre?','IndentationError':'Verifica los espacios al inicio de la línea.','ImportError':'La librería no está disponible.'};
-  let html = `<span class="out-err">❌ ${types[errType]||errType}${errLine?' en línea '+errLine:''}\n</span>`;
-  if(errLine && lines[errLine-1]) html += `<span class="err-line"><span class="err-arrow">→ L${errLine}:</span> <span style="color:#ffa198;">${escH(lines[errLine-1])}</span></span>\n`;
-  const lastMsg = errText.split('\n').filter(l=>l.trim()).pop()||errText;
-  html += `<span class="err-msg">${escH(lastMsg)}</span>\n`;
-  if(tips[errType]) html += `<span class="out-warn">💡 ${tips[errType]}</span>`;
-  return html;
-}
-
-function editMd(id){
-  const cell=cells.find(c=>c.id===id);
-  if(cell){ cell.mdEdit=true; renderCells(); focusCell(id); }
-}
-
-function onMdKeydown(e,id){
-  if(e.key==='Escape'){
-    syncCellCode(id);
-    const cell=cells.find(c=>c.id===id);
-    if(cell){ cell.mdEdit=false; renderCells(); }
-  }
-  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
-    e.preventDefault();
-    syncCellCode(id);
-    const cell=cells.find(c=>c.id===id);
-    if(cell){ cell.mdEdit=false; renderCells(); }
-    // Mover a siguiente celda
-    const idx=cells.findIndex(c=>c.id===id);
-    if(idx<cells.length-1) focusCell(cells[idx+1].id);
-  }
-}
-
-function renderMd(text){
-  // Simple Markdown render
-  let html=escH(text);
-  html=html.replace(/^### (.+)/gm,'<h3>$1</h3>');
-  html=html.replace(/^## (.+)/gm,'<h2>$1</h2>');
-  html=html.replace(/^# (.+)/gm,'<h1>$1</h1>');
-  html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  html=html.replace(/\*(.+?)\*/g,'<em>$1</em>');
-  html=html.replace(/`(.+?)`/g,'<code>$1</code>');
-  html=html.replace(/\n/g,'<br>');
-  return html;
-}
-
-// ── SYNTAX HIGHLIGHT ───────────────────────────────
-function highlight(code){
-  const KW=['import','from','as','def','class','return','if','else','elif','for','while',
-            'in','not','and','or','True','False','None','with','try','except','finally',
-            'lambda','pass','break','continue','yield','raise','del','global','assert'];
-  let h=escH(code);
-  h=h.replace(/(#[^\n]*)/g,'<span class="cm">$1</span>');
-  h=h.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"[^"]*"|'[^']*')/g,'<span class="st">$1</span>');
-  h=h.replace(/\b(\d+\.?\d*)\b/g,'<span class="nm">$1</span>');
-  KW.forEach(k=>{
-    const re=new RegExp(`\\b(${k})\\b`,'g');
-    h=h.replace(re,'<span class="kw">$1</span>');
-  });
-  h=h.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g,'<span class="fn">$1</span>');
-  return h;
-}
-
-function onCellInput(id){
-  const ta=document.getElementById('ta-'+id);
-  const syn=document.getElementById('syn-'+id);
-  if(ta&&syn){
-    const cell=cells.find(c=>c.id===id);
-    if(cell) cell.code=ta.value;
-    syn.innerHTML=highlight(ta.value);
-    autoResize(ta);
-    // Sync scroll
-    syn.scrollTop=ta.scrollTop;
-    syn.scrollLeft=ta.scrollLeft;
-  }
-}
-
-function autoResize(ta){
-  ta.style.height='auto';
-  const h=Math.max(48,ta.scrollHeight);
-  ta.style.height=h+'px';
-  const area=ta.closest('.cell-code-area');
-  if(area){ area.style.height=h+'px'; }
-  const syn=ta.parentElement?.querySelector('.cell-syn-layer');
-  if(syn) syn.style.height=h+'px';
-}
-
-function onCellKeydown(e,id){
-  const ta=document.getElementById('ta-'+id);
-  // Tab → insertar espacios
-  if(e.key==='Tab'){
-    e.preventDefault();
-    const s=ta.selectionStart,en=ta.selectionEnd;
-    ta.value=ta.value.substring(0,s)+'    '+ta.value.substring(en);
-    ta.selectionStart=ta.selectionEnd=s+4;
-    onCellInput(id);
-    return;
-  }
-  // Shift+Enter → ejecutar
-  if(e.shiftKey&&e.key==='Enter'){
-    e.preventDefault();
-    runCell(id);
-    // Mover a siguiente o crear nueva
-    const idx=cells.findIndex(c=>c.id===id);
-    if(idx<cells.length-1) focusCell(cells[idx+1].id);
-    else addCellAt(-1,'code');
-    return;
-  }
-  // Ctrl+Enter → ejecutar sin mover
-  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
-    e.preventDefault();
-    runCell(id);
-  }
-}
-
-function changeCellType(id){
-  const cell=cells.find(c=>c.id===id);
-  if(!cell) return;
-  cell.type=cell.type==='code'?'markdown':'code';
-  cell.mdEdit=true;
-  renderCells(); focusCell(id);
-}
-
-// ── DRAG & DROP CELDAS ────────────────────────────
-let dragSrcId = null;
-let dragOverId = null;
-
-function onCellDragStart(e, id){
-  dragSrcId = id;
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', id);
-  setTimeout(()=>{
-    const el = document.querySelector(`.nb-cell[data-id="${id}"]`);
-    if(el) el.style.opacity = '0.4';
-  },0);
-}
-function onCellDragEnd(e, id){
-  dragSrcId = null; dragOverId = null;
-  document.querySelectorAll('.nb-cell').forEach(el=>{
-    el.style.opacity='';
-    el.classList.remove('drag-over');
-  });
-}
-function onCellDragOver(e, id){
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  if(id===dragSrcId) return;
-  if(id!==dragOverId){
-    document.querySelectorAll('.nb-cell').forEach(el=>el.classList.remove('drag-over'));
-    dragOverId = id;
-    const el = document.querySelector(`.nb-cell[data-id="${id}"]`);
-    if(el) el.classList.add('drag-over');
-  }
-}
-function onCellDrop(e, id){
-  e.preventDefault();
-  if(!dragSrcId||dragSrcId===id) return;
-  const srcIdx = cells.findIndex(c=>c.id===dragSrcId);
-  const dstIdx = cells.findIndex(c=>c.id===id);
-  if(srcIdx<0||dstIdx<0) return;
-  const [moved] = cells.splice(srcIdx,1);
-  cells.splice(dstIdx,0,moved);
-  renderCells();
-  focusCell(dragSrcId);
-  notify('↕ Celda movida');
-}
-
-// ── EJECUTAR ───────────────────────────────────────
+// Módulo 2 + 3 — ejecución con output rico
 async function runCell(id){
   if(!requireAuth()) return;
   if(running){ notify('Ya hay una ejecución en curso'); return; }
@@ -1023,312 +756,113 @@ async function runCell(id){
   syncCellCode(id);
   const code=cell.code.trim();
   if(!code) return;
-
   running=true;
   setSbRun(true);
   const rbtn=document.getElementById('rbtn-'+id);
-  const outEl=document.getElementById('out-'+id);
   if(rbtn) rbtn.classList.add('spinning');
-  if(outEl){ outEl.className='cell-output show'; outEl.innerHTML='<span class="out-inf">Compilando...</span>'; }
-  document.getElementById('nb-cell-'+id)?.classList.add('running');
-
+  const outArea=document.getElementById(`output-area-${id}`);
+  if(outArea) outArea.innerHTML='<div class="out-text out-inf">⚙️ Ejecutando...</div>';
   try{
     if(engineOK&&engineURL){
-      const isHF=engineURL.includes('hf.space')||engineURL.includes('huggingface');
-      let result;
-      if(isHF){
-        const res=await fetch(engineURL+'/run/predict',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          mode:'cors',body:JSON.stringify({data:[code]}),
-          signal:AbortSignal.timeout(90000)
-        });
-        const raw=await res.json();
-        result=raw.data?raw.data[0]:raw;
-      } else {
-        const res=await fetch(engineURL+'/run',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          mode:'cors',body:JSON.stringify({code}),
-          signal:AbortSignal.timeout(60000)
-        });
-        result=await res.json();
-      }
+      const resp=await fetch(engineURL+'/run/predict',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({data:[code], fn_index:1}),
+        signal:AbortSignal.timeout(90000)
+      });
+      const raw=await resp.json();
+      const d=raw.data?raw.data[0]:{};
       execCounter++;
       cell.exec_count=execCounter;
-      if(result.success){
-        let html=`<span class="out-ok">${escH(result.output||'✅ OK')}</span>`;
-        if(result.bloch?.probabilities){
-          html+='\n<span class="out-inf">── Probabilidades ──\n</span>';
-          Object.entries(result.bloch.probabilities).sort((a,b)=>b[1]-a[1]).forEach(([s,p])=>{
-            const bar='█'.repeat(Math.round(p*20));
-            html+=`<span class="out-ok">|${s}⟩: ${(p*100).toFixed(1).padStart(5)}%  ${bar}\n</span>`;
-          });
+      if(outArea){
+        let outHtml='';
+        if(d.success){
+          outHtml+=`<div class="out-text out-ok">${escH(d.output||'✅ OK')}</div>`;
+        } else {
+          outHtml+=`<div class="out-text out-err">❌ ${escH(d.output||'Error')}</div>`;
         }
-        if(result.bloch?.counts){
-          const tot=Object.values(result.bloch.counts).reduce((a,b)=>a+b,0);
-          html+=`\n<span class="out-inf">── Mediciones (${tot} shots) ──\n</span>`;
-          Object.entries(result.bloch.counts).sort((a,b)=>b[1]-a[1]).forEach(([s,c])=>{
-            const bar='█'.repeat(Math.round(c/tot*20));
-            html+=`<span class="out-ok">|${s}⟩: ${c}  ${bar}\n</span>`;
-          });
+        if(d.bloch && d.bloch.probabilities){
+          const canvasId=`circuit-canvas-${id}`;
+          outHtml+=`<canvas id="${canvasId}" class="out-circuit"></canvas>`;
+          outArea.innerHTML=outHtml;
+          const canvas=document.getElementById(canvasId);
+          drawCircuitBars(canvas, d.bloch.probabilities);
+        } else if(d.plot_png){
+          const canvasId=`plot-canvas-${id}`;
+          outHtml+=`<canvas id="${canvasId}" class="out-plot"></canvas>`;
+          outArea.innerHTML=outHtml;
+          const canvas=document.getElementById(canvasId);
+          drawPlot(canvas, d.plot_png);
+        } else {
+          outArea.innerHTML=outHtml;
         }
-        cell.output=html;
-        if(outEl){ outEl.innerHTML=html; outEl.className='cell-output show'; }
-        setSbRun(false,'✅ Completado en '+(result.time||0)+'s');
-      } else {
-        const errHtml = formatProError(result.output||'Error', cell.code);
-        cell.output=errHtml;
-        if(outEl){ outEl.innerHTML=errHtml; outEl.className='cell-output show'; }
-        setSbRun(false,'❌ Error','err');
       }
+      setSbRun(false,'✅ Completado');
     } else {
-      // Simulación local
       await new Promise(r=>setTimeout(r,600));
       execCounter++;
       cell.exec_count=execCounter;
-      const simOut=`<span class="out-inf">⚡ Simulación local · Configura el compilador para Qiskit real\n</span><span class="out-ok"># ${code.split('\n')[0]}</span>`;
-      cell.output=simOut;
-      if(outEl){ outEl.innerHTML=simOut; outEl.className='cell-output show'; }
+      if(outArea) outArea.innerHTML=`<div class="out-text out-inf">⚡ Simulación local · Configura el motor en la barra superior</div>`;
       setSbRun(false,'Simulación local');
     }
   } catch(e){
-    const errHtml=`<span class="out-err">❌ ${e.name==='TimeoutError'?'Tiempo agotado':e.message}</span>`;
-    cell.output=errHtml;
-    if(outEl){ outEl.innerHTML=errHtml; outEl.className='cell-output show'; }
+    if(outArea) outArea.innerHTML=`<div class="out-text out-err">❌ ${e.name==='TimeoutError'?'Tiempo agotado':e.message}</div>`;
     setSbRun(false,'❌ Error','err');
   }
-
   running=false;
   if(rbtn) rbtn.classList.remove('spinning');
-  // Actualizar número de celda
   renderCellNum(id);
 }
-
-function renderCellNum(id){
-  const cell=cells.find(c=>c.id===id);
-  if(!cell) return;
-  const numEl=document.querySelector(`[data-id="${id}"] .cell-num`);
-  if(numEl) numEl.textContent=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]';
-}
-
+function renderCellNum(id){ const cell=cells.find(c=>c.id===id); if(!cell) return; const numEl=document.querySelector(`[data-id="${id}"] .cell-num`); if(numEl) numEl.textContent=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]'; }
 async function runCurCell(){ if(curCellId) await runCell(curCellId); }
+async function runAll(){ for(const cell of cells){ if(cell.type==='code'&&cell.code.trim()){ await runCell(cell.id); await new Promise(r=>setTimeout(r,200)); } } }
+function setSbRun(running,msg='',state=''){ const dot=document.getElementById('sb-dot'); const txt=document.getElementById('sb-txt'); if(dot) dot.className='sb-dot '+(running?'sb-run':state==='err'?'sb-err':'sb-idle'); if(txt&&msg) txt.textContent=msg; }
+function updateStatus(){ const el=document.getElementById('sb-cells-info'); if(el) el.textContent=cells.length+' celdas'; }
 
-async function runAll(){
-  for(const cell of cells){
-    if(cell.type==='code'&&cell.code.trim()){
-      await runCell(cell.id);
-      await new Promise(r=>setTimeout(r,200));
-    }
-  }
-}
-
-function setSbRun(running,msg='',state=''){
-  const dot=document.getElementById('sb-dot');
-  const txt=document.getElementById('sb-txt');
-  if(dot){
-    dot.className='sb-dot '+(running?'sb-run':state==='err'?'sb-err':'sb-idle');
-  }
-  if(txt&&msg) txt.textContent=msg;
-}
-
-function updateStatus(){
-  const el=document.getElementById('sb-cells-info');
-  if(el) el.textContent=cells.length+' celdas';
-}
-
-// ── NOTEBOOK OPERATIONS ────────────────────────────
-function newNotebook(){
-  if(!confirm('¿Crear nuevo notebook? Se perderá el actual.')) return;
-  cells=[];execCounter=0;curCellId=null;
-  document.getElementById('nb-name-inp').value='Nuevo Notebook';
-  addCellAt(-1,'code');
-  notify('✅ Nuevo notebook');
-}
-
-function importNb(){ document.getElementById('import-file').click(); }
-
-function handleImport(e){
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    try{
-      const nb=JSON.parse(ev.target.result);
-      cells=[];execCounter=0;
-      // Nombre del notebook
-      const name=nb.metadata?.name||file.name.replace('.ipynb','');
-      document.getElementById('nb-name-inp').value=name;
-      // Importar celdas
-      (nb.cells||[]).forEach(c=>{
-        const src=Array.isArray(c.source)?c.source.join(''):c.source||'';
-        const type=c.cell_type==='markdown'?'markdown':'code';
-        const id=genId();
-        cells.push({
-          id, type, code:src, output:'', exec_count:null, mdEdit:false
-        });
-      });
-      if(cells.length===0) addCellAt(-1,'code');
-      else { renderCells(); focusCell(cells[0].id); }
-      setView('notebook');
-      notify(`✅ Importado: ${name} (${cells.length} celdas)`);
-    }catch(err){
-      notify('❌ Error al leer el .ipynb: '+err.message);
-    }
-  };
-  reader.readAsText(file);
-  e.target.value='';
-}
-
-function downloadNb(){
-  const name=document.getElementById('nb-name-inp').value||'qcol_notebook';
-  const lib=localStorage.getItem('qcol_nb_lib')||'qiskit';
-  cells.forEach(c=>{
-    const ta=document.getElementById('ta-'+c.id);
-    const mta=document.getElementById('mta-'+c.id);
-    if(ta) c.code=ta.value;
-    if(mta) c.code=mta.value;
-  });
-  const nb={
-    nbformat:4,nbformat_minor:5,
-    metadata:{
-      name,
-      kernelspec:{display_name:'Python 3',language:'python',name:'python3'},
-      qcol:{lib,author:curUser?.name||'',created:new Date().toISOString()}
-    },
-    cells:cells.map(c=>({
-      cell_type:c.type==='markdown'?'markdown':'code',
-      source:[c.code],
-      metadata:{},
-      outputs:[],
-      execution_count:c.exec_count
-    }))
-  };
-  const blob=new Blob([JSON.stringify(nb,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=name.replace(/\.ipynb$/,'')+'.ipynb';
-  a.click();
-  notify('📥 '+a.download);
-}
-
-// ── GESTIONAR NOTEBOOKS ────────────────────────────
-function getSavedNbs(){
-  if(!curUser) return [];
-  const key='qcol_nbs_'+(curUser.username||'dev');
-  return JSON.parse(localStorage.getItem(key)||'[]');
-}
-function saveCurrentNb(){
+// Módulo 5 — guardado con timestamp
+function saveCurrentNb(showNotify=true){
   if(!curUser) return;
-  cells.forEach(c=>{
-    const ta=document.getElementById('ta-'+c.id);
-    const mta=document.getElementById('mta-'+c.id);
-    if(ta) c.code=ta.value;
-    if(mta) c.code=mta.value;
-  });
+  cells.forEach(c=>{ const ta=document.getElementById('ta-'+c.id); const mta=document.getElementById('mta-'+c.id); if(ta) c.code=ta.value; if(mta) c.code=mta.value; });
   const name=document.getElementById('nb-name-inp').value||'Sin título';
   const key='qcol_nbs_'+(curUser.username||'dev');
-  const nbs=getSavedNbs();
+  const nbs=JSON.parse(localStorage.getItem(key)||'[]');
   const existing=nbs.findIndex(n=>n.name===name);
   const entry={name,cells:JSON.parse(JSON.stringify(cells)),saved:new Date().toISOString()};
   if(existing>=0) nbs[existing]=entry; else nbs.unshift(entry);
   localStorage.setItem(key,JSON.stringify(nbs.slice(0,50)));
-  notify('💾 Guardado: '+name);
+  lastSaveTime=Date.now();
+  const saveSpan=document.getElementById('sb-save-status');
+  if(saveSpan) saveSpan.textContent='💾 Guardado';
+  setTimeout(()=>{ if(saveSpan) saveSpan.textContent='✓'; },2000);
+  if(showNotify) notify('💾 Guardado: '+name);
 }
-function loadNb(name){
-  const nbs=getSavedNbs();
-  const nb=nbs.find(n=>n.name===name);
-  if(!nb) return;
-  cells=nb.cells.map(c=>({...c,mdEdit:false}));
-  document.getElementById('nb-name-inp').value=nb.name;
-  renderCells();
-  if(cells[0]) focusCell(cells[0].id);
-  setView('notebook');
-  notify('📂 Cargado: '+nb.name);
-}
-function deleteNb(name){
-  if(!confirm('¿Eliminar "'+name+'"?')) return;
-  const key='qcol_nbs_'+(curUser?.username||'dev');
-  const nbs=getSavedNbs().filter(n=>n.name!==name);
-  localStorage.setItem(key,JSON.stringify(nbs));
-  refreshNbs();
-  notify('🗑 Eliminado: '+name);
-}
-function refreshNbs(){
-  const grid=document.getElementById('nb-grid');
-  if(!grid) return;
-  const nbs=getSavedNbs();
-  if(nbs.length===0){
-    grid.innerHTML=`<div class="nb-empty-state">
-      <div class="nb-empty-icon">📓</div>
-      <div class="nb-empty-ttl">Sin notebooks guardados</div>
-      <div class="nb-empty-sub">Crea tu primer notebook o importa un .ipynb</div>
-    </div>`;
-    return;
-  }
-  grid.innerHTML=nbs.map(nb=>`
-    <div class="nb-card">
-      <div class="nb-card-hdr">
-        <div class="nb-card-title">${escH(nb.name)}</div>
-        <div class="nb-card-badge">${nb.cells?.length||0} celdas</div>
-      </div>
-      <div class="nb-card-body">
-        <div class="nb-card-meta">${new Date(nb.saved).toLocaleDateString()}</div>
-        <div class="nb-card-actions">
-          <button class="btn-edit-nb" onclick="loadNb('${escH(nb.name)}')">📝 Editar</button>
-          <button class="btn-pub-nb" onclick="loadNb('${escH(nb.name)}');showPublish()">📤 Publicar</button>
-          <button class="btn-del-nb" onclick="deleteNb('${escH(nb.name)}')">🗑</button>
-        </div>
-      </div>
-    </div>`).join('');
-}
+setInterval(()=>{ if(curUser&&cells.length>0){ const mins=Math.floor((Date.now()-lastSaveTime)/60000); const saveSpan=document.getElementById('sb-save-status'); if(saveSpan) saveSpan.textContent=mins>0?`⏱️ hace ${mins}min`:'✓'; } },60000);
+document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); saveCurrentNb(true); } if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key==='Enter'){ e.preventDefault(); runAll(); } });
 
-// ── PUBLISH ────────────────────────────────────────
-function showPublish(){
-  const name=document.getElementById('nb-name-inp').value||'';
-  document.getElementById('pub-title').value=name;
-  document.getElementById('pub-modal').classList.add('open');
-}
+function newNotebook(){ if(!confirm('¿Crear nuevo notebook? Se perderá el actual.')) return; cells=[];execCounter=0;curCellId=null; document.getElementById('nb-name-inp').value='Nuevo Notebook'; addCellAt(-1,'code'); notify('✅ Nuevo notebook'); }
+function importNb(){ document.getElementById('import-file').click(); }
+function handleImport(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>{ try{ const nb=JSON.parse(ev.target.result); cells=[];execCounter=0; const name=nb.metadata?.name||file.name.replace('.ipynb',''); document.getElementById('nb-name-inp').value=name; (nb.cells||[]).forEach(c=>{ const src=Array.isArray(c.source)?c.source.join(''):c.source||''; const type=c.cell_type==='markdown'?'markdown':'code'; cells.push({id:genId(),type,code:src,output:'',exec_count:null,mdEdit:false}); }); if(cells.length===0) addCellAt(-1,'code'); else { renderCells(); focusCell(cells[0].id); } setView('notebook'); notify(`✅ Importado: ${name} (${cells.length} celdas)`); }catch(err){ notify('❌ Error al leer .ipynb: '+err.message); } }; reader.readAsText(file); e.target.value=''; }
+function downloadNb(){ const name=document.getElementById('nb-name-inp').value||'qcol_notebook'; cells.forEach(c=>{ const ta=document.getElementById('ta-'+c.id); const mta=document.getElementById('mta-'+c.id); if(ta) c.code=ta.value; if(mta) c.code=mta.value; }); const nb={nbformat:4,nbformat_minor:5,metadata:{name,kernelspec:{display_name:'Python 3',language:'python',name:'python3'},qcol:{lib:'qiskit',author:curUser?.name||'',created:new Date().toISOString()}},cells:cells.map(c=>({cell_type:c.type==='markdown'?'markdown':'code',source:[c.code],metadata:{},outputs:[],execution_count:c.exec_count}))}; const blob=new Blob([JSON.stringify(nb,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name.replace(/\.ipynb$/,'')+'.ipynb'; a.click(); notify('📥 '+a.download); }
+function getSavedNbs(){ if(!curUser) return []; const key='qcol_nbs_'+(curUser.username||'dev'); return JSON.parse(localStorage.getItem(key)||'[]'); }
+function loadNb(name){ const nbs=getSavedNbs(); const nb=nbs.find(n=>n.name===name); if(!nb) return; cells=nb.cells.map(c=>({...c,mdEdit:false})); document.getElementById('nb-name-inp').value=nb.name; renderCells(); if(cells[0]) focusCell(cells[0].id); setView('notebook'); notify('📂 Cargado: '+nb.name); }
+function deleteNb(name){ if(!confirm('¿Eliminar "'+name+'"?')) return; const key='qcol_nbs_'+(curUser?.username||'dev'); const nbs=getSavedNbs().filter(n=>n.name!==name); localStorage.setItem(key,JSON.stringify(nbs)); refreshNbs(); notify('🗑 Eliminado: '+name); }
+function refreshNbs(){ const grid=document.getElementById('nb-grid'); if(!grid) return; const nbs=getSavedNbs(); if(nbs.length===0){ grid.innerHTML=`<div class="nb-empty-state"><div class="nb-empty-icon">📓</div><div class="nb-empty-ttl">Sin notebooks guardados</div><div class="nb-empty-sub">Crea tu primer notebook o importa un .ipynb</div></div>`; return; } grid.innerHTML=nbs.map(nb=>`<div class="nb-card"><div class="nb-card-hdr"><div class="nb-card-title">${escH(nb.name)}</div><div class="nb-card-badge">${nb.cells?.length||0} celdas</div></div><div class="nb-card-body"><div class="nb-card-meta">${new Date(nb.saved).toLocaleDateString()}</div><div class="nb-card-actions"><button class="btn-edit-nb" onclick="loadNb('${escH(nb.name)}')">📝 Editar</button><button class="btn-pub-nb" onclick="loadNb('${escH(nb.name)}');showPublish()">📤 Publicar</button><button class="btn-del-nb" onclick="deleteNb('${escH(nb.name)}')">🗑</button></div></div></div>`).join(''); }
+function showPublish(){ const name=document.getElementById('nb-name-inp').value||''; document.getElementById('pub-title').value=name; document.getElementById('pub-modal').classList.add('open'); }
 function closePublish(){ document.getElementById('pub-modal').classList.remove('open'); }
-function publishNb(){
-  if(!requireAuth()) return;
-  saveCurrentNb();
-  // Publicar directamente en el módulo Proyectos via postMessage
-  const name = document.getElementById('nb-name-inp').value||'Sin título';
-  const desc = document.getElementById('pub-desc').value.trim();
-  const tags = document.getElementById('pub-tags').value.trim();
-  const id   = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+function publishNb(){ if(!requireAuth()) return; saveCurrentNb(false); const name=document.getElementById('nb-name-inp').value||'Sin título'; const desc=document.getElementById('pub-desc').value.trim(); const tags=document.getElementById('pub-tags').value.trim(); const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''); const projs=JSON.parse(localStorage.getItem('qcol_projs')||'[]'); const existing=projs.findIndex(p=>p.id===id); const entry={id,title:name,type:'nb',desc,tags,size:cells.length,time:Math.max(5,cells.length*2),added:new Date().toLocaleDateString(),author:curUser?.name||'Admin',cells:JSON.parse(JSON.stringify(cells))}; if(existing>=0) projs[existing]=entry; else projs.unshift(entry); localStorage.setItem('qcol_projs',JSON.stringify(projs)); postCore('QCOL_SAVE',{key:'qcol_projs',val:projs}); downloadNb(); closePublish(); notify('✅ Publicado en Proyectos: '+name); }
+function setView(v){ curView=v; document.getElementById('view-notebook').style.display=v==='notebook'?'flex':'none'; document.getElementById('view-manage').style.display=v==='manage'?'flex':'none'; document.getElementById('stab-1').classList.toggle('on',v==='notebook'); document.getElementById('stab-2').classList.toggle('on',v==='manage'); if(v==='manage') refreshNbs(); }
 
-  // 1. Guardar en qcol_projs para que aparezca en Proyectos
-  const projs = JSON.parse(localStorage.getItem('qcol_projs')||'[]');
-  const existing = projs.findIndex(p=>p.id===id);
-  const entry = {
-    id, title:name, type:'nb', desc, tags,
-    size: cells.length,
-    time: Math.max(5, cells.length*2),
-    added: new Date().toLocaleDateString(),
-    author: curUser?.name||'Admin',
-    cells: JSON.parse(JSON.stringify(cells))  // guardar celdas completas
-  };
-  if(existing>=0) projs[existing]=entry;
-  else projs.unshift(entry);
-  localStorage.setItem('qcol_projs', JSON.stringify(projs));
-
-  // 2. Notificar al ecosistema para refrescar Proyectos
-  postCore('QCOL_SAVE', {key:'qcol_projs', val:projs});
-
-  // 3. Descargar .ipynb para subir a GitHub
-  downloadNb();
-  closePublish();
-  notify('✅ Publicado en Proyectos: '+name);
+// Módulo 1 — initEngine al final
+function initEngine(){
+  const stored=localStorage.getItem('qcol_colab_url');
+  if(stored){
+    engineURL=stored;
+    const urlInput=document.getElementById('engine-url-input');
+    if(urlInput) urlInput.value=stored;
+    checkEngine();
+  }
 }
-
-// Auto-guardar cada 60s
-setInterval(()=>{ if(curUser&&cells.length>0) saveCurrentNb(); },60000);
-
-// Keyboard shortcuts
-document.addEventListener('keydown',e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); saveCurrentNb(); }
-  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key==='Enter'){ e.preventDefault(); runAll(); }
-});
+initEngine();
+setTimeout(()=>{ initMarkdown(); },500);
 </script>
 </body>
 </html>
