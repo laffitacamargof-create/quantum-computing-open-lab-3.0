@@ -435,6 +435,7 @@ let isUpdatingFromCircuit = false;
 let syncTimeout = null;
 const ROW_HEIGHT = 56;
 const MAX_QUBITS = 20;
+const MAX_GATES = 150;   // Límite fijo de puertas
 
 let blochStates = {};
 let currentBlochQubit = 0;
@@ -509,12 +510,13 @@ async function saveIgnoredAttrLocal(attr, reason) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// FUNCIÓN CLASIFICADORA CON DEEPSEEK (en lugar de Mistral) — MODIFICADA PARA MANEJAR CORS
+// FUNCIÓN CLASIFICADORA CON DEEPSEEK (en lugar de Mistral) — MODIFICADA PARA MANEJAR CORS Y SANITIZAR API KEY
 // ═══════════════════════════════════════════════════════════════════════
 async function callMistralClassifier(errorPayload) {
     // Leer configuración desde localStorage (mismas claves, pero ahora usamos DeepSeek)
     let apiKey = localStorage.getItem('qcol_mistral_key') || '';
-    apiKey = apiKey.trim();
+    // SANITIZAR: eliminar espacios, comillas, saltos de línea, tabuladores
+    apiKey = apiKey.replace(/[\s"'\n\r\t]/g, '').trim();
     const enabled = localStorage.getItem('qcol_mistral_enabled') === 'true';
     if (!enabled || !apiKey) return null;
     
@@ -583,7 +585,16 @@ NO añadas nada más. Solo esa línea.`;
                 errorMsg = rawText.slice(0, 200);
             }
             const out = document.getElementById('out-body');
-            if (out) out.innerHTML += `<span class="er">❌ Error de DeepSeek (${response.status}): ${errorMsg}</span>\n`;
+            // 401/403 = problema de cuenta (sin saldo o key inválida) → no spamear terminal
+            if (response.status === 401 || response.status === 403) {
+                console.warn('DeepSeek auth error:', response.status, errorMsg);
+                if (!window._deepseekAuthWarnShown) {
+                    window._deepseekAuthWarnShown = true;
+                    if (out) out.innerHTML += `<span class="er" style="font-size:.6rem;">⚠️ DeepSeek sin acceso (${response.status}) — verifica saldo en platform.deepseek.com. Usando clasificador local.</span>\n`;
+                }
+            } else {
+                if (out) out.innerHTML += `<span class="er">❌ Error de DeepSeek (${response.status}): ${errorMsg}</span>\n`;
+            }
             return null;
         }
 
@@ -703,6 +714,14 @@ function placeGate(gateId, qubit) {
   isUpdatingFromCircuit = true;
   const def = findGateDef(gateId);
   if (!def) { isUpdatingFromCircuit = false; return; }
+
+  // ── LÍMITE 150 ──
+  if (circuit.gates.length >= MAX_GATES) {
+    notify(`⛔ Límite de ${MAX_GATES} puertas alcanzado`);
+    isUpdatingFromCircuit = false;
+    return;
+  }
+
   if (def.triple) {
     if (circuit.qubits < 3) { notify('Necesitas al menos 3 qubits'); isUpdatingFromCircuit = false; return; }
     let qCtrl = qubit;
@@ -825,7 +844,8 @@ function renderCircuit() {
 
 function updateCircuitInfo() {
   const ng = circuit.gates.length;
-  document.getElementById('qcount-badge').textContent = `${circuit.qubits} qubits · ${ng} puertas`;
+  const limitWarning = ng >= MAX_GATES ? ` ⛔ LÍMITE` : ng >= MAX_GATES * 0.8 ? ` ⚠️ ${MAX_GATES - ng} restantes` : '';
+  document.getElementById('qcount-badge').textContent = `${circuit.qubits} qubits · ${ng}/${MAX_GATES} puertas${limitWarning}`;
   updateBlochSelector();
   const qs = document.getElementById('queue-sec');
   if (qs) qs.style.display = circuit.qubits > 10 ? 'block' : 'none';
@@ -986,11 +1006,12 @@ class ClassicalRegister:
     def __iter__(self): return iter(range(self.size))
 
 class Operation:
-    __slots__ = ('name', 'qubits', 'params')
+    __slots__ = ('name', 'qubits', 'params', 'operation')
     def __init__(self, name, qubits, params=None):
         self.name = name
         self.qubits = qubits
         self.params = params or []
+        self.operation = self   # permite inst.operation.name
 
 def _safe_int(q):
     """Convierte cualquier cosa a int de forma segura."""
@@ -1371,60 +1392,167 @@ function mapOpNameToGateId(opName) {
     return map[opName] || 'H';
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// PRE-PROCESADOR UNIVERSAL DE CÓDIGO (CAPA 0 — JS, antes de exec)
-// ═══════════════════════════════════════════════════════════════════
-function preprocessCode(code) {
+// ============================================================
+// FILTRADO ROBUSTO DE CÓDIGO (3 capas) — VERSIÓN CON PASS
+// ============================================================
+function robustPreprocess(code) {
+    // ═══ CAPA 1: Limpiar Unicode ═══
     let out = '';
     for (let i = 0; i < code.length; i++) {
         const cp = code.codePointAt(i);
         if (cp > 127) {
-            const subscripts   = '₀₁₂₃₄₅₆₇₈₉';
-            const superscripts = '⁰¹²³⁴⁵⁶⁷⁸⁹';
-            const subIdx = subscripts.indexOf(code[i]);
-            const supIdx = superscripts.indexOf(code[i]);
-            if (subIdx >= 0) { out += subIdx; continue; }
-            if (supIdx >= 0) { out += supIdx; continue; }
             const latinMap = {
-                'ā':'a','á':'a','à':'a','â':'a','ä':'a','ã':'a',
-                'ē':'e','é':'e','è':'e','ê':'e','ë':'e',
-                'ī':'i','í':'i','ì':'i','î':'i','ï':'i',
-                'ō':'o','ó':'o','ò':'o','ô':'o','ö':'o','õ':'o',
-                'ū':'u','ú':'u','ù':'u','û':'u','ü':'u',
-                'ý':'y','ÿ':'y','ñ':'n','ç':'c','ß':'ss',
-                'Ā':'A','Á':'A','À':'A','Â':'A','Ä':'A','Ã':'A',
-                'Ē':'E','É':'E','È':'E','Ê':'E','Ë':'E',
-                'Ī':'I','Í':'I','Ì':'I','Î':'I','Ï':'I',
-                'Ō':'O','Ó':'O','Ò':'O','Ô':'O','Ö':'O','Õ':'O',
-                'Ū':'U','Ú':'U','Ù':'U','Û':'U','Ü':'U',
-                'Ý':'Y','Ñ':'N','Ç':'C',
-                'ƒ':'f','Ƒ':'F','ƨ':'s','ƚ':'t','ƞ':'n',
-                'ǥ':'g','Ǥ':'G','ǀ':'l','ǁ':'ll','ǃ':'x',
-                'ș':'s','ț':'t','ș':'s',
-                'ł':'l','Ł':'L','ø':'o','Ø':'O','æ':'ae','Æ':'AE',
-                'đ':'d','Đ':'D','ħ':'h','Ħ':'H','ŧ':'t','Ŧ':'T',
-                'ṕ':'p','Ṕ':'P','ḥ':'h','Ḥ':'H','ṡ':'s','Ṡ':'S',
-                'ẇ':'w','Ẇ':'W','ṙ':'r','Ṙ':'R','ẑ':'z','Ẑ':'Z',
-                'ū':'u','ṭ':'t','ā':'a','ī':'i','ē':'e','ō':'o',
-                'ÿ':'y','ẙ':'y',
-                'ʼ':"'",'ʻ':"'",'ʹ':"'",
-                'α':'alpha','β':'beta','γ':'gamma','δ':'delta',
                 'θ':'theta','λ':'lam','μ':'mu','π':'pi','σ':'sigma',
                 'φ':'phi','ψ':'psi','ω':'omega',
-                'Α':'Alpha','Β':'Beta','Γ':'Gamma','Δ':'Delta',
-                'Θ':'Theta','Λ':'Lam','Μ':'Mu','Π':'Pi','Σ':'Sigma',
-                'Φ':'Phi','Ψ':'Psi','Ω':'Omega',
+                '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4',
+                '₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+                '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4',
+                '⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+                'á':'a','é':'e','í':'i','ó':'o','ú':'u',
+                'Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','ñ':'n','Ñ':'N'
             };
-            const ch = code[i];
-            if (latinMap[ch]) { out += latinMap[ch]; continue; }
+            if (latinMap[code[i]]) { out += latinMap[code[i]]; continue; }
             out += '_';
             if (cp > 0xFFFF) i++;
         } else {
             out += code[i];
         }
     }
-    out = out.replace(/^@(?!property|staticmethod|classmethod|abstractmethod)[^\n]+\n/gm, '');
-    return out;
+    code = out;
+
+    // ═══ CAPA 2: Eliminar decoradores no estándar ═══
+    code = code.replace(/^@(?!property|staticmethod|classmethod|abstractmethod)[^\n]+\n/gm, '');
+
+    // ═══ CAPA 3: Sustituir líneas problemáticas por pass (preservando indentación) ═══
+    const NON_ESSENTIAL = [
+        // Simulación y resultados
+        /\bAerSimulator\s*\(/, /simulator\.run\b/, /\.result\(\)/, /get_counts\(/,
+        /plot_histogram\(/, /StatevectorSimulator/, /BasicAer\b/, /Aer\.get_backend/,
+        // Visualización
+        /\.draw\s*\(/, /matplotlib/, /plt\./, /pyplot/,
+        // Transpilación
+        /\btranspile\s*\(/, /\bpassmanager\b/i, /PassManager/,
+        // Print y display  
+        /^\s*print\s*\(/, /^\s*display\s*\(/, /^\s*show\s*\(/,
+        // Imports no esenciales
+        /^\s*import\s+(?!numpy|qiskit|cirq|pennylane|qutip|scipy|sympy)/, 
+        /^\s*from\s+(?!qiskit|numpy|cirq|pennylane|qutip).*import/,
+        // Accesos a propiedades no esenciales de qc
+        /\bqc\.(depth|size|num_parameters|copy|control|inverse|repeat|power|definition|qasm|properties)\s*[(\s]/
+    ];
+
+    const lines = code.split('\n');
+    const result = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        const indent = line.match(/^(\s*)/)[1];
+        
+        // Líneas vacías y comentarios → siempre pasar
+        if (trimmed === '' || trimmed.startsWith('#')) {
+            result.push(line);
+            continue;
+        }
+        
+        // Verificar si es no-esencial
+        let isNonEssential = NON_ESSENTIAL.some(rx => rx.test(trimmed));
+        
+        // Excepción: si una línea no-esencial es la única línea de un bloque,
+        // DEBE convertirse en pass, no omitirse
+        if (isNonEssential) {
+            // Mirar si la línea anterior termina en : (cabecera de bloque)
+            const prevLine = result[result.length - 1]?.trim() || '';
+            if (prevLine.endsWith(':')) {
+                result.push(indent + 'pass  # omitido');
+            } else {
+                result.push(indent + 'pass  # omitido');
+            }
+            continue;
+        }
+        
+        // Todas las demás líneas pasan sin modificar
+        result.push(line);
+    }
+    
+    return result.join('\n');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CLASIFICADOR LOCAL — actúa ANTES de DeepSeek
+// ═══════════════════════════════════════════════════════════════════
+function classifyLocallyFirst(errorText, offendingAttr) {
+    if (!offendingAttr) return null;
+    
+    // Atributos SIEMPRE innecesarios para dibujar el circuito
+    const ALWAYS_UNNECESSARY = new Set([
+        // Visualización
+        'draw','mpl','text','latex','svg','png','pdf',
+        // Simulación
+        'run','result','get_counts','get_statevector','get_memory',
+        'expectation_value','sample','shots','seed_simulator',
+        // Transpilación  
+        'transpile','optimize','schedule','compile',
+        // Metadatos
+        'depth','size','num_parameters','width','num_ancillas',
+        'count_ops','num_connected_components','num_nonlocal_gates',
+        // Propiedades no estructurales
+        'copy','inverse','repeat','power','reverse_ops','decompose',
+        'remove_final_measurements','reset_ops','definition',
+        // Backends y simuladores
+        'AerSimulator','BasicAer','StatevectorSimulator','QasmSimulator',
+        'Aer','backend','provider','job','status',
+        // Output y display
+        'print','display','show','plot','histogram','bloch',
+        // NameErrors comunes que son variables auxiliares
+        'counts','result','job','backend','shots','noise_model',
+        'coupling_map','optimization_level','seed'
+    ]);
+    
+    // Atributos SIEMPRE críticos (parte de la estructura del circuito)
+    const ALWAYS_CRITICAL = new Set([
+        'h','x','y','z','s','t','sx','cx','cy','cz','ccx','swap',
+        'rx','ry','rz','u','u1','u2','u3','p','cp',
+        'measure','measure_all','barrier','reset',
+        'QuantumCircuit','QuantumRegister','ClassicalRegister',
+        'num_qubits','qubits','clbits','data','append','compose'
+    ]);
+    
+    const attr = offendingAttr.toLowerCase();
+    
+    // Verificar innecesarios
+    if (ALWAYS_UNNECESSARY.has(offendingAttr) || ALWAYS_UNNECESSARY.has(attr)) {
+        return { 
+            classification: 'unnecessary', 
+            attribute: offendingAttr, 
+            reason: 'Clasificado localmente como no-estructural' 
+        };
+    }
+    
+    // Verificar críticos
+    if (ALWAYS_CRITICAL.has(offendingAttr) || ALWAYS_CRITICAL.has(attr)) {
+        return { 
+            classification: 'critical', 
+            attribute: offendingAttr, 
+            reason: 'Clasificado localmente como estructural' 
+        };
+    }
+    
+    // Patrones de error que son siempre innecesarios
+    if (errorText.includes('get_counts') || 
+        errorText.includes('plot_histogram') ||
+        errorText.includes('matplotlib') ||
+        errorText.includes('pyplot') ||
+        errorText.includes('.draw(')) {
+        return { 
+            classification: 'unnecessary', 
+            attribute: offendingAttr, 
+            reason: 'Error en código de visualización/simulación' 
+        };
+    }
+    
+    // No puede decidir → pasar a DeepSeek
+    return null;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1445,6 +1573,117 @@ function extractOffendingAttribute(errorText) {
     return null;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// CORRECTOR DE SERVIDOR — reconstruye circuito desde salida real
+// ═══════════════════════════════════════════════════════════════════
+
+let _lastServerResult = null;
+
+function parseQiskitTextDraw(text) {
+    if (!text || typeof text !== 'string') return null;
+    const lines = text.split('\n');
+    const qubitLines = [];
+    for (let i = 0; i < lines.length; i++) {
+        if (/^\s*(q_?\d+\s*:|q\[\d+\]\s*:)/.test(lines[i])) {
+            qubitLines.push({ idx: i, line: lines[i], qubit: qubitLines.length });
+        }
+    }
+    if (qubitLines.length === 0) return null;
+    const numQubits = qubitLines.length;
+    const gates = [];
+    const symbolMap = {
+        'H':'H', 'X':'X', 'Y':'Y', 'Z':'Z', 'S':'S', 'T':'T',
+        'SX':'SX', 'RX':'RX', 'RY':'RY', 'RZ':'RZ',
+        'CX':'CX', 'CZ':'CZ', 'SWAP':'SWAP', 'CCX':'CCX',
+        'M':'M', '░':'M',
+        '┤ H ├':'H','┤ X ├':'X','┤ Y ├':'Y','┤ Z ├':'Z',
+        '┤ S ├':'S','┤ T ├':'T','┤ Sx├':'SX','┤ SX├':'SX',
+        '┤ Rx':'RX','┤ Ry':'RY','┤ Rz':'RZ',
+        '┤ P ├':'RZ','┤ U ├':'RX',
+    };
+    for (const { line, qubit } of qubitLines) {
+        const gateMatches = [...line.matchAll(/┤\s*(\w+)\s*[├┤]/g)];
+        for (const m of gateMatches) {
+            const gateName = m[1].trim();
+            const gateId = symbolMap[gateName] || mapOpNameToGateId(gateName.toLowerCase());
+            const def = findGateDef(gateId);
+            if (def && gates.length < MAX_GATES) {
+                gates.push({ id: gateId, q: qubit, def: def, uid: nextId++ });
+            }
+        }
+        if (/[░»]/.test(line) || /┤M[├┤]/.test(line) || /measure/.test(line.toLowerCase())) {
+            const def = findGateDef('M');
+            if (def && gates.length < MAX_GATES) {
+                gates.push({ id: 'M', q: qubit, def: def, uid: nextId++ });
+            }
+        }
+    }
+    return { numQubits, gates };
+}
+
+function applyServerCircuit(numQubits, gates) {
+    if (!numQubits || numQubits < 1) return false;
+    circuit.qubits = Math.min(numQubits, MAX_QUBITS);
+    circuit.gates = gates.slice(0, MAX_GATES);
+    renderCircuit();
+    updateCircuitInfo();
+    return true;
+}
+
+async function syncFromServer(reason) {
+    if (!engineOK || !engineURL) return false;
+    const code = document.getElementById('code-ta').value.trim();
+    if (!code) return false;
+    const out = document.getElementById('out-body');
+    out.innerHTML += `<span class="inf">🔄 Corrector: ejecutando en servidor para reconstruir circuito... (${reason})</span>\n`;
+    try {
+        const isHF = engineURL.includes('hf.space') || engineURL.includes('huggingface');
+        let res;
+        if (isHF) {
+            res = await fetchWithRetry(engineURL + '/run/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: [code], fn_index: 1 })
+            }, 2, 20000);
+        } else {
+            res = await fetchWithRetry(engineURL + '/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, lib: curLib })
+            }, 2, 20000);
+        }
+        const raw = await res.json();
+        let d = isHF ? (raw.data ? raw.data[0] : raw) : raw;
+        if (typeof d === 'string') { try { d = JSON.parse(d); } catch(e) {} }
+        if (!d || !d.success) {
+            out.innerHTML += `<span class="er">⚠️ Servidor no pudo ejecutar el código. Error: ${escapeHtml((d?.output || '').slice(0, 120))}</span>\n`;
+            return false;
+        }
+        const outputText = d.output || '';
+        const parsed = parseQiskitTextDraw(outputText);
+        _lastServerResult = {
+            output: outputText,
+            numQubits: parsed?.numQubits || circuit.qubits,
+            parsedGates: parsed?.gates?.length || 0,
+            timestamp: Date.now()
+        };
+        if (parsed && parsed.gates.length > 0) {
+            applyServerCircuit(parsed.numQubits, parsed.gates);
+            out.innerHTML += `<span class="ok">✅ Corrector: circuito reconstruido desde servidor — ${parsed.numQubits} qubits · ${parsed.gates.length} puertas</span>\n`;
+            notify(`🔧 Corrector activo: ${parsed.gates.length} puertas del servidor`);
+            if (d.bloch?.probabilities) updateBlochFromProbs(d.bloch.probabilities);
+            return true;
+        } else {
+            out.innerHTML += `<span class="ok">✅ Servidor ejecutó OK (${((Date.now() - Date.now()) / 1000).toFixed(1)}s):\n${escapeHtml(outputText.slice(0, 400))}</span>\n`;
+            if (d.bloch?.probabilities) updateBlochFromProbs(d.bloch.probabilities);
+            return false;
+        }
+    } catch(e) {
+        out.innerHTML += `<span class="er">⚠️ Corrector: error de red — ${e.message}</span>\n`;
+        return false;
+    }
+}
+
 async function syncWithPyodide(retryCount = 0) {
     if (isUpdatingFromCircuit) return;
     isUpdatingFromCircuit = true;
@@ -1454,13 +1693,19 @@ async function syncWithPyodide(retryCount = 0) {
     out.innerHTML += '<span class="inf">🔄 Sincronizando código → circuito visual...</span>\n';
     try {
         const py = await initPyodide();
-        const code = preprocessCode(rawCode);
+        const code = robustPreprocess(rawCode);
         py.globals.set('_pending_user_code', code);
         const result = await py.runPythonAsync(`
-import json, traceback, re, sys
+import json, traceback, re, sys, ast as _ast
 
 _user_code = globals().get('_pending_user_code', '')
 _ns = {}
+
+# Pre-inyectar registros comunes para evitar NameError (q, qr, cr, c, anc, aux)
+for _rname in ['q', 'qr', 'cr', 'c', 'anc', 'aux']:
+    if _rname not in _ns:
+        _ns[_rname] = QuantumRegister(2, _rname)
+
 _error = None
 _circuit = None
 _num_qubits = 0
@@ -1476,21 +1721,55 @@ def _sanitize(code):
 
 _clean_code = _sanitize(_user_code)
 
+# ── Intento 1: exec completo ──
 try:
     exec(compile(_clean_code, '<qcol>', 'exec'), _ns)
 except SyntaxError as _se:
+    # Eliminar línea problemática y reintentar
     _bad_line = getattr(_se, 'lineno', None)
     if _bad_line is not None:
-        _lines = _clean_code.splitlines()
-        _lines2 = [l for i, l in enumerate(_lines, 1) if i != _bad_line]
+        _patched = '\\n'.join(
+            l if i+1 != _bad_line else '    pass  # syntax fixed'
+            for i, l in enumerate(_clean_code.splitlines())
+        )
         try:
-            exec(compile('\\n'.join(_lines2), '<qcol_patched>', 'exec'), _ns)
+            exec(compile(_patched, '<qcol_fixed>', 'exec'), _ns)
         except Exception as _e2:
-            _error = f"SyntaxError (línea {_bad_line} eliminada): {_se.msg}\\n{traceback.format_exc()}"
+            _error = str(_se)
     else:
-        _error = traceback.format_exc()
+        _error = str(_se)
 except Exception as _e:
-    _error = traceback.format_exc()
+    # ── Intento 2: ejecución línea a línea con captura de errores ──
+    _errors_linea = []
+    _buf = []
+    _lines_raw = _clean_code.splitlines(keepends=True)
+    
+    for _lnum, _line in enumerate(_lines_raw, 1):
+        _buf.append(_line)
+        _snippet = ''.join(_buf)
+        # Verificar si el snippet es sintácticamente completo
+        try:
+            _ast.parse(_snippet)
+            # Completo → intentar ejecutar
+            try:
+                exec(compile(_snippet, f'<block_{_lnum}>', 'exec'), _ns)
+                _buf = []  # limpiar buffer si ejecutó OK
+            except Exception as _block_err:
+                _errors_linea.append(f'L{_lnum}: {type(_block_err).__name__}: {_block_err}')
+                _buf = []  # descartar bloque fallido, continuar
+        except SyntaxError:
+            pass  # snippet incompleto, acumular más líneas
+    
+    # Si quedó algo en el buffer, intentar ejecutarlo
+    if _buf:
+        try:
+            exec(compile(''.join(_buf), '<block_final>', 'exec'), _ns)
+        except:
+            pass
+    
+    # Solo reportar error si no se encontró circuito
+    if _errors_linea:
+        _error = 'Errores parciales: ' + '; '.join(_errors_linea[:3])
 
 if _error is None:
     for _cname in ['circuit','qc','circ','qcirc','c','circ1','qcircuit','qc1','main_circuit']:
@@ -1550,6 +1829,7 @@ json.dumps({
             circuit.qubits = Math.min(data.num_qubits, MAX_QUBITS);
             const newGates = [];
             for (const gate of data.gates) {
+                if (newGates.length >= MAX_GATES) break;
                 const gateId = mapOpNameToGateId(gate[0]);
                 const def = findGateDef(gateId);
                 if (!def) continue;
@@ -1579,35 +1859,54 @@ json.dumps({
                 setTimeout(() => syncWithPyodide(), 500);
                 return;
             }
-            if (mistralEnabled && offendingAttr && retryCount === 0) {
-                out.innerHTML += `<span class="inf">🧠 Consultando a DeepSeek sobre el error...</span>\n`;
-                const errorPayload = {
-                    error_type: errText.match(/^\w+Error/)?.[0] || 'Error',
-                    error_msg: errText,
-                    offending_line: '',
-                    attribute_name: offendingAttr,
-                    timestamp: new Date().toISOString(),
-                    code_hash: btoa(rawCode.slice(0,200)).slice(0,20),
-                    already_known: false
-                };
-                const classification = await callMistralClassifier(errorPayload);
-                if (classification && classification.classification === 'unnecessary') {
-                    const attr = classification.attribute || offendingAttr;
-                    const reason = classification.reason || 'Clasificado por DeepSeek';
-                    await saveIgnoredAttrLocal(attr, reason);
+            // ── CLASIFICADOR LOCAL PRIMERO ──
+            if (offendingAttr && retryCount === 0) {
+                const localClassification = classifyLocallyFirst(errText, offendingAttr);
+                if (localClassification && localClassification.classification === 'unnecessary') {
+                    const attr = localClassification.attribute;
+                    await saveIgnoredAttrLocal(attr, localClassification.reason);
                     await injectIgnoredAttrsIntoPython(py);
-                    out.innerHTML += `<span class="ok">✅ Atributo '${attr}' clasificado como innecesario. Reintentando sincronización...</span>\n`;
+                    out.innerHTML += `<span class="ok">⚡ '${escapeHtml(attr)}' clasificado localmente como innecesario. Reintentando...</span>\n`;
                     isUpdatingFromCircuit = false;
-                    setTimeout(() => syncWithPyodide(), 500);
+                    setTimeout(() => syncWithPyodide(), 300);
                     return;
-                } else {
-                    out.innerHTML += `<span class="er">⚠️ DeepSeek clasificó el error como crítico o no se pudo clasificar. Mostrando error original.</span>\n`;
+                }
+                // Solo si el clasificador local no pudo decidir, consultar DeepSeek
+                if (mistralEnabled && !localClassification) {
+                    out.innerHTML += `<span class="inf">🧠 Clasificador local no pudo decidir — consultando DeepSeek...</span>\n`;
+                    const errorPayload = {
+                        error_type: errText.match(/^\w+Error/)?.[0] || 'Error',
+                        error_msg: errText.slice(0, 400),
+                        attribute_name: offendingAttr,
+                        timestamp: new Date().toISOString(),
+                        already_known: false
+                    };
+                    const classification = await callMistralClassifier(errorPayload);
+                    if (classification && classification.classification === 'unnecessary') {
+                        const attr = classification.attribute || offendingAttr;
+                        await saveIgnoredAttrLocal(attr, classification.reason);
+                        await injectIgnoredAttrsIntoPython(py);
+                        out.innerHTML += `<span class="ok">✅ DeepSeek: '${escapeHtml(attr)}' innecesario. Reintentando...</span>\n`;
+                        isUpdatingFromCircuit = false;
+                        setTimeout(() => syncWithPyodide(), 500);
+                        return;
+                    }
                 }
             }
             out.innerHTML += `<span class="er">❌ Error en el código:<br>${escapeHtml(errText.slice(0,800))}</span>\n`;
+            // ── CORRECTOR DE ÚLTIMO RECURSO ──
+            if (engineOK && engineURL && retryCount === 0) {
+                out.innerHTML += `<span class="inf">🔧 Pyodide falló — activando corrector de servidor...</span>\n`;
+                isUpdatingFromCircuit = false;
+                await syncFromServer('pyodide-fallback');
+                return;
+            }
         }
     } catch (err) {
         out.innerHTML += `<span class="er">❌ Error interno: ${err.message}</span>\n`;
+        if (engineOK && engineURL) {
+            setTimeout(() => syncFromServer('internal-error'), 1000);
+        }
     } finally {
         isUpdatingFromCircuit = false;
     }
@@ -1661,6 +1960,32 @@ async function runServerCode() {
             if (d.bloch?.probabilities) updateBlochFromProbs(d.bloch.probabilities);
             setRunSt('idle', 'Listo');
             logMonitorRun({ success: true, lib: curLib, qubits: circuit.qubits, time: parseFloat(el) });
+            
+            // ── VALIDACIÓN CRUZADA: comparar circuito visual con salida real ──
+            const serverParsed = parseQiskitTextDraw(d.output || '');
+            _lastServerResult = {
+                output: d.output || '',
+                numQubits: serverParsed?.numQubits || circuit.qubits,
+                parsedGates: serverParsed?.gates?.length || 0,
+                timestamp: Date.now()
+            };
+            if (serverParsed && serverParsed.gates.length > 0) {
+                const visualGates = circuit.gates.length;
+                const serverGates = serverParsed.gates.length;
+                const diff = Math.abs(visualGates - serverGates);
+                const pct = serverGates > 0 ? diff / serverGates : 0;
+                if (pct > 0.15 || (visualGates === 0 && serverGates > 0)) {
+                    const corrected = applyServerCircuit(serverParsed.numQubits, serverParsed.gates);
+                    if (corrected) {
+                        out.innerHTML += `\n<span class="ok" style="font-size:.6rem;">🔧 Corrector: circuito visual actualizado desde salida del servidor (${visualGates}→${serverParsed.gates.length} puertas)</span>`;
+                        notify(`🔧 Circuito corregido: ${serverParsed.gates.length} puertas`);
+                    }
+                }
+            }
+            if (circuit.gates.length === 0 && serverParsed && serverParsed.gates.length > 0) {
+                applyServerCircuit(serverParsed.numQubits, serverParsed.gates);
+                out.innerHTML += `\n<span class="ok">🔧 Canvas vacío corregido desde servidor</span>`;
+            }
         } else {
             out.innerHTML += `<span class="er">${formatError(d.output, code)}</span>`;
             setRunSt('err', 'Error');
@@ -1748,13 +2073,41 @@ function updateSyntaxHighlight() {
 }
 
 function onCodeEdit() { 
+    // Contar llamadas a puertas en el código para advertir si supera 150
+    const code = document.getElementById('code-ta').value;
+    const gateCallCount = (code.match(/\bqc\.\w+\s*\(/g) || []).length;
+    if (gateCallCount > MAX_GATES) {
+        const lines = code.split('\n');
+        let count = 0;
+        let cutLine = lines.length;
+        for (let i = 0; i < lines.length; i++) {
+            if (/\bqc\.\w+\s*\(/.test(lines[i])) count++;
+            if (count > MAX_GATES) { cutLine = i; break; }
+        }
+        const ta = document.getElementById('code-ta');
+        ta.value = lines.slice(0, cutLine).join('\n');
+        notify(`⛔ Límite de ${MAX_GATES} puertas en el código. Líneas extra eliminadas.`);
+    }
     updateSyntaxHighlight(); 
     if (syncTimeout) clearTimeout(syncTimeout);
     syncTimeout = setTimeout(() => {
         if (pyodide !== null) {
             syncWithPyodide().catch(() => {});
+        } else if (engineOK && engineURL) {
+            syncFromServer('pyodide-not-loaded').catch(() => {});
         }
     }, 800);
+    
+    // Si el canvas está vacío pero hay código, activar corrector tras 3 segundos
+    if (circuit.gates.length === 0) {
+        clearTimeout(window._emptyCanvasTimeout);
+        window._emptyCanvasTimeout = setTimeout(() => {
+            const code = document.getElementById('code-ta').value.trim();
+            if (code && circuit.gates.length === 0 && engineOK && engineURL) {
+                syncFromServer('empty-canvas').catch(() => {});
+            }
+        }, 3000);
+    }
 }
 function onCodeScroll() { const ta = document.getElementById('code-ta'), syn = document.getElementById('syn-lay'); if (ta && syn) { syn.scrollTop = ta.scrollTop; syn.scrollLeft = ta.scrollLeft; } }
 function forceSync() {
