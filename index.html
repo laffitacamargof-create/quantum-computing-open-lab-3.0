@@ -563,6 +563,123 @@ const QCOL = (() => {
   let aiCfg = JSON.parse(localStorage.getItem('qcol_ai') || '{}');
   let aiHistory = [];
 
+  // ══════════════════════════════════════════════
+  // BASE DE DATOS COMPARTIDA — GitHub como storage
+  // ══════════════════════════════════════════════
+  const DB_PATH = 'data/qcol_db.json';
+  let _db = null;         // copia en memoria
+  let _dbSyncing = false;
+
+  function getGH() {
+      return JSON.parse(localStorage.getItem('qcol_gh') || '{}');
+  }
+
+  // Leer DB desde GitHub (raw, sin autenticación necesaria para lectura)
+  async function dbLoad() {
+      const gh = getGH();
+      if (!gh.user || !gh.repo) return null;
+      try {
+          const ts = Date.now(); // evitar caché del navegador
+          const url = `https://raw.githubusercontent.com/${gh.user}/${gh.repo}/main/${DB_PATH}?t=${ts}`;
+          const res = await fetch(url);
+          if (!res.ok) return null;
+          _db = await res.json();
+          return _db;
+      } catch(e) {
+          console.warn('dbLoad error:', e);
+          return null;
+      }
+  }
+
+  // Escribir DB en GitHub (requiere token con permiso repo)
+  async function dbSave(newData) {
+      if (_dbSyncing) return false;
+      _dbSyncing = true;
+      const gh = getGH();
+      if (!gh.token || !gh.user || !gh.repo) { _dbSyncing = false; return false; }
+      try {
+          const apiURL = `https://api.github.com/repos/${gh.user}/${gh.repo}/contents/${DB_PATH}`;
+          const headers = {
+              'Authorization': `token ${gh.token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
+          };
+          // Obtener SHA actual del archivo (necesario para actualizar)
+          let sha = null;
+          const check = await fetch(apiURL, { headers });
+          if (check.ok) { const j = await check.json(); sha = j.sha; }
+          
+          const content = btoa(unescape(encodeURIComponent(JSON.stringify(newData, null, 2))));
+          const body = { message: 'QCOL DB update', content };
+          if (sha) body.sha = sha;
+          
+          const res = await fetch(apiURL, {
+              method: 'PUT', headers,
+              body: JSON.stringify(body)
+          });
+          _dbSyncing = false;
+          return res.ok;
+      } catch(e) {
+          console.error('dbSave error:', e);
+          _dbSyncing = false;
+          return false;
+      }
+  }
+
+  // Obtener sección de la DB, con fallback a localStorage
+  async function dbGet(section) {
+      if (!_db) await dbLoad();
+      return _db?.[section] || null;
+  }
+
+  // Actualizar sección y guardar
+  async function dbSet(section, value) {
+      if (!_db) await dbLoad();
+      if (!_db) _db = { version:1, config:{}, users:[], circuits:{}, notebooks:{}, ai_history:{} };
+      _db[section] = value;
+      return dbSave(_db);
+  }
+
+  // Inicializar DB al arrancar
+  async function dbInit() {
+      const data = await dbLoad();
+      if (!data) {
+          // Primera vez: crear DB vacía
+          const empty = {
+              version: 1,
+              config: {
+                  colab_url: localStorage.getItem('qcol_colab_url') || '',
+                  mistral_key: localStorage.getItem('qcol_mistral_key') || '',
+                  mistral_enabled: localStorage.getItem('qcol_mistral_enabled') === 'true',
+                  mistral_model: localStorage.getItem('qcol_mistral_model') || 'deepseek-chat',
+                  mistral_timeout: parseInt(localStorage.getItem('qcol_mistral_timeout') || '10'),
+                  ignored_attrs: JSON.parse(localStorage.getItem('qcol_ignored_attrs') || '[]'),
+                  ignored_attrs_reasons: JSON.parse(localStorage.getItem('qcol_ignored_attrs_reasons') || '{}')
+              },
+              users: JSON.parse(localStorage.getItem('qcol_users') || '[]'),
+              circuits: {},
+              notebooks: {},
+              ai_history: {}
+          };
+          await dbSave(empty);
+          _db = empty;
+      }
+      // Aplicar config global a localStorage para que todos los módulos la lean
+      if (_db?.config) {
+          const c = _db.config;
+          if (c.colab_url)       localStorage.setItem('qcol_colab_url',         c.colab_url);
+          if (c.mistral_key)     localStorage.setItem('qcol_mistral_key',        c.mistral_key);
+          if (c.mistral_model)   localStorage.setItem('qcol_mistral_model',      c.mistral_model);
+          if (c.mistral_enabled !== undefined) localStorage.setItem('qcol_mistral_enabled', c.mistral_enabled);
+          if (c.ignored_attrs)   localStorage.setItem('qcol_ignored_attrs',      JSON.stringify(c.ignored_attrs));
+          if (c.ignored_attrs_reasons) localStorage.setItem('qcol_ignored_attrs_reasons', JSON.stringify(c.ignored_attrs_reasons));
+      }
+      if (_db?.users?.length) {
+          localStorage.setItem('qcol_users', JSON.stringify(_db.users));
+      }
+      broadcast({ type: 'QCOL_CONFIG_UPDATED', db: _db });
+  }
+
   // ── MENSAJERÍA INTER-MÓDULO ──
   window.addEventListener('message', e => {
     const d = e.data; if (!d?.type) return;
@@ -573,23 +690,28 @@ const QCOL = (() => {
     if (d.type === 'QCOL_GET_CONFIG')   sendCfg(e.source);
     if (d.type === 'QCOL_LOGOUT')       doLogout();
     if (d.type === 'QCOL_OPEN_FOUNDER') openAuth('founder');
-    if (d.type === 'QCOL_GET_USER') {
-      try { e.source.postMessage({type:'QCOL_USER', user:curUser}, '*'); } catch(err){}
-    }
-    // Cargar notebook en Arquitecto Pro desde Proyectos
-    if (d.type === 'QCOL_LOAD_NB') {
-      nav('architect-pro');
-      setTimeout(()=>{
-        const proIframe = iframes['architect-pro'];
-        if (proIframe) {
-          try { proIframe.contentWindow.postMessage({type:'QCOL_LOAD_NB', nb:d.nb}, '*'); }
-          catch(err){}
-        }
-      }, 400);
-    }
     if (d.type === 'QCOL_SAVE') {
       const val = typeof d.val === 'object' ? JSON.stringify(d.val) : d.val;
       localStorage.setItem(d.key, val);
+      
+      // Sincronizar clave de config a la DB compartida en GitHub
+      const CONFIG_KEYS = {
+          'qcol_colab_url': 'colab_url',
+          'qcol_mistral_key': 'mistral_key',
+          'qcol_mistral_enabled': 'mistral_enabled',
+          'qcol_mistral_model': 'mistral_model',
+          'qcol_mistral_timeout': 'mistral_timeout',
+          'qcol_ignored_attrs': 'ignored_attrs',
+          'qcol_ignored_attrs_reasons': 'ignored_attrs_reasons'
+      };
+      if (CONFIG_KEYS[d.key] && _db) {
+          if (!_db.config) _db.config = {};
+          let parsedVal = d.val;
+          try { parsedVal = typeof d.val === 'string' ? JSON.parse(d.val) : d.val; } catch(e) {}
+          _db.config[CONFIG_KEYS[d.key]] = parsedVal;
+          dbSave(_db); // guardar en GitHub sin bloquear
+      }
+      
       if (d.key === 'qcol_colab_url') checkEngine();
       if (d.key === 'qcol_ai') { aiCfg = d.val; setupAI(); }
       if (d.key === 'qcol_fp') notify('✅ Contraseña fundador actualizada');
@@ -657,7 +779,7 @@ const QCOL = (() => {
     iframe.src = file;
     iframe.onload = () => {
       iframes[screen] = iframe;
-      setTimeout(() => { sendCfg(iframe.contentWindow); try{iframe.contentWindow.postMessage({type:'QCOL_USER',user:curUser},'*');}catch(e){} broadcast({type:'QCOL_USER_UPDATE',user:curUser}); }, 300);
+      setTimeout(() => { sendCfg(iframe.contentWindow); broadcast({type:'QCOL_USER_UPDATE',user:curUser}); }, 200);
     };
     iframe.onerror = () => {
       wrap.innerHTML = renderPH(screen);
@@ -838,9 +960,16 @@ const QCOL = (() => {
     const users = JSON.parse(localStorage.getItem('qcol_users') || '[]');
     const f = users.find(x => x.username === u && x.password === p);
     if (!f) return notify('Usuario o contraseña incorrectos');
-    curUser = f; closeAuth(); updateUI(); renderMenu();
+    curUser = f;
+    // Al hacer login, cargar datos del usuario desde DB
+    dbLoad().then(data => {
+        if (data?.users) {
+            localStorage.setItem('qcol_users', JSON.stringify(data.users));
+        }
+    });
+    closeAuth(); updateUI(); renderMenu();
     notify(`¡Bienvenido, ${f.name}!`);
-    broadcast({ type:'QCOL_USER_UPDATE', user:curUser }); broadcast({ type:'QCOL_USER', user:curUser }); try{localStorage.setItem('qcol_cur_user', curUser ? JSON.stringify(curUser) : '');}catch(e){}
+    broadcast({ type:'QCOL_USER_UPDATE', user:curUser });
   }
 
   function doRegister() {
@@ -853,9 +982,15 @@ const QCOL = (() => {
     const nu = { name, username:u, password:p, role:'user', canUpload:false, joined:new Date().toLocaleDateString() };
     users.push(nu);
     localStorage.setItem('qcol_users', JSON.stringify(users));
+    // Sincronizar nuevo usuario a GitHub
+    dbGet('users').then(dbUsers => {
+        const merged = dbUsers || [];
+        if (!merged.find(u => u.username === nu.username)) merged.push(nu);
+        dbSet('users', merged);
+    });
     curUser = nu; closeAuth(); updateUI(); renderMenu();
     notify(`¡Bienvenido, ${name}!`);
-    broadcast({ type:'QCOL_USER_UPDATE', user:curUser }); broadcast({ type:'QCOL_USER', user:curUser }); try{localStorage.setItem('qcol_cur_user', curUser ? JSON.stringify(curUser) : '');}catch(e){}
+    broadcast({ type:'QCOL_USER_UPDATE', user:curUser });
   }
 
   function doFounder() {
@@ -865,7 +1000,7 @@ const QCOL = (() => {
       curUser = { name:'Franci Laffita Camargo', username:'franci_laffita', role:'founder', canUpload:true };
       closeAuth(); updateUI(); renderMenu();
       notify('👑 Acceso fundador concedido');
-      broadcast({ type:'QCOL_USER_UPDATE', user:curUser }); broadcast({ type:'QCOL_USER', user:curUser }); try{localStorage.setItem('qcol_cur_user', curUser ? JSON.stringify(curUser) : '');}catch(e){}
+      broadcast({ type:'QCOL_USER_UPDATE', user:curUser });
       nav('founder');
     } else {
       notify('Contraseña incorrecta');
@@ -875,7 +1010,7 @@ const QCOL = (() => {
   function doLogout() {
     curUser = null; updateUI(); renderMenu(); nav('home');
     notify('Sesión cerrada');
-    broadcast({ type:'QCOL_USER_UPDATE', user:null }); broadcast({ type:'QCOL_USER', user:null }); try{localStorage.removeItem('qcol_cur_user');}catch(e){}
+    broadcast({ type:'QCOL_USER_UPDATE', user:null });
   }
 
   function updateUI() {
@@ -1049,7 +1184,7 @@ const QCOL = (() => {
   }
 
   // ── INIT ──
-  function init() {
+  async function init() {
     const msgs = ['INICIANDO...', 'CARGANDO MÓDULOS...', 'LISTO'];
     let i = 0;
     const sp = document.getElementById('splash-msg');
@@ -1066,6 +1201,7 @@ const QCOL = (() => {
     renderMenu();
     updateUI();
     checkEngine();
+    await dbInit(); // Inicializar base de datos compartida
 
     document.getElementById('auth-modal').addEventListener('click', e => {
       if (e.target === document.getElementById('auth-modal')) closeAuth();
