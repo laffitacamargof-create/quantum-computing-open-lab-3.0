@@ -3,21 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QCOL — Arquitecto Profesional · JupyterLab Quantum</title>
+<title>QCOL — Arquitecto Profesional · Quantum Lab</title>
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500;600&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
-<!-- Markdown + MathJax + Highlight.js -->
+<!-- CodeMirror 6 + dependencias (ES modules) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@codemirror/view@6.0.0/dist/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@codemirror/theme-one-dark@6.0.0/dist/index.css">
+<script type="importmap">
+  {
+    "imports": {
+      "@codemirror/state": "https://cdn.skypack.dev/@codemirror/state",
+      "@codemirror/view": "https://cdn.skypack.dev/@codemirror/view",
+      "@codemirror/commands": "https://cdn.skypack.dev/@codemirror/commands",
+      "@codemirror/language": "https://cdn.skypack.dev/@codemirror/language",
+      "@codemirror/lang-python": "https://cdn.skypack.dev/@codemirror/lang-python",
+      "@codemirror/lang-markdown": "https://cdn.skypack.dev/@codemirror/lang-markdown",
+      "@codemirror/autocomplete": "https://cdn.skypack.dev/@codemirror/autocomplete",
+      "@codemirror/basic-setup": "https://cdn.skypack.dev/@codemirror/basic-setup",
+      "@codemirror/theme-one-dark": "https://cdn.skypack.dev/@codemirror/theme-one-dark",
+      "@lezer/common": "https://cdn.skypack.dev/@lezer/common",
+      "@lezer/python": "https://cdn.skypack.dev/@lezer/python"
+    }
+  }
+</script>
+<!-- Markdown, MathJax, Highlight.js -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
-<!-- CodeMirror 5 (estilo VSCode/JupyterLab) -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/theme/dracula.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/python/python.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/edit/closebrackets.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/highlight.min.js"></script>
 <style>
 :root{
   --bg:#0a0e1a;--bg2:#0d1117;--bg3:#0d1220;
@@ -33,6 +46,7 @@
 html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--ex);}
 body{display:flex;flex-direction:column;overflow:hidden;}
 
+/* notificaciones */
 .notif{position:fixed;top:.7rem;right:.7rem;z-index:9999;padding:.5rem .9rem;
   background:rgba(10,14,26,.97);border:1px solid var(--cy);border-radius:8px;
   font-family:var(--orb);font-size:.58rem;color:var(--cy);
@@ -50,7 +64,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
   border:none;border-radius:8px;color:#fff;font-family:var(--orb);font-size:.65rem;cursor:pointer;}
 
 .topbar{height:38px;display:flex;align-items:center;gap:.5rem;padding:0 .8rem;background:#080b14;
-  border-bottom:1px solid rgba(189,147,249,.18);flex-shrink:0;position:relative;z-index:10;}
+  border-bottom:1px solid rgba(189,147,249,.18);flex-shrink:0;z-index:10;}
 .tb-logo{display:flex;align-items:center;gap:.35rem;margin-right:.5rem;}
 .tb-q{font-family:var(--orb);font-size:.72rem;font-weight:900;color:var(--cy);}
 .tb-pro{font-family:var(--orb);font-size:.48rem;color:var(--pu);letter-spacing:.06em;}
@@ -72,7 +86,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 
 .secbar{height:32px;display:flex;align-items:stretch;background:#080b14;border-bottom:1px solid var(--bd);flex-shrink:0;padding:0 .5rem;gap:.1rem;}
 .stab{display:flex;align-items:center;gap:.3rem;padding:0 .75rem;background:transparent;border:none;color:var(--mu);
-  font-family:var(--orb);font-size:.48rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+  font-family:var(--orb);font-size:.48rem;cursor:pointer;border-bottom:2px solid transparent;}
 .stab.on{color:var(--pu);border-bottom-color:var(--pu);}
 .secbar-right{margin-left:auto;display:flex;align-items:center;gap:.3rem;padding:0 .3rem;}
 .tbtn{display:flex;align-items:center;gap:.3rem;padding:.25rem .6rem;background:transparent;
@@ -89,24 +103,26 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .nb-scroll::-webkit-scrollbar{width:5px;}
 .nb-scroll::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px;}
 
-.nb-cell{display:flex;margin:.2rem auto;width:min(900px,96%);position:relative;border-radius:8px;border:1px solid transparent;transition:border-color .15s;}
+.nb-cell{display:flex;margin:.2rem auto;width:min(900px,96%);position:relative;border-radius:8px;border:1px solid transparent;}
 .nb-cell:hover{border-color:rgba(189,147,249,.15);}
 .nb-cell.active{border-color:rgba(189,147,249,.4);}
 .cell-gutter{width:52px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:.6rem .3rem 0;gap:.3rem;}
-.cell-num{font-family:var(--mono);font-size:.6rem;color:var(--mu);min-width:22px;text-align:center;transition:color 0.2s;}
+.cell-num{font-family:var(--mono);font-size:.6rem;color:var(--mu);min-width:22px;text-align:center;}
 .cell-num.error{color:#ff4466; font-weight:bold;}
 .cell-run-btn{width:26px;height:26px;border-radius:50%;background:transparent;border:1px solid var(--bd2);
-  color:var(--mu);font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+  color:var(--mu);font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .cell-run-btn:hover{background:rgba(0,136,255,.15);border-color:var(--bl);color:var(--bl2);transform:scale(1.1);}
 .cell-run-btn.spinning{border-color:var(--gr);color:var(--gr);animation:sp .7s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg);}}
 .cell-body{flex:1;display:flex;flex-direction:column;min-width:0;padding:.4rem 0;}
 .cell-type-badge{display:inline-flex;align-items:center;gap:.3rem;font-family:var(--orb);font-size:.44rem;color:var(--mu);padding:.08rem 0 .3rem;}
-.ctb-code{color:var(--bl2);}.ctb-md{color:var(--gr);}
+.ctb-code{color:var(--bl2);}.ctb-md{color:var(--gr);}.ctb-qiskit{color:var(--gr);}
 .cell-code-area{background:var(--bg2);border:1px solid var(--bd);border-radius:6px;overflow:hidden;min-height:48px;}
 .cell-output-area{margin-top:.35rem;background:#060a10;border:1px solid var(--bd);border-radius:6px;font-family:var(--mono);overflow:hidden;}
 .out-text{padding:.55rem .8rem;font-size:.68rem;line-height:1.65;white-space:pre-wrap;max-height:280px;overflow-y:auto;border-bottom:1px solid var(--bd);margin:0;}
 .out-err{color:#ff88aa;background:rgba(255,68,102,.05);}
+.out-html{background:#0a0e1a;padding:.6rem;}
+.out-circuit-img, .out-bloch, .out-hist, .out-plot{max-width:100%;display:block;background:#0a0e1a;border-radius:6px;margin-top:8px;border:1px solid #1e3058;}
 .md-split{display:flex;gap:.5rem;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;min-height:150px;}
 .md-editor-pane{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--bd);}
 .md-preview-pane{flex:1;padding:.6rem;overflow-y:auto;max-height:400px;font-size:.75rem;line-height:1.6;color:var(--tx2);}
@@ -144,7 +160,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .manage-wrap{display:flex;flex-direction:column;height:100%;}
 .manage-bar{display:flex;align-items:center;gap:.5rem;padding:.6rem .9rem;background:var(--p);border-bottom:1px solid var(--bd);}
 .nb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.85rem;padding:1.1rem;overflow-y:auto;}
-.nb-card{background:var(--p);border:1px solid var(--bd);border-radius:10px;transition:all .25s;}
+.nb-card{background:var(--p);border:1px solid var(--bd);border-radius:10px;}
 .nb-card:hover{border-color:rgba(189,147,249,.4);}
 .nb-card-hdr{padding:.65rem .9rem;background:#080b14;border-bottom:1px solid rgba(189,147,249,.15);display:flex;justify-content:space-between;}
 .nb-card-title{font-family:var(--orb);font-size:.65rem;}
@@ -153,96 +169,244 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 #view-files{display:none;flex:1;flex-direction:column;overflow:hidden;}
 .fi-row{transition:background .15s;border-bottom:1px solid rgba(30,48,88,.3);}
 .fi-row:hover{background:rgba(0,136,255,.06);}
+/* CodeMirror 6 personalización */
+.cm-editor { border-radius: 6px; border: 1px solid var(--bd); background: var(--bg2); font-family: var(--mono); font-size: 0.75rem; }
+.cm-editor.cm-focused { border-color: var(--bl2); }
+.cm-gutters { background: var(--bg3); border-right: 1px solid var(--bd); color: var(--mu); }
+.cm-activeLineGutter { background: var(--p2); }
 </style>
 </head>
 <body>
 <div class="notif" id="notif"></div>
 <div class="access-denied" id="access-denied"><div class="denied-icon">🔒</div><div class="denied-title">ACCESO RESTRINGIDO</div><div class="denied-desc">Solo Administradores y Fundador</div><button class="btn-back" onclick="postCore('QCOL_NAV',{screen:'home'})">← Volver</button></div>
-<div class="topbar" id="topbar" style="display:none;"><div class="tb-logo"><span class="tb-q">Q</span><span style="font-family:var(--orb);font-size:.72rem;font-weight:900;color:var(--bl2);">COL</span><span class="tb-pro">PRO</span></div><div class="tb-sep"></div><input class="nb-name-inp" id="nb-name-inp" placeholder="Sin título" value="Nuevo Notebook"><div class="tb-right"><input type="text" id="engine-url-input" class="engine-url-input" placeholder="URL motor"><div class="eng-pill" id="eng-badge">● SIN COMPILADOR</div><div class="admin-pill" id="admin-pill" style="display:none;">ADMIN+</div><div class="user-pill" id="user-pill">—</div></div></div>
-<div class="secbar" id="secbar" style="display:none;"><button class="stab on" id="stab-1" onclick="setView('notebook')">📝 NOTEBOOK</button><button class="stab" id="stab-2" onclick="setView('manage')">📂 MIS NOTEBOOKS</button><button class="stab" id="stab-3" onclick="setView('files')">📁 ARCHIVOS</button><div class="secbar-right"><button class="tbtn" onclick="addCellAt(-1,'code')">＋ Código</button><button class="tbtn" onclick="addCellAt(-1,'markdown')">＋ Texto</button><button class="tbtn" onclick="importNb()">📂 Abrir .ipynb</button><input type="file" id="import-file" style="display:none;" accept=".ipynb" onchange="handleImport(event)"><button class="tbtn" onclick="downloadNb()">📥 .ipynb</button><button class="tbtn" onclick="saveCurrentNb(true)">💾 GUARDAR</button><button class="tbtn pub" onclick="showPublish()">📤 PUBLICAR</button><div style="width:1px;height:18px;background:var(--bd);margin:0 .1rem;"></div><button class="tbtn run" onclick="runCurCell()">▶ EJECUTAR</button><button class="tbtn run-all" onclick="runAll()">▶▶ TODO</button></div></div>
-<div class="main" id="main-area" style="display:none;"><div id="view-notebook" style="display:flex;"><div class="nb-scroll" id="nb-scroll"><div class="nb-bottom"><button class="nb-add-big" onclick="addCellAt(-1,'code')">＋ Añadir celda de código</button><button class="nb-add-big" onclick="addCellAt(-1,'markdown')">＋ Añadir celda de texto</button></div></div></div><div id="view-manage"><div class="manage-wrap"><div class="manage-bar"><div class="manage-title-lbl">📂 MIS NOTEBOOKS</div><button class="tbtn" style="margin-left:auto;" onclick="refreshNbs()">🔄 Actualizar</button><button class="tbtn pub" onclick="newNotebook();setView('notebook')">＋ NUEVO</button></div><div class="nb-grid" id="nb-grid"></div></div></div><div id="view-files"><div style="display:flex;align-items:center;gap:.4rem;padding:.5rem .8rem;background:#0a0e1a;border-bottom:1px solid #1e3058;flex-shrink:0;"><div style="font-family:var(--orb);font-size:.58rem;color:var(--pu);">📁 GESTOR DE ARCHIVOS</div><span id="file-path-display" style="font-family:var(--mono);font-size:.56rem;color:var(--mu);margin-left:.5rem;">/ raíz</span><div style="margin-left:auto;display:flex;gap:.3rem;"><button class="tbtn" onclick="fileNewFolder()">📁+ Carpeta</button><button class="tbtn" onclick="filePaste()" id="btn-paste" style="display:none;">📋 Pegar</button></div></div><div id="file-tree" style="flex:1;overflow-y:auto;padding:.5rem;"></div></div></div>
+<div class="topbar" id="topbar" style="display:none;"><div class="tb-logo"><span class="tb-q">Q</span><span style="font-family:var(--orb);font-size:.72rem;font-weight:900;color:var(--bl2);">COL</span><span class="tb-pro">PRO</span></div><div class="tb-sep"></div><input class="nb-name-inp" id="nb-name-inp" placeholder="Sin título" value="Nuevo Notebook"><div class="tb-right"><input type="text" id="engine-url-input" class="engine-url-input"><div class="eng-pill" id="eng-badge">● SIN COMPILADOR</div><div class="admin-pill" id="admin-pill" style="display:none;">ADMIN+</div><div class="user-pill" id="user-pill">—</div></div></div>
+<div class="secbar" id="secbar" style="display:none;"><button class="stab on" id="stab-1" onclick="setView('notebook')">📝 NOTEBOOK</button><button class="stab" id="stab-2" onclick="setView('manage')">📂 MIS NOTEBOOKS</button><button class="stab" id="stab-3" onclick="setView('files')">📁 ARCHIVOS</button><div class="secbar-right"><button class="tbtn" onclick="addCellAt(-1,'code')">＋ Código</button><button class="tbtn" onclick="addCellAt(-1,'markdown')">＋ Texto</button><button class="tbtn" onclick="addCellAt(-1,'qiskit')">⚛️ Qiskit</button><button class="tbtn" onclick="importNb()">📂 Abrir .ipynb</button><input type="file" id="import-file" style="display:none;" accept=".ipynb" onchange="handleImport(event)"><button class="tbtn" onclick="downloadNb()">📥 .ipynb</button><button class="tbtn" onclick="saveCurrentNb(true)">💾 GUARDAR</button><button class="tbtn pub" onclick="showPublish()">📤 PUBLICAR</button><div style="width:1px;height:18px;background:var(--bd);margin:0 .1rem;"></div><button class="tbtn run" onclick="runCurCell()">▶ EJECUTAR</button><button class="tbtn run-all" onclick="runAll()">▶▶ TODO</button></div></div>
+<div class="main" id="main-area" style="display:none;"><div id="view-notebook" style="display:flex;"><div class="nb-scroll" id="nb-scroll"><div class="nb-bottom"><button class="nb-add-big" onclick="addCellAt(-1,'code')">＋ Añadir celda de código</button><button class="nb-add-big" onclick="addCellAt(-1,'markdown')">＋ Añadir celda de texto</button><button class="nb-add-big" onclick="addCellAt(-1,'qiskit')">＋ Añadir celda Qiskit</button></div></div></div><div id="view-manage"><div class="manage-wrap"><div class="manage-bar"><div class="manage-title-lbl">📂 MIS NOTEBOOKS</div><button class="tbtn" style="margin-left:auto;" onclick="refreshNbs()">🔄 Actualizar</button><button class="tbtn pub" onclick="newNotebook();setView('notebook')">＋ NUEVO</button></div><div class="nb-grid" id="nb-grid"></div></div></div><div id="view-files"><div style="display:flex;align-items:center;gap:.4rem;padding:.5rem .8rem;background:#0a0e1a;border-bottom:1px solid #1e3058;flex-shrink:0;"><div style="font-family:var(--orb);font-size:.58rem;color:var(--pu);">📁 GESTOR DE ARCHIVOS</div><span id="file-path-display" style="font-family:var(--mono);font-size:.56rem;color:var(--mu);margin-left:.5rem;">/ raíz</span><div style="margin-left:auto;display:flex;gap:.3rem;"><button class="tbtn" onclick="fileNewFolder()">📁+ Carpeta</button><button class="tbtn" onclick="filePaste()" id="btn-paste" style="display:none;">📋 Pegar</button></div></div><div id="file-tree" style="flex:1;overflow-y:auto;padding:.5rem;"></div></div></div>
 <div class="statusbar" id="statusbar" style="display:none;"><div class="sb-dot sb-idle" id="sb-dot"></div><span id="sb-txt">Listo</span><span>Python · Qiskit</span><div class="sb-right"><span id="sb-cells-info">0 celdas</span><span id="sb-save-status">─</span></div></div>
-<div class="modal-ov" id="pub-modal"><div class="modal"><div class="modal-title">📤 Publicar Notebook</div><div class="fg"><label class="fl">TÍTULO</label><input class="fi" id="pub-title" placeholder="Nombre"></div><div class="fg"><label class="fl">DESCRIPCIÓN</label><textarea class="fi" id="pub-desc" placeholder="Descripción..."></textarea></div><div class="fg"><label class="fl">TOKEN GITHUB (opcional)</label><input class="fi" id="github-token" placeholder="ghp_xxxx" type="password"></div><div class="btn-row"><button class="btn-pri" onclick="publishNb()">📤 Publicar (GitHub + Local)</button><button class="btn-cancel" onclick="closePublish()">Cancelar</button></div></div></div>
+<div class="modal-ov" id="pub-modal"><div class="modal"><div class="modal-title">📤 Publicar Notebook</div><div class="fg"><label class="fl">TÍTULO</label><input class="fi" id="pub-title" placeholder="Nombre"></div><div class="fg"><label class="fl">DESCRIPCIÓN</label><textarea class="fi" id="pub-desc" placeholder="Descripción..."></textarea></div><div class="fg"><label class="fl">TOKEN GITHUB</label><input class="fi" id="github-token" placeholder="ghp_xxxx" type="password"></div><div class="btn-row"><button class="btn-pri" onclick="publishNb()">📤 Publicar</button><button class="btn-cancel" onclick="closePublish()">Cancelar</button></div></div></div>
 <script>
-// ==================== QCOL ARCHITECT PRO — TERMINAL NORMAL + GESTOR ARCHIVOS ====================
+// ==================== QCOL ARCHITECT PRO — UNIFICADO ====================
 let STANDALONE = window.parent===window, curUser=null, engineURL='', engineOK=false, running=false, curView='notebook', cells=[], curCellId=null, execCounter=0, _initialized=false, lastSaveTime=Date.now();
 let undoStack=[], redoStack=[], isUndoRedo=false;
 let autoSaveTimer=null;
 let _expositionMode = false;
+let cmEditors = new Map();
 
 function postCore(type,data){ try{ window.parent.postMessage({type,...data},'*'); }catch(e){} }
 function notify(msg,ms=2800){ const el=document.getElementById('notif'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),ms); }
 
-// undo/redo
 function pushUndo(){ if(isUndoRedo) return; undoStack.push(JSON.parse(JSON.stringify(cells))); if(undoStack.length>50) undoStack.shift(); redoStack=[]; }
 function undo(){ if(undoStack.length===0) return; isUndoRedo=true; redoStack.push(JSON.parse(JSON.stringify(cells))); cells=undoStack.pop(); renderCells(); isUndoRedo=false; notify('↩️ Deshacer'); }
 function redo(){ if(redoStack.length===0) return; isUndoRedo=true; undoStack.push(JSON.parse(JSON.stringify(cells))); cells=redoStack.pop(); renderCells(); isUndoRedo=false; notify('↪️ Rehacer'); }
 
-// engine
 async function checkEngine(){ if(!engineURL) return; const badge=document.getElementById('eng-badge'); try{ const resp=await fetch(engineURL+'/run/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:['print("ok")'], fn_index:1}),signal:AbortSignal.timeout(8000)}); if(resp.ok){ engineOK=true; badge.textContent='● MOTOR ACTIVO'; badge.className='eng-pill on'; } else throw new Error(); }catch(e){ engineOK=false; badge.textContent='● SIN COMPILADOR'; badge.className='eng-pill'; } }
-function setEngineURL(url){ engineURL=url; localStorage.setItem('qcol_colab_url',url); checkEngine(); notify('🌐 Motor actualizado'); }
 
-// runCell con salida normal, tabla de probabilidades e imagen
+// fetch con retry
+async function fetchWithRetry(url, options, retries=2, delay=1000) {
+  for(let i=0; i<=retries; i++) {
+    try {
+      return await fetch(url, options);
+    } catch(e) {
+      if(i===retries) throw e;
+      await new Promise(r=>setTimeout(r,delay));
+    }
+  }
+}
+
+// Inicializar CodeMirror 6
+async function initCodeMirror(cellId, initialCode, mode, onUpdate) {
+  const { EditorState, EditorView, basicSetup } = await import('@codemirror/basic-setup');
+  const { python } = await import('@codemirror/lang-python');
+  const { markdown } = await import('@codemirror/lang-markdown');
+  const { oneDark } = await import('@codemirror/theme-one-dark');
+  const { keymap } = await import('@codemirror/view');
+  const qcolTheme = EditorView.theme({
+    "&": { backgroundColor: "#0a0e1a", color: "#e2ecff" },
+    ".cm-content": { fontFamily: "'JetBrains Mono', monospace", fontSize: "0.75rem", caretColor: "#00ffdd" },
+    ".cm-cursor": { borderLeftColor: "#00ffdd" },
+    ".cm-gutters": { backgroundColor: "#080b14", borderRight: "1px solid #1e3058", color: "#4a6a9a" },
+    ".cm-activeLineGutter": { backgroundColor: "#1a2540" },
+    ".cm-activeLine": { backgroundColor: "#0d1220" }
+  }, { dark: true });
+  const runCellKeymap = keymap.of({
+    key: "Shift-Enter",
+    run: (view) => {
+      const cellDiv = view.dom.closest('.nb-cell');
+      if(cellDiv) {
+        const id = cellDiv.dataset.id;
+        const cell = cells.find(c=>c.id===id);
+        if(cell && cell.type==='qiskit') runQiskitCell(id);
+        else runCell(id);
+      }
+      return true;
+    }
+  });
+  const extensions = [
+    basicSetup,
+    oneDark,
+    qcolTheme,
+    runCellKeymap,
+    mode === 'python' ? python() : markdown(),
+    EditorView.updateListener.of((update) => {
+      if(update.docChanged && onUpdate) onUpdate(update.state.doc.toString());
+    })
+  ];
+  const state = EditorState.create({ doc: initialCode, extensions });
+  const parent = document.getElementById(`cm-${cellId}`);
+  if(!parent) return null;
+  const view = new EditorView({ state, parent });
+  cmEditors.set(cellId, view);
+  return view;
+}
+
+// Celda Qiskit especial
+async function runQiskitCell(id) {
+  if(!_expositionMode && !requireAuth()) return;
+  if(running) { notify('Ejecución en curso'); return; }
+  const cell = cells.find(c=>c.id===id);
+  if(!cell || cell.type!=='qiskit') return;
+  const view = cmEditors.get(id);
+  if(view) cell.code = view.state.doc.toString();
+  let userCode = cell.code.trim();
+  if(!userCode) return;
+  // Auto-detectar número de qubits
+  let nQubits = 2;
+  const match = userCode.match(/\.([a-z]+)\((\d+)/);
+  if(match) nQubits = Math.max(parseInt(match[2])+1, 2);
+  if(!userCode.includes('QuantumCircuit(')) userCode = `qc = QuantumCircuit(${nQubits})\n` + userCode;
+  if(!userCode.includes('.measure') && !userCode.includes('measure_all')) userCode += '\nqc.measure_all()';
+  const preamble = `
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import AerSimulator
+from qiskit.visualization import plot_histogram, plot_bloch_multivector
+import matplotlib.pyplot as plt
+import numpy as np
+import io, base64
+`;
+  const postamble = `
+_circuit_img = None
+_bloch_imgs = []
+_hist_img = None
+try:
+    buf = io.BytesIO()
+    qc.draw('mpl').savefig(buf, format='png')
+    buf.seek(0)
+    _circuit_img = base64.b64encode(buf.read()).decode()
+except: pass
+try:
+    sim = AerSimulator()
+    qc.save_statevector()
+    job = sim.run(qc, shots=1)
+    state = job.result().get_statevector()
+    fig = plot_bloch_multivector(state)
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    plt.close(fig)
+    buf.seek(0)
+    _bloch_imgs = [base64.b64encode(buf.read()).decode()]
+except: pass
+if any(inst.operation.name == 'measure' for inst in qc.data):
+    try:
+        sim = AerSimulator()
+        qc_meas = qc.copy()
+        if not any(inst.operation.name == 'measure' for inst in qc_meas.data):
+            qc_meas.measure_all()
+        transpiled = transpile(qc_meas, sim)
+        job = sim.run(transpiled, shots=1024)
+        counts = job.result().get_counts()
+        fig = plot_histogram(counts)
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png')
+        plt.close(fig)
+        buf.seek(0)
+        _hist_img = base64.b64encode(buf.read()).decode()
+    except: pass
+__result = {"stdout": "", "circuit_image": _circuit_img, "bloch_images": _bloch_imgs, "histogram_image": _hist_img}
+`;
+  const fullCode = preamble + userCode + postamble;
+  running = true; setSbRun(true);
+  const rbtn = document.getElementById('rbtn-'+id);
+  if(rbtn) rbtn.classList.add('spinning');
+  const outArea = document.getElementById(`output-area-${id}`);
+  outArea.innerHTML = '<div class="out-text out-inf">⚙️ Ejecutando circuito cuántico...</div>';
+  try {
+    const resp = await fetchWithRetry(engineURL+'/run/predict', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({data:[fullCode], fn_index:1}),
+      signal:AbortSignal.timeout(90000)
+    }, 2, 1000);
+    const raw = await resp.json();
+    const payload = (raw.data && raw.data[0]) ? raw.data[0] : raw;
+    execCounter++; cell.exec_count = execCounter;
+    outArea.innerHTML = '';
+    if(payload.stdout) outArea.appendChild(createTextDiv(payload.stdout));
+    if(payload.stderr) outArea.appendChild(createTextDiv(payload.stderr, 'err'));
+    if(payload.circuit_image) outArea.appendChild(createImage(payload.circuit_image, 'out-circuit-img'));
+    if(payload.bloch_images) payload.bloch_images.forEach(b64=>outArea.appendChild(createImage(b64, 'out-bloch')));
+    if(payload.histogram_image) outArea.appendChild(createImage(payload.histogram_image, 'out-hist'));
+    if(outArea.children.length===0) outArea.innerHTML = '<div class="out-text">✅ Circuito ejecutado</div>';
+    setSbRun(false, '✅ Circuito listo');
+  } catch(e) {
+    outArea.innerHTML = `<div class="out-text out-err">❌ ${escapeHtml(e.message)}</div>`;
+    setSbRun(false, '❌ Error', 'err');
+  }
+  running = false; if(rbtn) rbtn.classList.remove('spinning');
+  renderCellNum(id);
+}
+
+function createTextDiv(text, type=''){ const d=document.createElement('div'); d.className=`out-text ${type==='err'?'out-err':''}`; d.textContent=text; return d; }
+function createImage(b64, cls){ const img=document.createElement('img'); img.src='data:image/png;base64,'+b64; img.className=cls; img.style.maxWidth='100%'; img.style.marginTop='8px'; return img; }
+
+// runCell normal (sin Qiskit especial)
 async function runCell(id) {
   if(!_expositionMode && !requireAuth()) return;
-  if (running) { notify('Ejecución en curso'); return; }
-  const cell = cells.find(c => c.id === id);
-  if (!cell || cell.type !== 'code') return;
-  syncCellCode(id);
+  if(running) { notify('Ejecución en curso'); return; }
+  const cell = cells.find(c=>c.id===id);
+  if(!cell || cell.type!=='code') return;
+  const view = cmEditors.get(id);
+  if(view) cell.code = view.state.doc.toString();
   const code = cell.code.trim();
-  if (!code) return;
-  running = true;
-  setSbRun(true);
-  const rbtn = document.getElementById('rbtn-' + id);
-  if (rbtn) rbtn.classList.add('spinning');
+  if(!code) return;
+  running = true; setSbRun(true);
+  const rbtn = document.getElementById('rbtn-'+id);
+  if(rbtn) rbtn.classList.add('spinning');
   const outArea = document.getElementById(`output-area-${id}`);
-  if (outArea) outArea.innerHTML = '<div class="out-text out-inf">⚙️ Ejecutando...</div>';
+  outArea.innerHTML = '<div class="out-text out-inf">⚙️ Ejecutando...</div>';
   cell.hasError = false;
   renderCellNum(id);
   try {
-    if (engineOK && engineURL) {
-      const resp = await fetch(engineURL + '/run/predict', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: [code], fn_index: 1 }),
-        signal: AbortSignal.timeout(90000)
-      });
+    if(engineOK && engineURL) {
+      const resp = await fetchWithRetry(engineURL+'/run/predict', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({data:[code], fn_index:1}),
+        signal:AbortSignal.timeout(90000)
+      }, 2, 1000);
       const raw = await resp.json();
       let payload = (raw.data && raw.data[0]) ? raw.data[0] : raw;
-      execCounter++;
-      cell.exec_count = execCounter;
+      execCounter++; cell.exec_count = execCounter;
       let outHtml = '';
       let isError = false;
-      if (payload.stderr) {
-        outHtml += `<div class="out-text out-err">${escapeHtml(payload.stderr)}</div>`;
-        isError = true;
-      } else if (payload.stdout) {
-        outHtml += `<div class="out-text">${escapeHtml(payload.stdout)}</div>`;
-      } else if (typeof payload === 'string') {
-        outHtml += `<div class="out-text">${escapeHtml(payload)}</div>`;
-      } else {
-        outHtml += `<div class="out-text">✅ Ejecución completada</div>`;
-      }
-      // Probabilidades (sin canvas)
-      if (payload.bloch && payload.bloch.probabilities) {
+      if(payload.stderr) { outHtml += `<div class="out-text out-err">${escapeHtml(payload.stderr)}</div>`; isError=true; }
+      else if(payload.stdout) outHtml += `<div class="out-text">${escapeHtml(payload.stdout)}</div>`;
+      else if(typeof payload === 'string') outHtml += `<div class="out-text">${escapeHtml(payload)}</div>`;
+      else outHtml += `<div class="out-text">✅ Ejecución completada</div>`;
+      if(payload.bloch && payload.bloch.probabilities) {
         const probs = payload.bloch.probabilities;
-        const rows = Object.entries(probs).sort((a,b)=>b[1]-a[1]).map(([st, p]) => {
-          const pct = (p*100).toFixed(1);
-          const bar = '█'.repeat(Math.round(p*20));
-          return `<tr><td style="font-family:var(--mono);color:#00ffdd;padding:.15rem .5rem;">|${st}⟩</td><td style="font-family:var(--mono);color:#0088ff;padding:.15rem .5rem;">${bar}</td><td style="font-family:var(--mono);color:#e2ecff;padding:.15rem .5rem;">${pct}%</td></tr>`;
+        const rows = Object.entries(probs).sort((a,b)=>b[1]-a[1]).map(([st,p])=>{
+          const pct=(p*100).toFixed(1); const bar='█'.repeat(Math.round(p*20));
+          return `<tr><td style="font-family:var(--mono);color:#00ffdd;">|${st}⟩</td><td style="font-family:var(--mono);color:#0088ff;">${bar}</td><td style="font-family:var(--mono);color:#e2ecff;">${pct}%</td></tr>`;
         }).join('');
-        outHtml += `<div style="background:#090d18;border:1px solid #1e3058;border-radius:6px;padding:.5rem;margin-top:.4rem;"><div style="font-family:var(--orb);font-size:.5rem;color:#4a6a9a;">PROBABILIDADES</div><table style="border-collapse:collapse;">${rows}</table></div>`;
+        outHtml += `<div style="background:#090d18;border:1px solid #1e3058;border-radius:6px;padding:.5rem;margin-top:.4rem;"><div style="font-family:var(--orb);font-size:.5rem;">PROBABILIDADES</div><table>${rows}追赶</div>`;
       }
-      // Imagen matplotlib
-      if (payload.plot_png && typeof payload.plot_png === 'string' && payload.plot_png.length > 100) {
-        outHtml += `<img src="data:image/png;base64,${payload.plot_png}" style="max-width:100%;border-radius:6px;margin-top:.4rem;display:block;">`;
+      if(payload.plot_png && typeof payload.plot_png==='string' && payload.plot_png.length>100) {
+        outHtml += `<img src="data:image/png;base64,${payload.plot_png}" style="max-width:100%;border-radius:6px;margin-top:.4rem;">`;
       }
       cell.hasError = isError;
       outArea.innerHTML = outHtml;
       setSbRun(false, '✅ Completado');
     } else {
       await new Promise(r=>setTimeout(r,600));
-      execCounter++;
-      cell.exec_count = execCounter;
+      execCounter++; cell.exec_count = execCounter;
       outArea.innerHTML = '<div class="out-text out-inf">⚡ Simulación local · Conecta un motor</div>';
       setSbRun(false, 'Simulación local');
     }
@@ -251,120 +415,101 @@ async function runCell(id) {
     cell.hasError = true;
     setSbRun(false, '❌ Error', 'err');
   }
-  running = false;
-  if(rbtn) rbtn.classList.remove('spinning');
+  running = false; if(rbtn) rbtn.classList.remove('spinning');
   renderCellNum(id);
 }
 
-// Modo exposición (solo lectura)
 function activateExpositionMode() {
     _expositionMode = true;
-    document.querySelectorAll('.tbtn').forEach(btn => {
-        const txt = btn.textContent.trim();
-        if(['💾 GUARDAR','📥 .ipynb','📂 Abrir .ipynb','📤 PUBLICAR','＋ Código','＋ Texto'].includes(txt)) {
-            btn.style.display = 'none';
-        }
+    document.querySelectorAll('.tbtn').forEach(btn=>{
+        const txt=btn.textContent.trim();
+        if(['💾 GUARDAR','📥 .ipynb','📂 Abrir .ipynb','📤 PUBLICAR','＋ Código','＋ Texto','⚛️ Qiskit'].includes(txt)) btn.style.display='none';
     });
-    const badge = document.getElementById('expo-badge');
-    if(!badge && document.getElementById('topbar')) {
-        const b = document.createElement('span');
-        b.id = 'expo-badge';
-        b.style.cssText = 'padding:.15rem .45rem;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);border-radius:4px;font-family:var(--orb);font-size:.46rem;color:#00ff88;margin-left:8px;';
-        b.textContent = '👁 MODO EXPOSICIÓN';
-        document.getElementById('topbar').insertBefore(b, document.getElementById('nb-name-inp'));
+    if(!document.getElementById('expo-badge') && document.getElementById('topbar')) {
+        const b=document.createElement('span'); b.id='expo-badge'; b.style.cssText='padding:.15rem .45rem;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);border-radius:4px;font-family:var(--orb);font-size:.46rem;color:#00ff88;margin-left:8px;';
+        b.textContent='👁 MODO EXPOSICIÓN'; document.getElementById('topbar').insertBefore(b, document.getElementById('nb-name-inp'));
     }
 }
 
-// Gestor de archivos (solo admin/founder)
-let fileClipboard = null;
-let currentPath = [];
-
+// GESTOR DE ARCHIVOS (igual que antes)
+let fileClipboard = null, currentPath = [];
 function getFS() { return JSON.parse(localStorage.getItem('qcol_fs') || '{"name":"raíz","type":"folder","children":[]}'); }
 function saveFS(fs) { localStorage.setItem('qcol_fs', JSON.stringify(fs)); }
-function fsNavigate(root, path) {
-    let node = root;
-    for(const seg of path) {
-        const found = node.children?.find(c => c.name === seg && c.type === 'folder');
-        if(!found) return null;
-        node = found;
-    }
-    return node;
-}
-function renderFileTree() {
-    if(curView !== 'files') return;
-    const fs = getFS();
-    const node = fsNavigate(fs, currentPath);
-    const el = document.getElementById('file-tree');
-    const pathEl = document.getElementById('file-path-display');
-    if(!el || !node) return;
-    pathEl.textContent = '/ ' + (currentPath.join(' / ') || 'raíz');
-    let html = '';
-    if(currentPath.length > 0) html += `<div class="fi-row fi-up" onclick="fileCdUp()" style="cursor:pointer;padding:.3rem .5rem;color:var(--mu);">← .. (subir)</div>`;
-    (node.children || []).forEach(item => {
-        const isFolder = item.type === 'folder';
-        const icon = isFolder ? '📁' : (item.name.endsWith('.ipynb') ? '📓' : '📄');
-        html += `<div class="fi-row" style="display:flex;align-items:center;gap:.4rem;padding:.28rem .5rem;border-radius:5px;cursor:pointer;" ondblclick="${isFolder ? `fileCd('${item.name.replace(/'/g,"\\'")}')` : `fileOpen('${item.name.replace(/'/g,"\\'")}')`}" oncontextmenu="event.preventDefault();">
-            <span>${icon}</span>
-            <span style="flex:1;">${escapeHtml(item.name)}</span>
-            <div style="display:flex;gap:.2rem;opacity:0;" class="fi-actions">
-                ${isFolder ? '' : `<button class="tbtn" style="padding:.1rem .3rem;" onclick="event.stopPropagation();fileOpen('${item.name.replace(/'/g,"\\'")}')">📝</button>`}
-                <button class="tbtn" style="padding:.1rem .3rem;" onclick="event.stopPropagation();fileCopy('${item.name.replace(/'/g,"\\'")}','${item.type}')">📋</button>
-                <button class="tbtn" style="padding:.1rem .3rem;" onclick="event.stopPropagation();fileCut('${item.name.replace(/'/g,"\\'")}','${item.type}')">✂️</button>
-                <button class="tbtn" style="padding:.1rem .3rem;" onclick="event.stopPropagation();fileRename('${item.name.replace(/'/g,"\\'")}','${item.type}')">✏️</button>
-                <button class="tbtn" style="padding:.1rem .3rem;color:#ff8899;" onclick="event.stopPropagation();fileDelete('${item.name.replace(/'/g,"\\'")}','${item.type}')">🗑</button>
-            </div>
-        </div>`;
-    });
-    el.innerHTML = html;
-    document.getElementById('btn-paste').style.display = fileClipboard ? '' : 'none';
-    el.querySelectorAll('.fi-row').forEach(row => {
-        row.addEventListener('mouseenter', () => { const a = row.querySelector('.fi-actions'); if(a) a.style.opacity='1'; });
-        row.addEventListener('mouseleave', () => { const a = row.querySelector('.fi-actions'); if(a) a.style.opacity='0'; });
-    });
-}
-function fileCd(name) { currentPath.push(name); renderFileTree(); }
-function fileCdUp() { currentPath.pop(); renderFileTree(); }
-function fileNewFolder() { const name = prompt('Nombre de carpeta:'); if(!name||!name.trim()) return; const fs=getFS(); const node=fsNavigate(fs,currentPath); if(node.children.find(c=>c.name===name.trim())){ notify('Ya existe'); return; } node.children.push({name:name.trim(),type:'folder',children:[]}); saveFS(fs); renderFileTree(); notify('📁 Creada'); }
-function fileDelete(name,type) { if(!confirm(`¿Eliminar ${name}?`)) return; const fs=getFS(); const node=fsNavigate(fs,currentPath); node.children = node.children.filter(c=>c.name!==name); saveFS(fs); renderFileTree(); notify('🗑 Eliminado'); }
-function fileRename(name,type) { const newName = prompt('Nuevo nombre:',name); if(!newName||newName===name) return; const fs=getFS(); const node=fsNavigate(fs,currentPath); const item=node.children.find(c=>c.name===name); if(item) item.name=newName.trim(); saveFS(fs); renderFileTree(); notify('✏️ Renombrado'); }
-function fileCopy(name,type) { const fs=getFS(); const node=fsNavigate(fs,currentPath); const item=node.children.find(c=>c.name===name); if(!item) return; fileClipboard={action:'copy',item:JSON.parse(JSON.stringify(item)),fromPath:[...currentPath]}; notify('📋 Copiado'); renderFileTree(); }
-function fileCut(name,type) { const fs=getFS(); const node=fsNavigate(fs,currentPath); const item=node.children.find(c=>c.name===name); if(!item) return; fileClipboard={action:'cut',item:JSON.parse(JSON.stringify(item)),fromPath:[...currentPath],name}; notify('✂️ Cortado'); renderFileTree(); }
-function filePaste() { if(!fileClipboard) return; const fs=getFS(); const dest=fsNavigate(fs,currentPath); if(!dest) return; let pasteName=fileClipboard.item.name; while(dest.children.find(c=>c.name===pasteName)) pasteName='copia_'+pasteName; fileClipboard.item.name=pasteName; dest.children.push(fileClipboard.item); if(fileClipboard.action==='cut'){ const src=fsNavigate(fs,fileClipboard.fromPath); if(src) src.children=src.children.filter(c=>c.name!==fileClipboard.name); fileClipboard=null; } saveFS(fs); renderFileTree(); notify('📋 Pegado'); }
-function fileOpen(name) { const fs=getFS(); const node=fsNavigate(fs,currentPath); const item=node.children.find(c=>c.name===name); if(!item||item.type!=='file'||!name.endsWith('.ipynb')) return; try{ const nb=JSON.parse(item.content); cells=nb.cells.map(c=>({id:genId(),type:c.cell_type==='markdown'?'markdown':'code',code:Array.isArray(c.source)?c.source.join(''):c.source||'',output:'',exec_count:null,mdEdit:false})); document.getElementById('nb-name-inp').value=name.replace('.ipynb',''); renderCells(); if(cells[0]) focusCell(cells[0].id); setView('notebook'); notify('📂 Abierto: '+name); }catch(e){ notify('❌ Error al abrir'); } }
+function fsNavigate(root, path) { let node=root; for(const seg of path){ const found=node.children?.find(c=>c.name===seg && c.type==='folder'); if(!found) return null; node=found; } return node; }
+function renderFileTree() { if(curView!=='files') return; const fs=getFS(); const node=fsNavigate(fs,currentPath); const el=document.getElementById('file-tree'); const pathEl=document.getElementById('file-path-display'); if(!el||!node) return; pathEl.textContent='/ '+(currentPath.join(' / ')||'raíz'); let html=''; if(currentPath.length>0) html+=`<div class="fi-row fi-up" onclick="fileCdUp()" style="cursor:pointer;padding:.3rem .5rem;color:var(--mu);">← .. (subir)</div>`; (node.children||[]).forEach(item=>{ const isFolder=item.type==='folder'; const icon=isFolder?'📁':(item.name.endsWith('.ipynb')?'📓':'📄'); html+=`<div class="fi-row" style="display:flex;align-items:center;gap:.4rem;padding:.28rem .5rem;border-radius:5px;cursor:pointer;" ondblclick="${isFolder?`fileCd('${item.name.replace(/'/g,"\\'")}')`:`fileOpen('${item.name.replace(/'/g,"\\'")}')`}"><span>${icon}</span><span style="flex:1;">${escapeHtml(item.name)}</span><div style="display:flex;gap:.2rem;opacity:0;" class="fi-actions">${isFolder?'':`<button class="tbtn" style="padding:.1rem .3rem;" onclick="event.stopPropagation();fileOpen('${item.name.replace(/'/g,"\\'")}')">📝</button>`}<button class="tbtn" style="padding:.1rem .3rem;" onclick="event.stopPropagation();fileCopy('${item.name.replace(/'/g,"\\'")}','${item.type}')">📋</button><button class="tbtn" style="padding:.1rem .3rem;" onclick="event.stopPropagation();fileCut('${item.name.replace(/'/g,"\\'")}','${item.type}')">✂️</button><button class="tbtn" style="padding:.1rem .3rem;" onclick="event.stopPropagation();fileRename('${item.name.replace(/'/g,"\\'")}','${item.type}')">✏️</button><button class="tbtn" style="padding:.1rem .3rem;color:#ff8899;" onclick="event.stopPropagation();fileDelete('${item.name.replace(/'/g,"\\'")}','${item.type}')">🗑</button></div></div>`; }); el.innerHTML=html; document.getElementById('btn-paste').style.display=fileClipboard?'':'none'; el.querySelectorAll('.fi-row').forEach(row=>{ row.addEventListener('mouseenter',()=>{ const a=row.querySelector('.fi-actions'); if(a) a.style.opacity='1'; }); row.addEventListener('mouseleave',()=>{ const a=row.querySelector('.fi-actions'); if(a) a.style.opacity='0'; }); }); }
+function fileCd(name){ currentPath.push(name); renderFileTree(); }
+function fileCdUp(){ currentPath.pop(); renderFileTree(); }
+function fileNewFolder(){ const name=prompt('Nombre de carpeta:'); if(!name||!name.trim()) return; const fs=getFS(); const node=fsNavigate(fs,currentPath); if(node.children.find(c=>c.name===name.trim())){ notify('Ya existe'); return; } node.children.push({name:name.trim(),type:'folder',children:[]}); saveFS(fs); renderFileTree(); notify('📁 Creada'); }
+function fileDelete(name,type){ if(!confirm(`¿Eliminar ${name}?`)) return; const fs=getFS(); const node=fsNavigate(fs,currentPath); node.children=node.children.filter(c=>c.name!==name); saveFS(fs); renderFileTree(); notify('🗑 Eliminado'); }
+function fileRename(name,type){ const newName=prompt('Nuevo nombre:',name); if(!newName||newName===name) return; const fs=getFS(); const node=fsNavigate(fs,currentPath); const item=node.children.find(c=>c.name===name); if(item) item.name=newName.trim(); saveFS(fs); renderFileTree(); notify('✏️ Renombrado'); }
+function fileCopy(name,type){ const fs=getFS(); const node=fsNavigate(fs,currentPath); const item=node.children.find(c=>c.name===name); if(!item) return; fileClipboard={action:'copy',item:JSON.parse(JSON.stringify(item)),fromPath:[...currentPath]}; notify('📋 Copiado'); renderFileTree(); }
+function fileCut(name,type){ const fs=getFS(); const node=fsNavigate(fs,currentPath); const item=node.children.find(c=>c.name===name); if(!item) return; fileClipboard={action:'cut',item:JSON.parse(JSON.stringify(item)),fromPath:[...currentPath],name}; notify('✂️ Cortado'); renderFileTree(); }
+function filePaste(){ if(!fileClipboard) return; const fs=getFS(); const dest=fsNavigate(fs,currentPath); if(!dest) return; let pasteName=fileClipboard.item.name; while(dest.children.find(c=>c.name===pasteName)) pasteName='copia_'+pasteName; fileClipboard.item.name=pasteName; dest.children.push(fileClipboard.item); if(fileClipboard.action==='cut'){ const src=fsNavigate(fs,fileClipboard.fromPath); if(src) src.children=src.children.filter(c=>c.name!==fileClipboard.name); fileClipboard=null; } saveFS(fs); renderFileTree(); notify('📋 Pegado'); }
+function fileOpen(name){ const fs=getFS(); const node=fsNavigate(fs,currentPath); const item=node.children.find(c=>c.name===name); if(!item||item.type!=='file'||!name.endsWith('.ipynb')) return; try{ const nb=JSON.parse(item.content); cells=nb.cells.map(c=>({id:genId(),type:c.cell_type==='markdown'?'markdown':(c.cell_type==='qiskit'?'qiskit':'code'),code:Array.isArray(c.source)?c.source.join(''):c.source||'',output:'',exec_count:null,mdEdit:false})); document.getElementById('nb-name-inp').value=name.replace('.ipynb',''); renderCells(); if(cells[0]) focusCell(cells[0].id); setView('notebook'); notify('📂 Abierto: '+name); }catch(e){ notify('❌ Error al abrir'); } }
 
-// resto funciones auxiliares
+// renderCells y buildCellEl con CodeMirror
 function renderCells(){ const scroll=document.getElementById('nb-scroll'); const bottom=scroll.querySelector('.nb-bottom'); scroll.querySelectorAll('.nb-cell,.add-cell-row').forEach(el=>el.remove()); if(cells.length===0){ const emptyDiv=document.createElement('div'); emptyDiv.className='empty-placeholder'; emptyDiv.innerHTML='✨ <strong>Sin celdas</strong><br><button class="nb-add-big" style="margin-top:1rem;" onclick="addCellAt(-1,\'code\')">＋ Añadir primera celda</button>'; scroll.insertBefore(emptyDiv,bottom); }else{ cells.forEach((cell,i)=>{ const row=buildAddRow(i-1); scroll.insertBefore(row,bottom); const el=buildCellEl(cell,i); scroll.insertBefore(el,bottom); }); const row=buildAddRow(cells.length-1); scroll.insertBefore(row,bottom); } if(curCellId) focusCell(curCellId); updateStatus(); }
-function buildAddRow(afterIdx){ const row=document.createElement('div'); row.className='add-cell-row'; row.innerHTML=`<div class="add-cell-line"></div><div class="add-cell-btns"><button class="add-btn" onclick="addCellAt(${afterIdx},'code')">＋ Código</button><button class="add-btn" onclick="addCellAt(${afterIdx},'markdown')">＋ Texto</button></div><div class="add-cell-line"></div>`; return row; }
-function buildCellEl(cell,i){ const el=document.createElement('div'); el.className='nb-cell'+(curCellId===cell.id?' active':''); el.dataset.id=cell.id; el.onclick=()=>focusCell(cell.id); const isCode=cell.type==='code'; const execLbl=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]'; const toolbar=`<div class="cell-toolbar"><button class="ct-btn" onclick="event.stopPropagation();moveCellUp('${cell.id}')">↑</button><button class="ct-btn" onclick="event.stopPropagation();moveCellDown('${cell.id}')">↓</button><button class="ct-btn" onclick="event.stopPropagation();changeCellType('${cell.id}')">${isCode?'Md':'{ }'}</button><button class="ct-btn danger" onclick="event.stopPropagation();deleteCell('${cell.id}')">✕</button></div>`;
-  if(isCode){ el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num ${cell.hasError ? 'error' : ''}" id="num-${cell.id}">${execLbl}</div><button class="cell-run-btn" id="rbtn-${cell.id}" onclick="event.stopPropagation();runCell('${cell.id}')">▶</button></div><div class="cell-body"><div class="cell-type-badge ctb-code">{ } Python</div><div class="cell-code-area" id="area-${cell.id}"></div><div class="cell-output-area" id="output-area-${cell.id}"></div></div>`; setTimeout(()=>{ const areaDiv=document.getElementById(`area-${cell.id}`); if(areaDiv && !areaDiv.cm){ const cm=CodeMirror(areaDiv,{value:cell.code||'',mode:'python',theme:'dracula',lineNumbers:true,indentUnit:4,tabSize:4,autoCloseBrackets:true,matchBrackets:true,extraKeys:{'Shift-Enter':()=>runCell(cell.id),'Ctrl-Enter':()=>runCell(cell.id),'Tab':(cm)=>cm.execCommand('insertSoftTab'),'Ctrl-S':()=>saveCurrentNb(true)}}); cm.on('change',()=>{ cell.code=cm.getValue(); autoSaveDebounced(); pushUndo(); }); areaDiv.cm=cm; if(curCellId===cell.id) cm.focus(); } },20); } else { if(cell.mdEdit){ el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num" style="color:var(--gr)">Md</div></div><div class="cell-body"><div class="cell-type-badge ctb-md">✦ Markdown / LaTeX</div><div class="md-split"><div class="md-editor-pane"><textarea class="cell-md-split-area" id="mta-${cell.id}" placeholder="# Título&#10;Escribe Markdown o LaTeX: $E=mc^2$" oninput="syncCellCode('${cell.id}');renderMdPreview('${cell.id}');autoSaveDebounced();pushUndo();" rows="6">${escapeHtml(cell.code||'')}</textarea></div><div class="md-preview-pane" id="md-preview-${cell.id}"></div></div></div>`; setTimeout(()=>renderMdPreview(cell.id),20); } else { const renderedMd=renderMarkdownSimple(cell.code||''); el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num" style="color:var(--gr)">Md</div></div><div class="cell-body"><div class="cell-type-badge ctb-md">✦ Markdown</div><div class="cell-md-rendered" id="mren-${cell.id}" ondblclick="editMd('${cell.id}')">${renderedMd}</div></div>`; } } return el; }
-function syncCellCode(id){ const cell=cells.find(c=>c.id===id); if(!cell) return; if(cell.type==='code'){ const areaDiv=document.getElementById(`area-${id}`); if(areaDiv && areaDiv.cm) cell.code=areaDiv.cm.getValue(); } else { const ta=document.getElementById(`mta-${id}`); if(ta) cell.code=ta.value; } }
+function buildAddRow(afterIdx){ const row=document.createElement('div'); row.className='add-cell-row'; row.innerHTML=`<div class="add-cell-line"></div><div class="add-cell-btns"><button class="add-btn" onclick="addCellAt(${afterIdx},'code')">＋ Código</button><button class="add-btn" onclick="addCellAt(${afterIdx},'markdown')">＋ Texto</button><button class="add-btn" onclick="addCellAt(${afterIdx},'qiskit')">⚛️ Qiskit</button></div><div class="add-cell-line"></div>`; return row; }
+function buildCellEl(cell,i){ const el=document.createElement('div'); el.className='nb-cell'+(curCellId===cell.id?' active':''); el.dataset.id=cell.id; el.onclick=()=>focusCell(cell.id); const isCode=(cell.type==='code'||cell.type==='qiskit'); const execLbl=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]'; const toolbar=`<div class="cell-toolbar"><button class="ct-btn" onclick="event.stopPropagation();moveCellUp('${cell.id}')">↑</button><button class="ct-btn" onclick="event.stopPropagation();moveCellDown('${cell.id}')">↓</button><button class="ct-btn" onclick="event.stopPropagation();changeCellType('${cell.id}')">${isCode?'Md':'{ }'}</button><button class="ct-btn danger" onclick="event.stopPropagation();deleteCell('${cell.id}')">✕</button></div>`;
+  if(isCode){
+    const badgeLabel = cell.type==='qiskit'?'⚛️ Qiskit':'{ } Python';
+    const badgeColor = cell.type==='qiskit'?'var(--gr)':'var(--bl2)';
+    el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num ${cell.hasError ? 'error' : ''}" id="num-${cell.id}">${execLbl}</div><button class="cell-run-btn" id="rbtn-${cell.id}" onclick="event.stopPropagation();${cell.type==='qiskit'?'runQiskitCell':'runCell'}('${cell.id}')">▶</button></div><div class="cell-body"><div class="cell-type-badge" style="color:${badgeColor}">${badgeLabel}</div><div id="cm-${cell.id}" style="min-height:80px;"></div><div class="cell-output-area" id="output-area-${cell.id}"></div></div>`;
+    setTimeout(async ()=>{
+      if(!cmEditors.has(cell.id)){
+        await initCodeMirror(cell.id, cell.code||'', 'python', (newCode)=>{ cell.code=newCode; autoSaveDebounced(); pushUndo(); });
+      }
+      if(curCellId===cell.id && cmEditors.has(cell.id)) cmEditors.get(cell.id).focus();
+    },10);
+  } else {
+    if(cell.mdEdit){
+      el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num" style="color:var(--gr)">Md</div></div><div class="cell-body"><div class="cell-type-badge ctb-md">✦ Markdown / LaTeX</div><div class="md-split"><div class="md-editor-pane"><textarea class="cell-md-split-area" id="mta-${cell.id}" placeholder="# Título" oninput="syncCellCode('${cell.id}');renderMdPreview('${cell.id}');autoSaveDebounced();pushUndo();" rows="6">${escapeHtml(cell.code||'')}</textarea></div><div class="md-preview-pane" id="md-preview-${cell.id}"></div></div></div>`;
+      setTimeout(()=>renderMdPreview(cell.id),20);
+    } else {
+      const renderedMd=renderMarkdownSimple(cell.code||'');
+      el.innerHTML=`${toolbar}<div class="cell-gutter"><div class="cell-num" style="color:var(--gr)">Md</div></div><div class="cell-body"><div class="cell-type-badge ctb-md">✦ Markdown</div><div class="cell-md-rendered" id="mren-${cell.id}" ondblclick="editMd('${cell.id}')">${renderedMd}</div></div>`;
+    }
+  }
+  return el;
+}
+function syncCellCode(id){ const cell=cells.find(c=>c.id===id); if(!cell) return; if(cell.type==='code'||cell.type==='qiskit'){ const view=cmEditors.get(id); if(view) cell.code=view.state.doc.toString(); } else { const ta=document.getElementById(`mta-${id}`); if(ta) cell.code=ta.value; } }
 function renderMarkdownSimple(text){ if(!text) return '<em>✏️ Doble clic para editar</em>'; try{ return marked.parse(text); }catch(e){ return `<pre>${escapeHtml(text)}</pre>`; } }
 async function renderMdPreview(cellId){ const cell=cells.find(c=>c.id===cellId); if(!cell||cell.type!=='markdown') return; const preview=document.getElementById(`md-preview-${cellId}`); if(!preview) return; const html=marked.parse(cell.code||''); preview.innerHTML=html; if(window.MathJax) await MathJax.typesetPromise([preview]); if(window.hljs) preview.querySelectorAll('pre code').forEach(block=>hljs.highlightElement(block)); }
 function editMd(id){ if(_expositionMode) return; const cell=cells.find(c=>c.id===id); if(cell){ cell.mdEdit=true; renderCells(); focusCell(id); } }
-function addCellAt(afterIdx,type){ if(_expositionMode) { notify('Modo exposición — no se pueden añadir celdas'); return; } pushUndo(); const cell={id:genId(),type,code:type==='code'?'':'',output:'',exec_count:null,mdEdit:false,hasError:false}; if(afterIdx===-1||afterIdx>=cells.length) cells.push(cell); else cells.splice(afterIdx+1,0,cell); renderCells(); focusCell(cell.id); updateStatus(); }
-function deleteCell(id){ if(_expositionMode) return; pushUndo(); cells=cells.filter(c=>c.id!==id); if(curCellId===id) curCellId=cells[0]?.id||null; renderCells(); updateStatus(); }
+function addCellAt(afterIdx,type){
+  if(_expositionMode){ notify('Modo exposición — no se pueden añadir celdas'); return; }
+  pushUndo();
+  let defaultCode='';
+  if(type==='qiskit') defaultCode='qc = QuantumCircuit(2)\nqc.h(0)\nqc.cx(0,1)';
+  else if(type==='markdown') defaultCode='# Título\n\nEscribe **Markdown** y $LaTeX$';
+  const cell={id:genId(),type,code:defaultCode,output:'',exec_count:null,mdEdit:false,hasError:false};
+  if(afterIdx===-1||afterIdx>=cells.length) cells.push(cell);
+  else cells.splice(afterIdx+1,0,cell);
+  renderCells(); focusCell(cell.id); updateStatus();
+}
+function deleteCell(id){ if(_expositionMode) return; pushUndo(); cells=cells.filter(c=>c.id!==id); if(curCellId===id) curCellId=cells[0]?.id||null; renderCells(); updateStatus(); if(cells.length===0) notify('💡 Añade una celda'); }
 function moveCellUp(id){ if(_expositionMode) return; pushUndo(); const i=cells.findIndex(c=>c.id===id); if(i<=0) return; [cells[i-1],cells[i]]=[cells[i],cells[i-1]]; renderCells(); focusCell(id); }
 function moveCellDown(id){ if(_expositionMode) return; pushUndo(); const i=cells.findIndex(c=>c.id===id); if(i<0||i>=cells.length-1) return; [cells[i],cells[i+1]]=[cells[i+1],cells[i]]; renderCells(); focusCell(id); }
-function changeCellType(id){ if(_expositionMode) return; pushUndo(); const cell=cells.find(c=>c.id===id); if(!cell) return; cell.type=cell.type==='code'?'markdown':'code'; cell.mdEdit=true; renderCells(); focusCell(id); }
-function focusCell(id){ curCellId=id; document.querySelectorAll('.nb-cell').forEach(el=>el.classList.toggle('active',el.dataset.id===id)); const area=document.getElementById(`area-${id}`); if(area && area.cm) area.cm.focus(); else{ const ta=document.getElementById(`mta-${id}`); if(ta) ta.focus(); } }
+function changeCellType(id){ if(_expositionMode) return; pushUndo(); const cell=cells.find(c=>c.id===id); if(!cell) return; const newType = cell.type==='code'?'markdown':(cell.type==='markdown'?'qiskit':'code'); cell.type=newType; cell.mdEdit=true; renderCells(); focusCell(id); }
+function focusCell(id){ curCellId=id; document.querySelectorAll('.nb-cell').forEach(el=>el.classList.toggle('active',el.dataset.id===id)); const view=cmEditors.get(id); if(view) view.focus(); else{ const ta=document.getElementById(`mta-${id}`); if(ta) ta.focus(); } }
 function renderCellNum(id){ const cell=cells.find(c=>c.id===id); if(!cell) return; const numSpan=document.querySelector(`[data-id="${id}"] .cell-num`); if(numSpan){ numSpan.textContent=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]'; if(cell.hasError) numSpan.classList.add('error'); else numSpan.classList.remove('error'); } }
-async function runCurCell(){ if(curCellId) await runCell(curCellId); }
-async function runAll(){ for(const cell of cells) if(cell.type==='code'&&cell.code.trim()){ await runCell(cell.id); await new Promise(r=>setTimeout(r,200)); } }
+async function runCurCell(){ if(curCellId){ const cell=cells.find(c=>c.id===curCellId); if(cell && cell.type==='qiskit') await runQiskitCell(curCellId); else await runCell(curCellId); } }
+async function runAll(){ for(const cell of cells){ if(cell.type==='code'&&cell.code.trim()) await runCell(cell.id); else if(cell.type==='qiskit'&&cell.code.trim()) await runQiskitCell(cell.id); await new Promise(r=>setTimeout(r,200)); } }
 function setSbRun(running,msg='',state=''){ const dot=document.getElementById('sb-dot'), txt=document.getElementById('sb-txt'); if(dot) dot.className='sb-dot '+(running?'sb-run':state==='err'?'sb-err':'sb-idle'); if(txt&&msg) txt.textContent=msg; }
 function updateStatus(){ document.getElementById('sb-cells-info').textContent=cells.length+' celdas'; }
 function autoSaveDebounced(){ if(autoSaveTimer) clearTimeout(autoSaveTimer); autoSaveTimer=setTimeout(()=>{ if(curUser && cells.length && !_expositionMode) saveCurrentNb(false); }, 2000); }
-function saveCurrentNb(showNotify=true){ if(_expositionMode) return; if(!curUser) return; cells.forEach(c=>syncCellCode(c.id)); const name=document.getElementById('nb-name-inp').value||'Sin título'; const key='qcol_nbs_'+(curUser.username||'dev'); const nbs=JSON.parse(localStorage.getItem(key)||'[]'); const existing=nbs.findIndex(n=>n.name===name); const entry={name,cells:JSON.parse(JSON.stringify(cells)),saved:new Date().toISOString()}; if(existing>=0) nbs[existing]=entry; else nbs.unshift(entry); localStorage.setItem(key,JSON.stringify(nbs.slice(0,50))); window.parent.postMessage({ type: 'QCOL_SAVE_NOTEBOOK', username: curUser?.username, notebook: { ...entry, savedAt: new Date().toLocaleDateString() } }, '*'); lastSaveTime=Date.now(); const saveSpan=document.getElementById('sb-save-status'); if(saveSpan) saveSpan.textContent='💾 Guardado'; setTimeout(()=>{ if(saveSpan) saveSpan.textContent='✓'; },2000); if(showNotify) notify('💾 Guardado: '+name); }
+function saveCurrentNb(showNotify=true){ if(_expositionMode) return; if(!curUser) return; cells.forEach(c=>syncCellCode(c.id)); const name=document.getElementById('nb-name-inp').value||'Sin título'; const key='qcol_nbs_'+(curUser.username||'dev'); const nbs=JSON.parse(localStorage.getItem(key)||'[]'); const existing=nbs.findIndex(n=>n.name===name); const entry={name,cells:JSON.parse(JSON.stringify(cells)),saved:new Date().toISOString()}; if(existing>=0) nbs[existing]=entry; else nbs.unshift(entry); localStorage.setItem(key,JSON.stringify(nbs.slice(0,50))); window.parent.postMessage({type:'QCOL_SAVE_NOTEBOOK',username:curUser?.username,notebook:{...entry,savedAt:new Date().toLocaleDateString()}},'*'); lastSaveTime=Date.now(); const saveSpan=document.getElementById('sb-save-status'); if(saveSpan) saveSpan.textContent='💾 Guardado'; setTimeout(()=>{ if(saveSpan) saveSpan.textContent='✓'; },2000); if(showNotify) notify('💾 Guardado: '+name); }
 function newNotebook(){ if(_expositionMode) return; if(cells.length>0 && !confirm('¿Guardar antes de crear nuevo?')) return; saveCurrentNb(true); pushUndo(); cells=[]; execCounter=0; curCellId=null; document.getElementById('nb-name-inp').value='Nuevo Notebook'; addCellAt(-1,'code'); notify('✅ Nuevo notebook'); }
-function loadNb(name){ if(_expositionMode) return; if(cells.length>0 && !confirm('Guardar actual antes de cargar?')) return; saveCurrentNb(false); const nbs=getSavedNbs(); const nb=nbs.find(n=>n.name===name); if(!nb) return; cells=nb.cells.map(c=>({...c,mdEdit:false,hasError:false})); document.getElementById('nb-name-inp').value=nb.name; renderCells(); if(cells[0]) focusCell(cells[0].id); setView('notebook'); notify('📂 Cargado: '+nb.name); }
+function loadNb(name){ if(_expositionMode) return; if(cells.length>0 && !confirm('Guardar actual antes de cargar?')) return; saveCurrentNb(false); const nbs=getSavedNbs(); const nb=nbs.find(n=>n.name===name); if(!nb) return; cells=nb.cells.map(c=>({...c,id:genId(),mdEdit:false,hasError:false})); document.getElementById('nb-name-inp').value=nb.name; renderCells(); if(cells[0]) focusCell(cells[0].id); setView('notebook'); notify('📂 Cargado: '+nb.name); }
 function deleteNb(name){ if(_expositionMode) return; if(!confirm('¿Eliminar "'+name+'"?')) return; const key='qcol_nbs_'+(curUser?.username||'dev'); const nbs=getSavedNbs().filter(n=>n.name!==name); localStorage.setItem(key,JSON.stringify(nbs)); refreshNbs(); notify('🗑 Eliminado'); }
 function getSavedNbs(){ if(!curUser) return []; const key='qcol_nbs_'+(curUser.username||'dev'); return JSON.parse(localStorage.getItem(key)||'[]'); }
 function refreshNbs(){ const grid=document.getElementById('nb-grid'); if(!grid) return; const nbs=getSavedNbs(); if(nbs.length===0){ grid.innerHTML='<div class="empty-placeholder">📓 Sin notebooks guardados</div>'; return; } grid.innerHTML=nbs.map(nb=>`<div class="nb-card"><div class="nb-card-hdr"><div class="nb-card-title">${escapeHtml(nb.name)}</div><div class="nb-card-badge">${nb.cells?.length||0} celdas</div></div><div class="nb-card-body"><div class="nb-card-meta">${new Date(nb.saved).toLocaleDateString()}</div><div class="nb-card-actions"><button class="btn-edit-nb" onclick="loadNb('${escapeHtml(nb.name)}')">📝 Editar</button><button class="btn-pub-nb" onclick="loadNb('${escapeHtml(nb.name)}');showPublish()">📤 Publicar</button><button class="btn-del-nb" onclick="deleteNb('${escapeHtml(nb.name)}')">🗑</button></div></div></div>`).join(''); }
 function importNb(){ if(_expositionMode) return; document.getElementById('import-file').click(); }
-function handleImport(e){ if(_expositionMode) return; const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>{ try{ const nb=JSON.parse(ev.target.result); cells=[]; execCounter=0; const name=nb.metadata?.name||file.name.replace('.ipynb',''); document.getElementById('nb-name-inp').value=name; (nb.cells||[]).forEach(c=>{ const src=Array.isArray(c.source)?c.source.join(''):c.source||''; const type=c.cell_type==='markdown'?'markdown':'code'; cells.push({id:genId(),type,code:src,output:'',exec_count:null,mdEdit:false,hasError:false}); }); if(cells.length===0) addCellAt(-1,'code'); else { renderCells(); if(cells[0]) focusCell(cells[0].id); } setView('notebook'); notify(`✅ Importado: ${name} (${cells.length} celdas)`); }catch(err){ notify('❌ Error .ipynb: '+err.message); } }; reader.readAsText(file); e.target.value=''; }
-function downloadNb(){ if(_expositionMode){ notify('Modo exposición — descarga desactivada'); return; } const name=document.getElementById('nb-name-inp').value||'qcol_notebook'; cells.forEach(c=>syncCellCode(c.id)); const nb={nbformat:4,nbformat_minor:5,metadata:{name},cells:cells.map(c=>({cell_type:c.type==='markdown'?'markdown':'code',source:[c.code],metadata:{},outputs:[]}))}; const blob=new Blob([JSON.stringify(nb,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name.replace(/\.ipynb$/,'')+'.ipynb'; a.click(); notify('📥 Descargado'); }
+function handleImport(e){ if(_expositionMode) return; const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>{ try{ const nb=JSON.parse(ev.target.result); cells=[]; execCounter=0; const name=nb.metadata?.name||file.name.replace('.ipynb',''); document.getElementById('nb-name-inp').value=name; (nb.cells||[]).forEach(c=>{ const src=Array.isArray(c.source)?c.source.join(''):c.source||''; let type=c.cell_type==='markdown'?'markdown':'code'; if(c.cell_type==='qiskit') type='qiskit'; cells.push({id:genId(),type,code:src,output:'',exec_count:null,mdEdit:false,hasError:false}); }); if(cells.length===0) addCellAt(-1,'code'); else { renderCells(); if(cells[0]) focusCell(cells[0].id); } setView('notebook'); notify(`✅ Importado: ${name} (${cells.length} celdas)`); }catch(err){ notify('❌ Error .ipynb: '+err.message); } }; reader.readAsText(file); e.target.value=''; }
+function downloadNb(){ if(_expositionMode){ notify('Modo exposición — descarga desactivada'); return; } const name=document.getElementById('nb-name-inp').value||'qcol_notebook'; cells.forEach(c=>syncCellCode(c.id)); const nb={nbformat:4,nbformat_minor:5,metadata:{name},cells:cells.map(c=>({cell_type:c.type==='markdown'?'markdown':(c.type==='qiskit'?'qiskit':'code'),source:[c.code],metadata:{},outputs:[]}))}; const blob=new Blob([JSON.stringify(nb,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name.replace(/\.ipynb$/,'')+'.ipynb'; a.click(); notify('📥 Descargado'); }
 function showPublish(){ if(_expositionMode) return; document.getElementById('pub-title').value=document.getElementById('nb-name-inp').value||''; document.getElementById('pub-modal').classList.add('open'); }
 function closePublish(){ document.getElementById('pub-modal').classList.remove('open'); }
-async function publishNb(){ if(_expositionMode) return; if(!requireAuth()) return; saveCurrentNb(false); const title=document.getElementById('pub-title').value.trim()||'notebook'; const desc=document.getElementById('pub-desc').value; const token=document.getElementById('github-token').value.trim(); const contentBase64=btoa(unescape(encodeURIComponent(JSON.stringify({cells,title},null,2)))); if(token){ try{ const userResp=await fetch('https://api.github.com/user',{headers:{Authorization:`token ${token}`}}); if(!userResp.ok) throw new Error('Token inválido'); const user=await userResp.json(); const repo=`${user.login}/qcol-notebooks`; const path=`notebooks/${title.replace(/[^a-z0-9]/gi,'_')}.ipynb`; await fetch(`https://api.github.com/repos/${repo}/contents/${path}`,{method:'PUT',headers:{Authorization:`token ${token}`, 'Content-Type':'application/json'},body:JSON.stringify({message:'Publicar notebook QCOL',content:contentBase64,branch:'main'})}); notify(`✅ Publicado en GitHub: ${repo}`); }catch(err){ notify(`❌ GitHub error: ${err.message}`); } } else { downloadNb(); notify('📦 Descarga local .ipynb'); } closePublish(); }
+async function publishNb(){ if(_expositionMode) return; if(!requireAuth()) return; saveCurrentNb(false); const title=document.getElementById('pub-title').value.trim()||'notebook'; const token=document.getElementById('github-token').value.trim(); const contentBase64=btoa(unescape(encodeURIComponent(JSON.stringify({cells,title},null,2)))); if(token){ try{ const userResp=await fetch('https://api.github.com/user',{headers:{Authorization:`token ${token}`}}); if(!userResp.ok) throw new Error('Token inválido'); const user=await userResp.json(); const repo=`${user.login}/qcol-notebooks`; const path=`notebooks/${title.replace(/[^a-z0-9]/gi,'_')}.ipynb`; await fetch(`https://api.github.com/repos/${repo}/contents/${path}`,{method:'PUT',headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},body:JSON.stringify({message:'Publicar notebook QCOL',content:contentBase64,branch:'main'})}); notify(`✅ Publicado en GitHub: ${repo}`); }catch(err){ notify(`❌ GitHub error: ${err.message}`); } } else { downloadNb(); notify('📦 Descarga local .ipynb'); } closePublish(); }
 function setView(v){ curView=v; document.getElementById('view-notebook').style.display=v==='notebook'?'flex':'none'; document.getElementById('view-manage').style.display=v==='manage'?'flex':'none'; document.getElementById('view-files').style.display=v==='files'?'flex':'none'; document.getElementById('stab-1').classList.toggle('on',v==='notebook'); document.getElementById('stab-2').classList.toggle('on',v==='manage'); document.getElementById('stab-3').classList.toggle('on',v==='files'); if(v==='manage') refreshNbs(); if(v==='files') renderFileTree(); }
 function genId(){ return 'c'+Date.now()+Math.random().toString(36).slice(2,8); }
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
