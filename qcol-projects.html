@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QCOL Proyectos · Laboratorio Cuántico</title>
+<title>QCOL Proyectos · Gestor + IA Bibliotecaria</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#010608;--s:#071220;--s2:#0c1c30;--b:#0d2a4a;--b2:#1a3a5c;--bl:#0088ff;--bl2:#00ccff;--gr:#00ff88;--gd:#ffd700;--rd:#ff4466;--tx:#ddeeff;--mu:#4a7a9b;--orb:'Orbitron',monospace;--mono:'JetBrains Mono',monospace;--exo:'Exo 2',sans-serif;}
@@ -12,12 +12,11 @@ body{background:var(--bg);color:var(--tx);font-family:var(--exo);min-height:100v
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,136,255,.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,136,255,.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
 .notif{position:fixed;top:.8rem;right:.8rem;z-index:999;padding:.55rem 1rem;background:rgba(4,14,28,.97);border:1px solid var(--bl2);border-radius:8px;font-family:var(--orb);font-size:.6rem;color:var(--bl2);transform:translateX(130%);transition:transform .3s; backdrop-filter: blur(2px);}
 .notif.show{transform:translateX(0);}
-.admin-bar{display:none;background:rgba(255,215,0,.05);border-bottom:1px solid rgba(255,215,0,.15);padding:.5rem 1.3rem;font-family:var(--orb);font-size:.56rem;color:var(--gd);align-items:center;gap:.5rem;}
+.admin-bar{display:none;background:rgba(255,215,0,.05);border-bottom:1px solid rgba(255,215,0,.15);padding:.5rem 1.3rem;font-family:var(--orb);font-size:.56rem;color:var(--gd);align-items:center;gap:.5rem;flex-wrap:wrap;}
 .admin-bar.show{display:flex;}
 .toolbar{display:flex;align-items:center;gap:.7rem;padding:.85rem 1.3rem;background:var(--s);border-bottom:1px solid var(--b);flex-wrap:wrap;position:sticky;top:0;z-index:10;}
 .search-box{display:flex;align-items:center;gap:.4rem;background:rgba(0,0,0,.35);border:1px solid var(--b2);border-radius:7px;padding:.32rem .7rem;flex:1;max-width:300px;}
 .search-box input{background:transparent;border:none;color:var(--tx);font-family:var(--exo);font-size:.75rem;outline:none;width:100%;}
-.search-box input::placeholder{color:var(--mu);}
 .filter-btns{display:flex;gap:.3rem;}
 .fbtn{padding:.28rem .65rem;background:transparent;border:1px solid var(--b2);border-radius:5px;color:var(--mu);font-family:var(--orb);font-size:.52rem;cursor:pointer;transition:all .2s;}
 .fbtn.on{background:rgba(0,136,255,.15);border-color:var(--bl);color:var(--bl2);}
@@ -26,11 +25,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .btn-pri:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,136,255,.4);}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5rem 2rem;text-align:center;gap:1.2rem;min-height:55vh;}
 .empty-icon{font-size:3.5rem;opacity:.4;}
-.empty-title{font-family:var(--orb);font-size:.95rem;color:var(--mu);}
-.empty-desc{font-size:.74rem;color:var(--mu);max-width:380px;line-height:1.75;opacity:.7;}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem;padding:1.3rem;max-width:1200px;margin:0 auto;width:100%;}
 .card{background:var(--s);border:1px solid var(--b);border-radius:13px;overflow:hidden;transition:all .3s;animation:fu .4s ease both;}
-@keyframes fu{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .card:hover{border-color:rgba(0,136,255,.5);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,136,255,.1);}
 .card-hdr{padding:.75rem 1rem;background:var(--s2);border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;}
 .tbadge{font-family:var(--orb);font-size:.5rem;padding:.13rem .42rem;border-radius:4px;}
@@ -43,285 +39,121 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .card-desc{font-size:.68rem;color:var(--mu);line-height:1.65;margin-bottom:.8rem;}
 .card-meta{display:flex;gap:.85rem;font-size:.6rem;color:var(--mu);margin-bottom:.75rem;font-family:var(--mono);}
 .card-actions{display:flex;gap:.4rem;}
-.btn-exec{flex:1;padding:.52rem;background:linear-gradient(135deg,rgba(0,136,255,.18),rgba(0,200,255,.08));border:1px solid rgba(0,136,255,.4);border-radius:7px;color:var(--bl2);font-family:var(--orb);font-size:.58rem;cursor:pointer;transition:all .2s;}
+.btn-exec{flex:1;padding:.52rem;background:linear-gradient(135deg,rgba(0,136,255,.18),rgba(0,200,255,.08));border:1px solid rgba(0,136,255,.4);border-radius:7px;color:var(--bl2);font-family:var(--orb);font-size:.58rem;cursor:pointer;}
 .btn-exec:hover{background:rgba(0,136,255,.28);}
-.btn-del{padding:.52rem .65rem;background:rgba(255,68,102,.08);border:1px solid rgba(255,68,102,.2);border-radius:7px;color:#ff8899;font-family:var(--orb);font-size:.58rem;cursor:pointer;}
-.btn-del:hover{background:rgba(255,68,102,.18);}
-.btn-edit{padding:.52rem .65rem;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);border-radius:7px;color:#88ffaa;font-family:var(--orb);font-size:.58rem;cursor:pointer;}
-.btn-edit:hover{background:rgba(0,255,136,.18);}
+.btn-del,.btn-edit,.btn-copy,.btn-cut,.btn-paste,.btn-folder{padding:.52rem .65rem;background:rgba(0,0,0,.3);border:1px solid var(--b2);border-radius:7px;color:var(--mu);font-family:var(--orb);font-size:.58rem;cursor:pointer;}
+.btn-del:hover{background:rgba(255,68,102,.18);color:#ff8899;}
+.btn-edit:hover,.btn-copy:hover,.btn-cut:hover,.btn-paste:hover,.btn-folder:hover{background:rgba(0,136,255,.18);color:var(--bl2);}
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center;backdrop-filter: blur(3px);}
 .modal-ov.open{display:flex;}
-.modal{background:var(--s);border:1px solid rgba(0,136,255,.45);border-radius:14px;padding:1.7rem;width:min(500px,92vw);max-height:90vh;overflow-y:auto;animation:su .3s ease;}
-@keyframes su{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal{background:var(--s);border:1px solid rgba(0,136,255,.45);border-radius:14px;padding:1.7rem;width:min(500px,92vw);max-height:90vh;overflow-y:auto;}
 .modal-title{font-family:var(--orb);font-size:.88rem;color:var(--bl2);margin-bottom:1.2rem;}
 .fg{margin-bottom:.8rem;}
 .fl{font-family:var(--orb);font-size:.52rem;color:var(--mu);letter-spacing:.1em;display:block;margin-bottom:.25rem;}
 .fi{width:100%;background:rgba(0,0,0,.5);border:1px solid var(--b2);border-radius:7px;padding:.5rem .8rem;color:var(--tx);font-family:var(--exo);font-size:.78rem;outline:none;}
-.fi:focus{border-color:rgba(0,136,255,.7);}
-select.fi{cursor:pointer;}
-textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
 .btn-row{display:flex;gap:.5rem;margin-top:.8rem;}
 .btn-cancel{padding:.45rem .9rem;background:transparent;border:1px solid var(--b2);border-radius:7px;color:var(--mu);font-family:var(--orb);font-size:.58rem;cursor:pointer;}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+.ai-panel{background:rgba(0,136,255,.05);border:1px solid var(--b);border-radius:12px;margin:0 1.3rem 1rem 1.3rem;padding:1rem;overflow:hidden;}
+.ai-header{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem;font-family:var(--orb);color:var(--bl2);font-size:.7rem;}
+.ai-chat{display:flex;gap:.5rem;margin-top:.5rem;}
+.ai-chat input{flex:1;background:rgba(0,0,0,.5);border:1px solid var(--b2);border-radius:8px;padding:.6rem .8rem;color:var(--tx);font-family:var(--exo);font-size:.7rem;}
+.ai-response{background:rgba(0,0,0,.3);border-radius:8px;padding:.7rem;margin-top:.5rem;font-size:.68rem;color:var(--mu);max-height:120px;overflow-y:auto;}
+.file-browser{background:var(--s2);border-radius:12px;margin:0 1.3rem 1rem 1.3rem;padding:.5rem;border:1px solid var(--b);}
+.browser-header{display:flex;gap:.3rem;padding:.3rem;flex-wrap:wrap;border-bottom:1px solid var(--b);margin-bottom:.5rem;}
+.breadcrumb{font-family:var(--mono);font-size:.6rem;color:var(--bl2);padding:.3rem .5rem;background:rgba(0,0,0,.3);border-radius:5px;}
+.file-list{max-height:200px;overflow-y:auto;font-size:.65rem;}
+.file-item{padding:.3rem .5rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;}
+.file-item:hover{background:rgba(0,136,255,.1);}
+.file-item.selected{background:rgba(0,136,255,.2);}
 </style>
 </head>
 <body>
 <div class="notif" id="notif"></div>
 <div class="admin-bar" id="admin-bar">
-  👑 Modo administrador — Gestiona proyectos del laboratorio
-  <button class="btn btn-pri" style="margin-left:auto;" onclick="openAdd()">+ AGREGAR</button>
+  👑 Modo administrador — Gestión total
+  <button class="btn btn-pri" onclick="openAdd()">+ AGREGAR</button>
+  <button class="btn btn-pri" onclick="createFolderModal()">📁 CREAR CARPETA</button>
+  <button class="btn" style="background:#1a3a5c;" onclick="uploadFile()">📤 SUBIR ARCHIVO</button>
+  <button class="btn" id="copyBtn" onclick="copySelected()">📋 COPIAR</button>
+  <button class="btn" id="cutBtn" onclick="cutSelected()">✂️ CORTAR</button>
+  <button class="btn" id="pasteBtn" onclick="pasteSelected()">📎 PEGAR</button>
 </div>
 <div class="toolbar">
-  <div class="search-box">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#4a7a9b" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#4a7a9b" stroke-width="2" stroke-linecap="round"/></svg>
-    <input id="search" placeholder="Buscar..." oninput="render()">
-  </div>
-  <div class="filter-btns">
-    <button class="fbtn on" onclick="setF('all',this)">Todo</button>
-    <button class="fbtn" onclick="setF('nb',this)">Notebooks</button>
-    <button class="fbtn" onclick="setF('pdf',this)">PDFs</button>
-    <button class="fbtn" onclick="setF('video',this)">Videos</button>
-  </div>
+  <div class="search-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#4a7a9b" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#4a7a9b" stroke-width="2" stroke-linecap="round"/></svg><input id="search" placeholder="Buscar proyectos..." oninput="render()"></div>
+  <div class="filter-btns"><button class="fbtn on" onclick="setF('all',this)">Todo</button><button class="fbtn" onclick="setF('nb',this)">Notebooks</button><button class="fbtn" onclick="setF('pdf',this)">PDFs</button><button class="fbtn" onclick="setF('video',this)">Videos</button></div>
 </div>
+
+<!-- IA Bibliotecaria -->
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-header"><span>🧠 IA BIBLIOTECARIA</span><span style="font-size:.5rem;">busca, lee y recomienda</span></div>
+  <div class="ai-chat"><input id="aiQuery" placeholder="Pregúntale a la IA: ¿Qué proyectos hay sobre Shor? ¿Recomiéndame algo..." onkeypress="if(event.key==='Enter')askAI()"><button class="btn-pri" onclick="askAI()">Consultar</button></div>
+  <div class="ai-response" id="aiResponse">🤖 Lista para ayudarte. Pregúntame sobre los archivos del laboratorio.</div>
+</div>
+
+<!-- Gestor de archivos embebido -->
+<div class="file-browser" id="fileBrowser">
+  <div class="browser-header"><span class="breadcrumb" id="currentPathDisplay">📁 /</span><button class="btn" style="margin-left:auto;" onclick="refreshFileList()">🔄</button></div>
+  <div class="file-list" id="fileList">Cargando archivos...</div>
+</div>
+
 <div id="content"></div>
 
-<!-- MODAL AGREGAR (solo admins) -->
-<div class="modal-ov" id="add-modal">
-  <div class="modal">
-    <div class="modal-title">➕ Agregar Proyecto</div>
-    <div class="fg"><label class="fl">TÍTULO</label><input class="fi" id="a-t" placeholder="Nombre del proyecto"></div>
-    <div class="fg"><label class="fl">TIPO</label>
-      <select class="fi" id="a-type">
-        <option value="pdf">PDF / LaTeX</option>
-        <option value="video">Video</option>
-        <option value="nb" class="opt-nb" style="display:none;">Notebook .ipynb</option>
-      </select>
-    </div>
-    <div class="fg"><label class="fl">ID DEL ARCHIVO (sin extensión, único)</label><input class="fi" id="a-id" placeholder="ej: algoritmo_shor"></div>
-    <div class="fg"><label class="fl">DESCRIPCIÓN</label><textarea class="fi" id="a-desc" placeholder="Breve descripción"></textarea></div>
-    <div class="fg"><label class="fl">TAGS</label><input class="fi" id="a-tags" placeholder="Qiskit · Algoritmos"></div>
-    <div class="g2">
-      <div class="fg"><label class="fl">CELDAS / PÁGINAS</label><input class="fi" id="a-size" type="number" value="10"></div>
-      <div class="fg"><label class="fl">TIEMPO (min)</label><input class="fi" id="a-time" type="number" value="15"></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-pri" onclick="addProj()">✅ Guardar</button>
-      <button class="btn-cancel" onclick="closeAdd()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL EDITAR (solo founder) -->
-<div class="modal-ov" id="edit-modal">
-  <div class="modal">
-    <div class="modal-title">✏️ Editar Proyecto</div>
-    <div class="fg"><label class="fl">TÍTULO</label><input class="fi" id="e-t" placeholder="Título del proyecto"></div>
-    <div class="fg"><label class="fl">TIPO</label>
-      <select class="fi" id="e-type">
-        <option value="pdf">PDF / LaTeX</option>
-        <option value="video">Video</option>
-        <option value="nb" class="opt-nb-edit" style="display:none;">Notebook .ipynb</option>
-      </select>
-    </div>
-    <div class="fg"><label class="fl">ID DEL ARCHIVO (único, no editable)</label><input class="fi" id="e-id" readonly disabled style="opacity:0.7;background:#0a1428;"></div>
-    <div class="fg"><label class="fl">DESCRIPCIÓN</label><textarea class="fi" id="e-desc" placeholder="Descripción"></textarea></div>
-    <div class="fg"><label class="fl">TAGS</label><input class="fi" id="e-tags" placeholder="tags"></div>
-    <div class="g2">
-      <div class="fg"><label class="fl">CELDAS / PÁGINAS</label><input class="fi" id="e-size" type="number"></div>
-      <div class="fg"><label class="fl">TIEMPO (min)</label><input class="fi" id="e-time" type="number"></div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-pri" onclick="updateProj()">💾 Guardar cambios</button>
-      <button class="btn-cancel" onclick="closeEdit()">Cancelar</button>
-    </div>
-  </div>
-</div>
+<!-- MODALES -->
+<div class="modal-ov" id="add-modal"><div class="modal"><div class="modal-title">➕ Agregar Proyecto</div><div class="fg"><label class="fl">TÍTULO</label><input class="fi" id="a-t"></div><div class="fg"><label class="fl">TIPO</label><select class="fi" id="a-type"><option value="pdf">PDF</option><option value="video">Video</option><option value="nb" class="opt-nb" style="display:none;">Notebook</option></select></div><div class="fg"><label class="fl">ID</label><input class="fi" id="a-id"></div><div class="fg"><label class="fl">DESCRIPCIÓN</label><textarea class="fi" id="a-desc"></textarea></div><div class="fg"><label class="fl">TAGS</label><input class="fi" id="a-tags"></div><div class="g2"><div class="fg"><label class="fl">CELDAS/PÁG</label><input class="fi" id="a-size" type="number" value="10"></div><div class="fg"><label class="fl">TIEMPO</label><input class="fi" id="a-time" type="number" value="15"></div></div><div class="btn-row"><button class="btn btn-pri" onclick="addProj()">Guardar</button><button class="btn-cancel" onclick="closeAdd()">Cancelar</button></div></div></div>
+<div class="modal-ov" id="edit-modal"><div class="modal"><div class="modal-title">✏️ Editar</div><div class="fg"><label class="fl">TÍTULO</label><input class="fi" id="e-t"></div><div class="fg"><label class="fl">TIPO</label><select class="fi" id="e-type"><option value="pdf">PDF</option><option value="video">Video</option><option value="nb" class="opt-nb-edit">Notebook</option></select></div><div class="fg"><label class="fl">ID</label><input class="fi" id="e-id" readonly></div><div class="fg"><label class="fl">DESC</label><textarea class="fi" id="e-desc"></textarea></div><div class="fg"><label class="fl">TAGS</label><input class="fi" id="e-tags"></div><div class="g2"><div class="fg"><label class="fl">CELDAS/PÁG</label><input class="fi" id="e-size" type="number"></div><div class="fg"><label class="fl">TIEMPO</label><input class="fi" id="e-time" type="number"></div></div><div class="btn-row"><button class="btn btn-pri" onclick="updateProj()">Guardar</button><button class="btn-cancel" onclick="closeEdit()">Cancelar</button></div></div></div>
+<div class="modal-ov" id="folder-modal"><div class="modal"><div class="modal-title">📁 Nueva Carpeta</div><div class="fg"><label class="fl">NOMBRE</label><input class="fi" id="folder-name"></div><div class="btn-row"><button class="btn btn-pri" onclick="createFolderConfirm()">Crear</button><button class="btn-cancel" onclick="closeFolderModal()">Cancelar</button></div></div></div>
 
 <script>
-let curUser=null,isAdmin=false,isFounder=false,cfg={},filt='all';
-let editingProjId = null;
+// ==================== VFS + INDEXEDDB ====================
+let curUser=null, isAdmin=false, isFounder=false, cfg={}, filt='all', editingProjId=null;
+let selectedFilePath=null, clipboard=null;
+const DB_NAME='QCOL_VFS', STORE_NAME='files';
 
-function postCore(t,d={}){window.parent.postMessage({type:t,...d},'*');}
-function notify(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('show');clearTimeout(n._t);n._t=setTimeout(()=>n.classList.remove('show'),3000);postCore('QCOL_NOTIFY',{msg});}
+function openDB(){return new Promise((resolve,reject)=>{let req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=e=>{let db=e.target.result;if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME);};req.onsuccess=e=>resolve(e.target.result);req.onerror=e=>reject(e);});}
+async function getVFSItem(path){let db=await openDB();return new Promise((resolve,reject)=>{let tx=db.transaction(STORE_NAME,'readonly'),store=tx.objectStore(STORE_NAME),req=store.get(path);req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null);});}
+async function setVFSItem(path,data){let db=await openDB();let tx=db.transaction(STORE_NAME,'readwrite');tx.objectStore(STORE_NAME).put(data,path);return new Promise(r=>{tx.oncomplete=r;});}
+async function deleteVFSItem(path){let db=await openDB();let tx=db.transaction(STORE_NAME,'readwrite');tx.objectStore(STORE_NAME).delete(path);return new Promise(r=>{tx.oncomplete=r;});}
+async function listVFSFolder(folderPath){let db=await openDB();return new Promise((resolve,reject)=>{let tx=db.transaction(STORE_NAME,'readonly'),store=tx.objectStore(STORE_NAME),items=[];store.openCursor().onsuccess=e=>{let c=e.target.result;if(c){if(c.key.startsWith(folderPath+'/')||(folderPath==='/'&&c.key.indexOf('/')===c.key.lastIndexOf('/')&&c.key!=='/'))items.push(c.value);c.continue();}else resolve(items);};});}
+async function initVFS(){let root=await getVFSItem('/');if(!root){await setVFSItem('/',{path:'/',type:'folder',name:'root',children:[]});await setVFSItem('/notebooks',{path:'/notebooks',type:'folder',name:'notebooks',parent:'/'});await setVFSItem('/pdfs',{path:'/pdfs',type:'folder',name:'pdfs',parent:'/'});await setVFSItem('/videos',{path:'/videos',type:'folder',name:'videos',parent:'/'});}}
 
-window.addEventListener('message',e=>{
-  const d=e.data;if(!d?.type)return;
-  if(d.type==='QCOL_CONFIG'){cfg=d;}
-  if(d.type==='QCOL_USER_UPDATE'){
-    curUser=d.user;
-    isAdmin = (curUser?.role==='admin' || curUser?.role==='founder');
-    isFounder = (curUser?.role==='founder');
-    // Mostrar/ocultar opción Notebook en ambos modales según rol (paso1)
-    document.querySelectorAll('.opt-nb').forEach(o => o.style.display = isAdmin ? '' : 'none');
-    document.querySelectorAll('.opt-nb-edit').forEach(o => o.style.display = isAdmin ? '' : 'none');
-    document.getElementById('admin-bar').classList.toggle('show', isAdmin);
-    render();
-  }
-});
-postCore('QCOL_GET_CONFIG');
+async function createFolder(folderPath,name){let newPath=folderPath==='/'?`/${name}`:`${folderPath}/${name}`;let exists=await getVFSItem(newPath);if(exists){notify('Ya existe');return false;}await setVFSItem(newPath,{path:newPath,type:'folder',name:name,parent:folderPath,children:[]});notify(`Carpeta ${name} creada`);refreshFileList();return true;}
+async function deleteItem(path){let item=await getVFSItem(path);if(!item)return;if(item.type==='folder'){let children=await listVFSFolder(path);for(let c of children)await deleteVFSItem(c.path);}await deleteVFSItem(path);notify(`Eliminado ${path}`);refreshFileList();render();}
+async function copyItem(src,dest){let item=await getVFSItem(src);if(!item)return;let newItem={...item,path:dest,name:dest.split('/').pop(),parent:dest.substring(0,dest.lastIndexOf('/'))||'/'};await setVFSItem(dest,newItem);if(item.type==='folder'){let children=await listVFSFolder(src);for(let c of children){let newChildPath=c.path.replace(src,dest);await copyItem(c.path,newChildPath);}}}
+async function moveItem(src,dest){await copyItem(src,dest);await deleteItem(src);}
+function notify(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('show');clearTimeout(n._t);n._t=setTimeout(()=>n.classList.remove('show'),3000);}
+window.parent.postMessage({type:'QCOL_GET_CONFIG'},'*');
+window.addEventListener('message',e=>{let d=e.data;if(d?.type==='QCOL_CONFIG')cfg=d;if(d?.type==='QCOL_USER_UPDATE'){curUser=d.user;isAdmin=(curUser?.role==='admin'||curUser?.role==='founder');isFounder=(curUser?.role==='founder');document.querySelectorAll('.opt-nb,.opt-nb-edit').forEach(o=>o.style.display=isAdmin?'':'none');document.getElementById('admin-bar').classList.toggle('show',isAdmin);render();}});
 
-// ==================== DATA ====================
 function getP(){return JSON.parse(localStorage.getItem('qcol_projs')||'[]');}
 function saveP(p){localStorage.setItem('qcol_projs',JSON.stringify(p));}
-
-// ==================== FILTROS ====================
 function setF(f,el){filt=f;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));el.classList.add('on');render();}
+function escapeHtml(s){if(!s)return '';return s.replace(/[&<>]/g,function(m){if(m==='&')return '&amp;';if(m==='<')return '&lt;';if(m==='>')return '&gt;';return m;});}
 
-// ==================== RENDER + PERMISOS (paso3) ====================
-function render(){
-  const q=document.getElementById('search').value.toLowerCase();
-  const all=getP().filter(p=>{
-    const mf=filt==='all'||p.type===filt;
-    const mq=!q||p.title.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q)||(p.tags||'').toLowerCase().includes(q);
-    return mf&&mq;
-  });
-  const c=document.getElementById('content');
-  if(all.length===0){
-    c.innerHTML=`<div class="empty"><div class="empty-icon">📂</div>
-      <div class="empty-title">${q?'Sin resultados':'Sin proyectos aún'}</div>
-      <div class="empty-desc">${q?'No se encontraron proyectos con "'+q+'"':isAdmin?'Usa el botón + AGREGAR para publicar el primer proyecto.':'El administrador aún no ha publicado proyectos.'}</div>
-    </div>`;return;
-  }
-  c.innerHTML='<div class="grid">'+all.map(p=>{
-    const tl=p.type==='nb'?'NOTEBOOK':p.type==='pdf'?'PDF LaTeX':'VIDEO';
-    const tc=p.type==='nb'?'tnb':p.type==='pdf'?'tpdf':'tvid';
-    const meta=p.type==='nb'?`<span>⚛ ${p.size||10} celdas</span><span>⏱ ${p.time||10} min</span>`:p.type==='pdf'?`<span>📄 ${p.size||10} pág</span><span>⏱ ${p.time||10} min</span>`:`<span>▶ Video</span><span>⏱ ${p.time||10} min</span>`;
-    
-    // Permisos específicos paso3
-    const canDelete = isFounder;      // solo founder puede eliminar
-    const canModify = isFounder;      // solo founder puede editar
-    
-    const delBtn = canDelete ? `<button class="btn-del" onclick="delProj('${p.id}')" title="Eliminar permanentemente">🗑</button>` : '';
-    const editBtn = canModify ? `<button class="btn-edit" onclick="editProj('${p.id}')" title="Editar proyecto">✏️</button>` : '';
-    
-    const execText = p.type==='nb'?'▶ EJECUTAR':p.type==='pdf'?'📖 VER':'▶ VER';
-    return`<div class="card"><div class="card-hdr"><span class="tbadge ${tc}">${tl}</span><span class="card-tags">${p.tags||''}</span></div>
-      <div class="card-body"><div class="card-title">${escapeHtml(p.title)}</div><p class="card-desc">${escapeHtml(p.desc||'')}</p>
-      <div class="card-meta">${meta}</div>
-      <div class="card-actions"><button class="btn-exec" onclick="execP('${p.id}','${p.type}')">${execText}</button>${editBtn}${delBtn}</div></div></div>`;
-  }).join('')+'</div>';
-}
+function render(){let q=document.getElementById('search').value.toLowerCase();let all=getP().filter(p=>{let mf=filt==='all'||p.type===filt;let mq=!q||p.title.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q)||(p.tags||'').toLowerCase().includes(q);return mf&&mq;});let c=document.getElementById('content');if(all.length===0){c.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><div class="empty-title">${q?'Sin resultados':'Sin proyectos'}</div></div>`;return;}c.innerHTML='<div class="grid">'+all.map(p=>{let tl=p.type==='nb'?'NOTEBOOK':p.type==='pdf'?'PDF':'VIDEO';let tc=p.type==='nb'?'tnb':p.type==='pdf'?'tpdf':'tvid';let meta=p.type==='nb'?`⚛ ${p.size||10} celdas ⏱ ${p.time||10} min`:p.type==='pdf'?`📄 ${p.size||10} pág ⏱ ${p.time||10} min`:`▶ Video ⏱ ${p.time||10} min`;let canDelete=isFounder,canModify=isFounder;let delBtn=canDelete?`<button class="btn-del" onclick="delProj('${p.id}')">🗑</button>`:'';let editBtn=canModify?`<button class="btn-edit" onclick="editProj('${p.id}')">✏️</button>`:'';return`<div class="card"><div class="card-hdr"><span class="tbadge ${tc}">${tl}</span><span class="card-tags">${escapeHtml(p.tags||'')}</span></div><div class="card-body"><div class="card-title">${escapeHtml(p.title)}</div><p class="card-desc">${escapeHtml(p.desc||'')}</p><div class="card-meta">${meta}</div><div class="card-actions"><button class="btn-exec" onclick="execProj('${p.id}')">${p.type==='nb'?'▶ EJECUTAR':p.type==='pdf'?'📖 VER':'▶ VER'}</button>${editBtn}${delBtn}</div></div></div>`;}).join('')+'</div>';}
 
-function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,function(m){if(m==='&')return '&amp;';if(m==='<')return '&lt;';if(m==='>')return '&gt;';return m;});}
+async function execProj(id){let projs=getP();let p=projs.find(x=>x.id===id);if(!p){notify('No encontrado');return;}if(p.type==='nb'){let nbPath=`/notebooks/${id}.ipynb`;let nbFile=await getVFSItem(nbPath);if(!nbFile){notify('El notebook no existe en el gestor. Usa SUBIR ARCHIVO primero.');return;}window.parent.postMessage({type:'QCOL_OPEN_NB_EXPOSITION',nb:{id:p.id,title:p.title,cells:nbFile.content?.cells||[],metadata:nbFile.content?.metadata||{}}},'*');notify('Abriendo notebook en modo exposición...');}else if(p.type==='pdf'){let pdfPath=`/pdfs/${id}.pdf`;let pdfFile=await getVFSItem(pdfPath);if(pdfFile&&pdfFile.content){let blob=new Blob([pdfFile.content],{type:'application/pdf'});let url=URL.createObjectURL(blob);window.parent.postMessage({type:'QCOL_OPEN_PDF',url:url,title:p.title},'*');notify('Abriendo PDF en visor integrado');}else{let gh=cfg.ghUser||'laffitacamargof-create',repo=cfg.ghRepo||'quantum-computing-open-lab';window.open(`https://github.com/${gh}/${repo}/blob/main/docs/${id}.pdf`,'_blank');}}else if(p.type==='video'){notify('🎬 Video: '+p.title);}}
 
-// ==================== EJECUTAR PROYECTO ====================
-function execP(id,type){
-  const p=getP().find(x=>x.id===id);if(!p)return;
-  if(type==='nb'){
-    if(isAdmin){
-      postCore('QCOL_LOAD_NB',{nb:p});
-      postCore('QCOL_NAV',{screen:'architect-pro'});
-      notify('Abriendo en Arquitecto Pro...');
-    } else {
-      postCore('QCOL_NAV',{screen:'architect'});
-      notify('Abriendo en editor Notebook...');
-    }
-  }
-  else if(type==='pdf'){
-    const gh=cfg.ghUser||'laffitacamargof-create',repo=cfg.ghRepo||'quantum-computing-open-lab';
-    window.open(`https://github.com/${gh}/${repo}/blob/main/docs/${id}.pdf`,'_blank');
-  } else if(type==='video'){
-    notify(`🎬 Video: ${p.title} — demo en desarrollo`);
-  } else notify('Formato no soportado');
-}
-
-// ==================== DELETE (solo founder) ====================
-function delProj(id){
-  if(!isFounder){ notify('❌ Solo el founder puede eliminar proyectos'); return; }
-  if(!confirm('⚠️ Eliminar proyecto permanentemente?'))return;
-  const newProjs=getP().filter(x=>x.id!==id);
-  saveP(newProjs);
-  notify('🗑 Proyecto eliminado');
-  render();
-}
-
-// ==================== AGREGAR (solo admins, paso2) ====================
-function openAdd(){ if(!isAdmin){ notify('❌ Solo administradores pueden agregar proyectos'); return; } document.getElementById('add-modal').classList.add('open'); }
-function closeAdd(){ document.getElementById('add-modal').classList.remove('open'); }
-function addProj(){
-  if(!isAdmin){ notify('❌ Solo administradores pueden agregar proyectos'); return; }
-  const t=document.getElementById('a-t').value.trim();
-  let id=document.getElementById('a-id').value.trim().replace(/\s/g,'_').toLowerCase();
-  const type=document.getElementById('a-type').value;
-  const desc=document.getElementById('a-desc').value.trim();
-  const tags=document.getElementById('a-tags').value.trim();
-  const size=parseInt(document.getElementById('a-size').value)||10;
-  const time=parseInt(document.getElementById('a-time').value)||15;
-  if(!t||!id){notify('Título e ID son obligatorios');return;}
-  const all=getP(); if(all.find(p=>p.id===id)){notify('⚠️ ID ya existe, elige otro');return;}
-  all.push({id,title:t,type,desc,tags,size,time,added:new Date().toLocaleDateString()});
-  saveP(all);
-  closeAdd();
-  notify(`✅ Proyecto "${t}" agregado`);
-  render();
-  document.getElementById('a-t').value='';
-  document.getElementById('a-id').value='';
-  document.getElementById('a-desc').value='';
-  document.getElementById('a-tags').value='';
-  document.getElementById('a-size').value='10';
-  document.getElementById('a-time').value='15';
-  document.getElementById('a-type').value='pdf';
-}
-
-// ==================== EDITAR (solo founder) ====================
-function editProj(id){
-  if(!isFounder){ notify('❌ Solo el founder puede editar proyectos'); return; }
-  const proj=getP().find(p=>p.id===id);
-  if(!proj){ notify('Proyecto no encontrado'); return; }
-  editingProjId=id;
-  // llenar modal de edición
-  document.getElementById('e-t').value=proj.title;
-  document.getElementById('e-type').value=proj.type;
-  document.getElementById('e-id').value=proj.id;
-  document.getElementById('e-desc').value=proj.desc||'';
-  document.getElementById('e-tags').value=proj.tags||'';
-  document.getElementById('e-size').value=proj.size||10;
-  document.getElementById('e-time').value=proj.time||15;
-  // mostrar modal
-  document.getElementById('edit-modal').classList.add('open');
-}
-function closeEdit(){ document.getElementById('edit-modal').classList.remove('open'); editingProjId=null; }
-function updateProj(){
-  if(!isFounder){ notify('Acción denegada: solo founder'); closeEdit(); return; }
-  if(!editingProjId){ notify('Error interno'); closeEdit(); return; }
-  const newTitle=document.getElementById('e-t').value.trim();
-  const newType=document.getElementById('e-type').value;
-  const newDesc=document.getElementById('e-desc').value.trim();
-  const newTags=document.getElementById('e-tags').value.trim();
-  const newSize=parseInt(document.getElementById('e-size').value)||10;
-  const newTime=parseInt(document.getElementById('e-time').value)||15;
-  if(!newTitle){ notify('El título no puede estar vacío'); return; }
-  let projects=getP();
-  const index=projects.findIndex(p=>p.id===editingProjId);
-  if(index===-1){ notify('Proyecto no existe'); closeEdit(); return; }
-  // preservar id y fecha original
-  projects[index]={...projects[index], title:newTitle, type:newType, desc:newDesc, tags:newTags, size:newSize, time:newTime};
-  saveP(projects);
-  notify('✏️ Proyecto actualizado');
-  closeEdit();
-  render();
-}
-
-// ==================== EVENTOS CIERRE MODALES ====================
+function delProj(id){if(!isFounder)return;let newP=getP().filter(x=>x.id!==id);saveP(newP);notify('Proyecto eliminado');render();}
+function openAdd(){if(!isAdmin)return;document.getElementById('add-modal').classList.add('open');}
+function closeAdd(){document.getElementById('add-modal').classList.remove('open');}
+function addProj(){if(!isAdmin)return;let t=document.getElementById('a-t').value.trim(),id=document.getElementById('a-id').value.trim().replace(/\s/g,'_').toLowerCase(),type=document.getElementById('a-type').value,desc=document.getElementById('a-desc').value.trim(),tags=document.getElementById('a-tags').value.trim(),size=parseInt(document.getElementById('a-size').value)||10,time=parseInt(document.getElementById('a-time').value)||15;if(!t||!id){notify('Completa título e ID');return;}let all=getP();if(all.find(p=>p.id===id)){notify('ID ya existe');return;}all.push({id,title:t,type,desc,tags,size,time});saveP(all);closeAdd();notify('Agregado');render();}
+function editProj(id){if(!isFounder)return;let p=getP().find(x=>x.id===id);if(!p)return;editingProjId=id;document.getElementById('e-t').value=p.title;document.getElementById('e-type').value=p.type;document.getElementById('e-id').value=p.id;document.getElementById('e-desc').value=p.desc||'';document.getElementById('e-tags').value=p.tags||'';document.getElementById('e-size').value=p.size||10;document.getElementById('e-time').value=p.time||15;document.getElementById('edit-modal').classList.add('open');}
+function closeEdit(){document.getElementById('edit-modal').classList.remove('open');}
+function updateProj(){if(!isFounder)return;let newTitle=document.getElementById('e-t').value.trim();let newType=document.getElementById('e-type').value;let newDesc=document.getElementById('e-desc').value.trim();let newTags=document.getElementById('e-tags').value.trim();let newSize=parseInt(document.getElementById('e-size').value)||10;let newTime=parseInt(document.getElementById('e-time').value)||15;let projs=getP();let idx=projs.findIndex(p=>p.id===editingProjId);if(idx!==-1){projs[idx]={...projs[idx],title:newTitle,type:newType,desc:newDesc,tags:newTags,size:newSize,time:newTime};saveP(projs);notify('Actualizado');closeEdit();render();}}
+async function uploadFile(){if(!isAdmin){notify('Solo admin');return;}let input=document.createElement('input');input.type='file';input.accept='.ipynb,.pdf,.mp4';input.onchange=async e=>{let file=e.target.files[0];if(!file)return;let ext=file.name.split('.').pop();let destFolder=ext==='ipynb'?'/notebooks':ext==='pdf'?'/pdfs':'/videos';let destPath=`${destFolder}/${file.name}`;let arrayBuffer=await file.arrayBuffer();let content=ext==='ipynb'?JSON.parse(new TextDecoder().decode(arrayBuffer)):new Uint8Array(arrayBuffer);await setVFSItem(destPath,{path:destPath,type:'file',name:file.name,ext:ext,content:content,size:file.size});notify(`Subido: ${file.name}`);refreshFileList();};input.click();}
+function createFolderModal(){if(!isAdmin)return;document.getElementById('folder-modal').classList.add('open');}
+function closeFolderModal(){document.getElementById('folder-modal').classList.remove('open');}
+async function createFolderConfirm(){let name=document.getElementById('folder-name').value.trim();if(!name)return;let currentPath='/';await createFolder(currentPath,name);closeFolderModal();document.getElementById('folder-name').value='';}
+async function refreshFileList(){let items=await listVFSFolder('/');let container=document.getElementById('fileList');container.innerHTML=items.map(i=>`<div class="file-item ${selectedFilePath===i.path?'selected':''}" onclick="selectFile('${i.path}')">${i.type==='folder'?'📁':'📄'} ${i.name}</div>`).join('')||'<div>Vacío</div>';}
+function selectFile(path){selectedFilePath=path;refreshFileList();notify(`Seleccionado: ${path}`);}
+function copySelected(){if(!selectedFilePath){notify('Selecciona un archivo/carpeta');return;}clipboard={mode:'copy',src:selectedFilePath};notify('Copiado: '+selectedFilePath);}
+function cutSelected(){if(!selectedFilePath){notify('Selecciona');return;}clipboard={mode:'cut',src:selectedFilePath};notify('Cortado: '+selectedFilePath);}
+async function pasteSelected(){if(!clipboard){notify('Nada en portapapeles');return;}let destPath='/';let src=clipboard.src;let dest=destPath+src.substring(src.lastIndexOf('/'));if(clipboard.mode==='copy'){await copyItem(src,dest);notify('Pegado');}else if(clipboard.mode==='cut'){await moveItem(src,dest);notify('Movido');}clipboard=null;selectedFilePath=null;refreshFileList();render();}
+async function askAI(){let query=document.getElementById('aiQuery').value.trim();if(!query)return;let responseDiv=document.getElementById('aiResponse');responseDiv.innerHTML='🤔 Buscando en el repositorio...';let allFiles=await listVFSFolder('/');let relevant=[];for(let f of allFiles){if(f.type==='file'){let nameMatch=f.name.toLowerCase().includes(query.toLowerCase());let contentMatch=false;if(f.ext==='ipynb'&&f.content&&f.content.cells){let text=f.content.cells.map(c=>c.source?.join(' ')||'').join(' ');contentMatch=text.toLowerCase().includes(query.toLowerCase());}if(nameMatch||contentMatch)relevant.push(f);}}if(relevant.length===0)responseDiv.innerHTML='🤖 No encontré archivos relacionados. Prueba con otras palabras.';else{let recos=relevant.slice(0,5).map(f=>`📄 ${f.name}`).join('<br>');responseDiv.innerHTML=`🤖 Encontré ${relevant.length} archivo(s):<br>${recos}<br><br>💡 Sugerencia: revisa ${relevant[0]?.name} para más información.`;}document.getElementById('aiQuery').value='';}
+initVFS();refreshFileList();render();
 document.getElementById('add-modal').addEventListener('click',e=>{if(e.target===document.getElementById('add-modal'))closeAdd();});
 document.getElementById('edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('edit-modal'))closeEdit();});
-
-// ==================== INICIALIZAR + SEGURIDAD EXTRA ====================
-// Sincronizar visibilidad de opciones nb al cargar si el usuario ya está definido (postMessage puede llegar después)
-function syncNotebookOptionDelayed(){
-  const adminState=isAdmin;
-  document.querySelectorAll('.opt-nb').forEach(o => o.style.display = adminState ? '' : 'none');
-  document.querySelectorAll('.opt-nb-edit').forEach(o => o.style.display = adminState ? '' : 'none');
-}
-setInterval(syncNotebookOptionDelayed, 500); // respaldo ante cambios asíncronos
-
-// Prevenir manipulación desde consola: verificar en addProj y editProj ya está hecho
-// también proteger cualquier intento de renderizar botones no autorizados mediante re-render frecuente
-window.render=render;
-
-// Pequeño helper para asegurar que founder tiene todos los permisos pero admin (no founder) no tenga botones eliminar/editar
-// ya está implementado en render()
-render();
+document.getElementById('folder-modal').addEventListener('click',e=>{if(e.target===document.getElementById('folder-modal'))closeFolderModal();});
 </script>
 </body>
 </html>
