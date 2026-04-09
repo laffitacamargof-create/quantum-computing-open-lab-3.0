@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QCOL — Panel Fundador</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500&family=Exo+2:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Librerías para Markdown y sanitización -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
 <style>
 :root{--bg:#010608;--s:#071220;--s2:#0c1c30;--b:#0d2a4a;--b2:#1a3a5c;--bl:#0088ff;--bl2:#00ccff;--cy:#00ffdd;--gr:#00ff88;--gd:#ffd700;--rd:#ff4466;--pu:#bd93f9;--tx:#ddeeff;--mu:#4a7a9b;--orb:'Orbitron',monospace;--mono:'JetBrains Mono',monospace;--exo:'Exo 2',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -82,6 +85,23 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
 .alert-info{background:rgba(0,136,255,.08);border:1px solid rgba(0,136,255,.25);color:var(--bl2);}
 .upload-zone{border:2px dashed var(--b2);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .3s;margin:.75rem 0;}
 .upload-zone:hover{border-color:rgba(0,136,255,.55);background:rgba(0,136,255,.03);}
+/* MARKDOWN CHAT STYLES */
+.chat-container{background:rgba(0,0,0,.2);border-radius:10px;border:1px solid var(--b);overflow:hidden;margin-top:.5rem;}
+.chat-messages{height:320px;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.8rem;}
+.chat-message{max-width:85%;padding:.6rem .9rem;border-radius:12px;font-size:.7rem;line-height:1.5;}
+.user-message{background:rgba(0,136,255,.15);border:1px solid rgba(0,136,255,.3);align-self:flex-end;color:var(--tx);}
+.assistant-message{background:rgba(0,0,0,.3);border:1px solid var(--b2);align-self:flex-start;}
+.assistant-message p{margin:.2rem 0;}
+.assistant-message pre{background:#010810;padding:.4rem;border-radius:6px;overflow-x:auto;margin:.3rem 0;font-size:.6rem;}
+.assistant-message code{font-family:var(--mono);background:rgba(0,0,0,.3);padding:.1rem .2rem;border-radius:3px;}
+.assistant-message table{border-collapse:collapse;width:100%;margin:.5rem 0;}
+.assistant-message th,.assistant-message td{border:1px solid var(--b2);padding:.2rem .4rem;}
+.assistant-message blockquote{border-left:3px solid var(--bl2);margin:.3rem 0;padding-left:.6rem;color:var(--mu);}
+.chat-input-area{display:flex;gap:.5rem;padding:.7rem;border-top:1px solid var(--b);background:rgba(0,0,0,.2);}
+.chat-input-area input{flex:1;background:rgba(0,0,0,.4);border:1px solid var(--b2);border-radius:20px;padding:.5rem .8rem;color:var(--tx);font-family:var(--exo);font-size:.7rem;outline:none;}
+.chat-input-area input:focus{border-color:var(--bl);}
+.chat-input-area button{padding:.4rem 1rem;border-radius:20px;}
+.loading-dots{display:inline-block;font-size:.8rem;letter-spacing:2px;}
 @media(max-width:680px){
   .grid2{grid-template-columns:1fr;}
   .tabs{flex-wrap:wrap;gap:.2rem;padding:.4rem;}
@@ -92,6 +112,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
   .btn{font-size:.55rem;padding:.35rem .65rem;}
   .logbox{font-size:.58rem;}
   .panel{padding:.75rem;}
+  .chat-message{max-width:95%;}
 }
 @media(max-width:480px){
   .tabs{gap:.15rem;}
@@ -352,7 +373,7 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
   </div>
 </div>
 
-<!-- ════════════ IA ════════════ -->
+<!-- ════════════ IA (MODIFICADO: AÑADIDO CHAT CON MARKDOWN) ════════════ -->
 <div class="panel" id="tab-ai">
   <div class="sec">
     <div class="sec-title">🤖 Configuración de IA — Optimizado para Mistral 3</div>
@@ -475,9 +496,33 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
     </div>
     <div class="btn-row"><button class="btn btn-pri" onclick="saveAI()">💾 Guardar prompt</button></div>
   </div>
+
+  <!-- NUEVO: CHAT CON RENDERIZADO MARKDOWN -->
+  <div class="sec">
+    <div class="sec-title">💬 Chat con IA (respuestas en Markdown)</div>
+    <div class="alert alert-info">
+      Escribe tu mensaje y la IA responderá con formato Markdown (negritas, listas, código, tablas). 
+      El chat mantiene el contexto de la conversación.
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-message assistant-message">
+          <p>👋 ¡Hola! Soy el asistente de QCOL. Puedes preguntarme sobre computación cuántica, Qiskit, Cirq, QuTiP o cualquier duda técnica. Escribe tu mensaje.</p>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+        <button class="btn btn-pri" onclick="sendChatMessage()">Enviar</button>
+        <button class="btn btn-sec" onclick="clearChat()">Limpiar chat</button>
+      </div>
+    </div>
+    <div id="chat-loading" style="display:none; text-align:center; margin-top:.5rem; font-size:.6rem; color:var(--mu);">
+      <span class="loading-dots">● ● ●</span> IA pensando...
+    </div>
+  </div>
 </div>
 
-<!-- ════════════ IA RESOLVER (NUEVO) ════════════ -->
+<!-- ════════════ IA RESOLVER ════════════ -->
 <div class="panel" id="tab-iaresolver">
   <div class="sec">
     <div class="sec-title">🧠 IA Resolver — Clasificación automática de errores</div>
@@ -824,7 +869,6 @@ textarea.fi{resize:vertical;min-height:70px;line-height:1.6;}
 
 </div>
 
-
 <script>
 // ══ COMUNICACIÓN CON EL CORE ══
 function postToCore(type, data = {}) {
@@ -847,6 +891,7 @@ window.addEventListener('message', (e) => {
 });
 
 let currentUser = null;
+let chatHistory = []; // almacena {role, content}
 
 function notify(msg) {
   const n = document.getElementById('notif');
@@ -979,13 +1024,9 @@ function loadMistralSettings() {
   updateMistralUI();
 }
 
-// MEJORA: sanitizar API key al guardar y mostrar preview
 function saveMistralSettings() {
-    // Obtener la clave del campo
     let rawKey = document.getElementById('mistral-key').value;
-    // Limpiar: eliminar espacios, comillas dobles/simples, saltos de línea, tabuladores
     let cleanKey = rawKey.replace(/[\s"'\n\r\t]/g, '').trim();
-    // Actualizar el campo visual con la clave limpia
     document.getElementById('mistral-key').value = cleanKey;
     
     const enabled = document.getElementById('mistral-toggle').checked;
@@ -1000,19 +1041,15 @@ function saveMistralSettings() {
     localStorage.setItem('qcol_mistral_prompt', prompt);
     
     updateMistralUI();
-    // Mostrar los primeros 8 caracteres de la clave (para debug)
     const keyPreview = cleanKey.slice(0, 8) + (cleanKey.length > 8 ? '...' : '');
     notify(`✅ Configuración de DeepSeek guardada — clave: ${keyPreview}`);
     addSysLog('DeepSeek: configuración actualizada', 'ok');
 }
 
-// MEJORA: test con DeepSeek, sanitización y lectura como texto
 async function testMistralConnection() {
-    // Leer y sanitizar la API key
     let apiKey = localStorage.getItem('qcol_mistral_key');
     if (!apiKey) { notify('❌ No hay API key configurada'); return; }
     apiKey = apiKey.replace(/[\s"'\n\r\t]/g, '').trim();
-    // Forzar endpoint y modelo de DeepSeek
     const url = 'https://api.deepseek.com/v1/chat/completions';
     const model = 'deepseek-chat';
     notify(`🔄 Probando conexión con DeepSeek (clave: ${apiKey.slice(0,8)}...)`);
@@ -1029,9 +1066,7 @@ async function testMistralConnection() {
                 max_tokens: 5
             })
         });
-        // Leer como texto primero para depurar
         const text = await res.text();
-        console.log('Respuesta cruda de DeepSeek:', text);
         if (res.ok) {
             try {
                 const data = JSON.parse(text);
@@ -1189,7 +1224,6 @@ function loadSaved() {
     document.getElementById('plt-title').value = cfg.authorTitle || '';
     document.getElementById('plt-version').value = cfg.version || '2.0.0';
   }
-  // Inicializar valores por defecto de DeepSeek
   if (localStorage.getItem('qcol_mistral_enabled') === null) {
     localStorage.setItem('qcol_mistral_enabled', 'true');
   }
@@ -1201,7 +1235,6 @@ function loadSaved() {
   }
   loadMistralSettings();
 
-  // Conectar automáticamente si hay URL guardada
   const savedUrl = localStorage.getItem('qcol_colab_url');
   if (savedUrl) {
     document.getElementById('colab-url').value = savedUrl;
@@ -1209,7 +1242,6 @@ function loadSaved() {
   }
 }
 
-// ══ HELPERS ══
 function getGH() {
   const s = JSON.parse(localStorage.getItem('qcol_gh') || '{}');
   return { user: s.user || 'laffitacamargof-create', repo: s.repo || 'quantum-computing-open-lab', branch: s.branch || 'main', token: s.token || '' };
@@ -1218,307 +1250,6 @@ function getAI() { return JSON.parse(localStorage.getItem('qcol_ai') || '{}'); }
 function getConfig() { return JSON.parse(localStorage.getItem('qcol_cfg') || '{}'); }
 function getUsers() { return JSON.parse(localStorage.getItem('qcol_users') || '[]'); }
 function saveUsersFn(u) { localStorage.setItem('qcol_users', JSON.stringify(u)); }
-
-// ══ COLAB (funciones antiguas, se mantienen pero ya no se usan directamente) ══
-// Nota: testColab y saveColab ya fueron reemplazadas arriba.
-// Se conservan las funciones auxiliares de descarga de templates y otras.
-function downloadTemplate(lib) {
-  const installs = {
-    qiskit: '!pip install qiskit qiskit-aer qiskit-ibm-runtime matplotlib numpy scipy sympy -q',
-    cirq: '!pip install cirq cirq-core tensorflow-quantum matplotlib -q',
-    pennylane: '!pip install pennylane pennylane-lightning autograd matplotlib -q',
-    qutip: '!pip install qutip numpy scipy matplotlib -q',
-  };
-  const imports = {
-    qiskit: 'from qiskit import QuantumCircuit\nfrom qiskit_aer import AerSimulator\nimport numpy as np\nfrom numpy import pi\nimport matplotlib.pyplot as plt',
-    cirq: 'import cirq\nimport numpy as np\nimport matplotlib.pyplot as plt',
-    pennylane: 'import pennylane as qml\nimport numpy as np\nimport matplotlib.pyplot as plt',
-    qutip: 'import qutip as qt\nimport numpy as np\nimport matplotlib.pyplot as plt',
-  };
-  const nb = {
-    "nbformat":4,"nbformat_minor":0,
-    "metadata":{"kernelspec":{"display_name":"Python 3","language":"python","name":"python3"}},
-    "cells":[
-      {"cell_type":"markdown","source":[`# QCOL — Template ${lib.toUpperCase()}\n## Quantum Computing Open Lab\nPlantilla con ${lib} preinstalado`],"metadata":{}},
-      {"cell_type":"code","source":[installs[lib]],"metadata":{},"outputs":[],"execution_count":null},
-      {"cell_type":"code","source":[imports[lib]],"metadata":{},"outputs":[],"execution_count":null},
-      {"cell_type":"code","source":["# Tu código aquí"],"metadata":{},"outputs":[],"execution_count":null},
-    ]
-  };
-  const blob = new Blob([JSON.stringify(nb,null,2)],{type:'application/json'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download = `QCOL_Template_${lib}.ipynb`; a.click();
-  notify('📥 Template ' + lib + ' descargado');
-}
-
-// ══ GITHUB ══
-function saveGH() {
-  const gh = {
-    user: document.getElementById('gh-user').value.trim(),
-    repo: document.getElementById('gh-repo').value.trim(),
-    branch: document.getElementById('gh-branch')?.value.trim() || 'main',
-    token: document.getElementById('gh-token').value.trim(),
-  };
-  localStorage.setItem('qcol_gh', JSON.stringify(gh));
-  postToCore('QCOL_SAVE_CONFIG', { key: 'gh_config', value: gh });
-  notify('✅ GitHub guardado');
-  addSysLog('GitHub: ' + gh.user + '/' + gh.repo, 'ok');
-}
-async function testGH() {
-  const gh = getGH();
-  try {
-    const res = await fetch(`https://api.github.com/repos/${gh.user}/${gh.repo}`);
-    if (res.ok) {
-      const d = await res.json();
-      document.getElementById('gh-dot').className = 'sdot ok';
-      document.getElementById('gh-status').textContent = '✅ ' + d.full_name;
-      notify('✅ Repositorio verificado');
-      addSysLog('GitHub verificado: ' + d.full_name, 'ok');
-    } else throw new Error('Repositorio no encontrado');
-  } catch(e) {
-    document.getElementById('gh-dot').className = 'sdot err';
-    document.getElementById('gh-status').textContent = '❌ ' + e.message;
-    notify('❌ ' + e.message);
-  }
-}
-function openGH() { const gh = getGH(); window.open(`https://github.com/${gh.user}/${gh.repo}`, '_blank'); }
-
-function previewUpload(input) {
-  const preview = document.getElementById('gh-file-preview');
-  if (input.files.length > 0) {
-    const f = input.files[0];
-    const kb = (f.size/1024).toFixed(1);
-    preview.textContent = `📄 ${f.name} — ${kb} KB`;
-    preview.style.color = 'var(--gr)';
-    const folder = document.getElementById('gh-folder');
-    if (!folder.value) {
-      if (f.name.endsWith('.pdf')) folder.value = 'docs/';
-      else if (f.name.endsWith('.ipynb')) folder.value = 'notebooks/';
-      else if (f.name.endsWith('.html')) folder.value = '';
-      else if (f.name.endsWith('.py')) folder.value = '';
-    }
-  }
-}
-
-function addGHLog(msg, type='info') {
-  const log = document.getElementById('gh-upload-log');
-  if (!log) return;
-  const t = new Date().toLocaleTimeString();
-  const colors = {ok:'var(--gr)', err:'var(--rd)', info:'var(--mu)', warn:'#d29922'};
-  log.innerHTML += `\n<span style="color:${colors[type]||colors.info}">[${t}] ${msg}</span>`;
-  log.scrollTop = log.scrollHeight;
-}
-
-async function uploadToGitHub() {
-  const gh = getGH();
-  if (!gh.token) {
-    notify('❌ Configura el Token GitHub primero');
-    addGHLog('❌ Sin token GitHub', 'err');
-    return;
-  }
-
-  const fileInput = document.getElementById('gh-file-input');
-  if (!fileInput.files.length) {
-    notify('Selecciona un archivo primero');
-    return;
-  }
-
-  const file    = fileInput.files[0];
-  const folder  = document.getElementById('gh-folder').value.trim();
-  const msg     = document.getElementById('gh-commit-msg').value.trim() || 'Subido desde QCOL';
-  const path    = folder ? folder.replace(/\/?$/, '/') + file.name : file.name;
-  const apiURL  = `https://api.github.com/repos/${gh.user}/${gh.repo}/contents/${path}`;
-
-  addGHLog(`Subiendo: ${path}...`, 'info');
-  notify('📤 Subiendo a GitHub...');
-
-  try {
-    const base64 = await new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.onload = () => res(reader.result.split(',')[1]);
-      reader.onerror = rej;
-      reader.readAsDataURL(file);
-    });
-
-    let sha = undefined;
-    try {
-      const check = await fetch(apiURL, {
-        headers: {
-          'Authorization': `token ${gh.token}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      });
-      if (check.ok) {
-        const existing = await check.json();
-        sha = existing.sha;
-        addGHLog(`Archivo existe — actualizando...`, 'warn');
-      }
-    } catch(e) {}
-
-    const body = { message: msg, content: base64 };
-    if (sha) body.sha = sha;
-
-    const res = await fetch(apiURL, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${gh.token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (res.ok) {
-      const d = await res.json();
-      addGHLog(`✅ Subido: ${path}`, 'ok');
-      addGHLog(`📎 URL: ${d.content?.html_url || '—'}`, 'ok');
-      notify(`✅ ${file.name} subido a GitHub`);
-      addSysLog(`Archivo subido a GitHub: ${path}`, 'ok');
-      fileInput.value = '';
-      document.getElementById('gh-file-preview').textContent = '';
-    } else {
-      const err = await res.json();
-      const msg2 = err.message || 'Error desconocido';
-      addGHLog(`❌ Error: ${msg2}`, 'err');
-      notify(`❌ Error: ${msg2}`);
-      if (msg2.includes('Bad credentials')) {
-        addGHLog('💡 Verifica que el token tenga permiso "repo"', 'warn');
-      }
-    }
-  } catch(e) {
-    addGHLog(`❌ ${e.message}`, 'err');
-    notify('❌ ' + e.message);
-  }
-}
-
-// ══ AI ══
-function aiProviderChange() {
-  const p = document.getElementById('ai-prov').value;
-  const models = {
-    mistral:      'mistral-large-latest',
-    groq:         'llama3-70b-8192',
-    huggingface:  'mistralai/Mistral-7B-Instruct-v0.3',
-    openai:       'gpt-4o-mini',
-    gemini:       'gemini-pro',
-    none:         ''
-  };
-  const sel = document.getElementById('ai-model-sel');
-  const inp = document.getElementById('ai-model');
-  const hint = document.getElementById('ai-key-hint');
-  const hints = {
-    mistral:     'Mistral: <a onclick="window.open(\'https://console.mistral.ai\',\'_blank\')" style="color:var(--gr);cursor:pointer;">console.mistral.ai</a> → API Keys → Create',
-    groq:        'Groq: <a onclick="window.open(\'https://console.groq.com\',\'_blank\')" style="color:var(--gr);cursor:pointer;">console.groq.com</a> → API Keys → Create Key',
-    huggingface: 'HuggingFace: <a onclick="window.open(\'https://huggingface.co/settings/tokens\',\'_blank\')" style="color:var(--gr);cursor:pointer;">hf.co/settings/tokens</a> → New token',
-    openai:      'OpenAI: <a onclick="window.open(\'https://platform.openai.com/api-keys\',\'_blank\')" style="color:var(--gr);cursor:pointer;">platform.openai.com/api-keys</a>',
-    gemini:      'Google: <a onclick="window.open(\'https://aistudio.google.com/app/apikey\',\'_blank\')" style="color:var(--gr);cursor:pointer;">aistudio.google.com</a> (necesita VPN)',
-    none:        ''
-  };
-  if (inp) inp.value = models[p] || '';
-  if (sel) sel.value = models[p] || sel.options[0]?.value;
-  if (hint) hint.innerHTML = hints[p] || '';
-}
-
-const PROMPTS = {
-  quantum:   'Eres el asistente de QCOL (Quantum Computing Open Lab), creado por Franci Laffita Camargo, estudiante de Física Nuclear. Ayudas con Qiskit, Cirq, PennyLane, QuTiP, circuitos cuánticos y física cuántica. Responde en español, de forma concisa y técnicamente precisa.',
-  teacher:   'Eres un profesor experto en computación cuántica del ecosistema QCOL. Explicas conceptos de forma clara y pedagógica, con ejemplos prácticos. Usas analogías para hacer accesibles los conceptos difíciles. Responde siempre en español.',
-  concise:   'Eres el asistente cuántico de QCOL. Responde siempre en español, de forma muy concisa. Máximo 3-4 líneas por respuesta. Solo lo esencial. Para código Qiskit, muestra directamente el código.',
-  bilingual: 'You are the QCOL quantum computing assistant. Respond in both Spanish and English. First answer in Spanish, then provide the English translation. Be concise and technically precise.',
-  code:      'Eres el asistente de código cuántico de QCOL. Tu especialidad es generar código Qiskit y Cirq. Cuando te pidan un circuito o algoritmo, responde directamente con el código Python funcional, con comentarios breves. Usa siempre sintaxis moderna de Qiskit 1.x.'
-};
-
-function setPrompt(type) {
-  const el = document.getElementById('ai-prompt');
-  if (el && PROMPTS[type]) {
-    el.value = PROMPTS[type];
-    notify('Prompt: ' + type);
-  }
-}
-function saveAI() {
-  const ai = {
-    provider: document.getElementById('ai-prov').value,
-    key:      document.getElementById('ai-key').value.trim(),
-    model:    document.getElementById('ai-model').value.trim(),
-    prompt:   document.getElementById('ai-prompt').value.trim(),
-    temp:     parseFloat(document.getElementById('ai-temp')?.value || '0.7'),
-    tokens:   parseInt(document.getElementById('ai-tokens')?.value || '600'),
-    lang:     document.getElementById('ai-lang')?.value || 'es',
-  };
-  localStorage.setItem('qcol_ai', JSON.stringify(ai));
-  postToCore('QCOL_SAVE', { key: 'qcol_ai', val: ai });
-  notify('✅ IA guardada — ' + ai.provider + ' · ' + ai.model);
-  addSysLog('IA configurada: ' + ai.provider + ' · ' + ai.model, 'ok');
-  document.getElementById('ai-dot').className = ai.provider !== 'none' ? 'sdot ok' : 'sdot off';
-  document.getElementById('ai-status').textContent = ai.provider !== 'none'
-    ? '✅ ' + ai.provider + ' — ' + ai.model
-    : 'Sin configurar';
-}
-async function testAI() {
-  const ai = getAI();
-  if (ai.provider === 'none' || !ai.key) { notify('Configura la IA primero'); return; }
-  notify('Probando IA...');
-  const temp = ai.temp || 0.7;
-  const tokens = ai.tokens || 600;
-  try {
-    let url, body, headers;
-    headers = {'Content-Type':'application/json'};
-
-    if (ai.provider === 'mistral') {
-      url = 'https://api.mistral.ai/v1/chat/completions';
-      headers['Authorization'] = 'Bearer ' + ai.key;
-      body = { model: ai.model || 'mistral-large-latest',
-               messages:[{role:'user',content:'Di "QCOL OK"'}],
-               max_tokens:10, temperature: temp };
-    } else if (ai.provider === 'groq') {
-      url = 'https://api.groq.com/openai/v1/chat/completions';
-      headers['Authorization'] = 'Bearer ' + ai.key;
-      body = { model: ai.model || 'llama3-70b-8192',
-               messages:[{role:'user',content:'Di "QCOL OK"'}],
-               max_tokens:10, temperature: temp };
-    } else if (ai.provider === 'huggingface') {
-      url = `https://api-inference.huggingface.co/models/${ai.model || 'mistralai/Mistral-7B-Instruct-v0.3'}`;
-      headers['Authorization'] = 'Bearer ' + ai.key;
-      body = { inputs: 'Di "QCOL OK"', parameters: { max_new_tokens: 10 } };
-    } else if (ai.provider === 'openai') {
-      url = 'https://api.openai.com/v1/chat/completions';
-      headers['Authorization'] = 'Bearer ' + ai.key;
-      body = { model: ai.model || 'gpt-4o-mini',
-               messages:[{role:'user',content:'Di "QCOL OK"'}],
-               max_tokens:10, temperature: temp };
-    } else {
-      notify('Prueba manual para este proveedor'); return;
-    }
-
-    const res = await fetch(url, {
-      method:'POST', headers,
-      body:JSON.stringify(body),
-      signal:AbortSignal.timeout(15000)
-    });
-    const rawText = await res.text();
-    if (rawText.trim().startsWith('<') || rawText.trim().startsWith('<!')) {
-      notify('❌ CORS bloqueado — ' + ai.provider + ' no acepta llamadas directas desde el navegador');
-      return;
-    }
-    let d;
-    try { d = JSON.parse(rawText); } catch(e) {
-      notify('❌ Respuesta no válida: ' + rawText.slice(0, 60));
-      return;
-    }
-    if (res.ok) {
-      const resp = d.choices?.[0]?.message?.content?.trim()
-                || d.generated_text
-                || '✅ OK';
-      notify('✅ IA conectada: ' + resp);
-      document.getElementById('ai-dot').className = 'sdot ok';
-      document.getElementById('ai-status').textContent = '✅ Conectada — ' + ai.provider + ' · ' + ai.model;
-      addSysLog('IA probada: ' + ai.provider + ' · ' + ai.model, 'ok');
-    } else throw new Error(d.error?.message || d.message || 'Error ' + res.status);
-  } catch(e) {
-    notify('❌ ' + e.message);
-    addSysLog('Error IA: ' + e.message, 'err');
-  }
-}
-
-// ══ USERS ══
 function renderUsers() {
   const tbody = document.getElementById('users-tbody');
   if (!tbody) return;
@@ -1566,7 +1297,6 @@ function changeFounderPass() {
   ['fp-cur','fp-new'].forEach(id=>document.getElementById(id).value='');
 }
 
-// ══ PROJECTS ══
 function getProjs() { return JSON.parse(localStorage.getItem('qcol_projs')||'[]'); }
 function renderProjs() {
   const tbody=document.getElementById('projs-tbody');if(!tbody)return;
@@ -1598,7 +1328,6 @@ function delProj(id){
   localStorage.setItem('qcol_projs',JSON.stringify(all));renderProjs();notify('Proyecto eliminado');
 }
 
-// ══ PLATFORM CONFIG ══
 function savePlatform() {
   const cfg={name:document.getElementById('plt-name').value,author:document.getElementById('plt-author').value,authorTitle:document.getElementById('plt-title').value,version:document.getElementById('plt-version').value};
   localStorage.setItem('qcol_cfg',JSON.stringify(cfg));notify('✅ Plataforma guardada');addSysLog('Config plataforma guardada','ok');
@@ -1615,7 +1344,6 @@ function saveSystem() {
   addSysLog('Sistema actualizado','ok');
 }
 
-// ══ MONITOR ══
 function getMonitorConfig(){
   return JSON.parse(localStorage.getItem('qcol_monitor_cfg')||'{"maxRuns":50,"maxQubits":20,"maxTime":60,"mode":"open"}');
 }
@@ -1780,7 +1508,6 @@ function clearMonitorData(){
   addSysLog('Historial de monitor limpiado','warn');
 }
 
-// ══ BACKUP ══
 function exportAll() {
   const data={config:getConfig(),github:getGH(),ai:{...getAI(),key:'***'},users:getUsers(),projects:getProjs(),exported:new Date().toISOString(),version:'2.0.0'};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
@@ -1803,7 +1530,6 @@ function importBackup(e) {
   reader.readAsText(file);e.target.value='';
 }
 
-// ══ MODULES ══
 function checkModules() {
   const mods = ['projects','architect','architect-pro','library','account','help'];
   mods.forEach(async (m) => {
@@ -1820,25 +1546,12 @@ function checkModules() {
   notify('Verificando módulos...');
 }
 
-const MODULE_PLACEHOLDERS = {
-  projects: `<!-- QCOL Módulo Proyectos v2.0 -->`,
-  architect: `<!-- QCOL Módulo Arquitecto v2.0 -->`,
-  'architect-pro': `<!-- QCOL Módulo Arquitecto Pro v2.0 -->`,
-  library: `<!-- QCOL Módulo Librería v2.0 -->`,
-  account: `<!-- QCOL Módulo Cuenta v2.0 -->`,
-  help: `<!-- QCOL Módulo Ayuda v2.0 -->`,
-};
-
 function downloadModule(mod) {
   if (mod === 'core') {
     notify('El core (index.html) ya fue descargado desde Claude');
     return;
   }
   notify('Módulo ' + mod + ' — pendiente de desarrollo. Se descargará cuando esté listo.');
-}
-
-function downloadAll() {
-  notify('Los módulos se descargan individualmente desde los outputs de esta sesión.');
 }
 
 function getCustomModules(){return JSON.parse(localStorage.getItem('qcol_custom_modules')||'[]');}
@@ -1878,7 +1591,269 @@ function deleteModule(i){
   const mods=getCustomModules();mods.splice(i,1);saveCustomModules(mods);renderCustomModules();notify('Módulo eliminado del menú');addSysLog('Módulo eliminado','warn');
 }
 
-// ══ INIT ══
+// ══ NUEVAS FUNCIONES PARA CHAT CON MARKDOWN ══
+function displayMessage(role, content) {
+  const container = document.getElementById('chat-messages');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `chat-message ${role === 'user' ? 'user-message' : 'assistant-message'}`;
+  if (role === 'assistant' && window.marked && window.DOMPurify) {
+    const rawHtml = window.marked.parse(content);
+    const cleanHtml = window.DOMPurify.sanitize(rawHtml);
+    msgDiv.innerHTML = cleanHtml;
+  } else {
+    msgDiv.textContent = content;
+  }
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+function clearChat() {
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+  chatHistory = [];
+  displayMessage('assistant', '👋 ¡Hola! Soy el asistente de QCOL. Puedes preguntarme sobre computación cuántica, Qiskit, Cirq, QuTiP o cualquier duda técnica. Escribe tu mensaje.');
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+
+  displayMessage('user', message);
+  input.value = '';
+  
+  chatHistory.push({ role: 'user', content: message });
+  if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+
+  const ai = getAI();
+  if (ai.provider === 'none' || !ai.key) {
+    displayMessage('assistant', '⚠️ **IA no configurada**. Por favor, ve a la configuración de IA, selecciona un proveedor y guarda tu API key.');
+    return;
+  }
+
+  const loadingDiv = document.getElementById('chat-loading');
+  loadingDiv.style.display = 'block';
+
+  try {
+    const messages = [];
+    if (ai.prompt) {
+      messages.push({ role: 'system', content: ai.prompt });
+    }
+    for (let i = 0; i < chatHistory.length - 1; i++) {
+      messages.push({ role: chatHistory[i].role, content: chatHistory[i].content });
+    }
+    messages.push({ role: 'user', content: message });
+
+    const temp = ai.temp || 0.7;
+    const maxTokens = ai.tokens || 600;
+    let url, headers, body;
+
+    headers = { 'Content-Type': 'application/json' };
+
+    switch (ai.provider) {
+      case 'mistral':
+        url = 'https://api.mistral.ai/v1/chat/completions';
+        headers['Authorization'] = 'Bearer ' + ai.key;
+        body = {
+          model: ai.model || 'mistral-large-latest',
+          messages: messages,
+          max_tokens: maxTokens,
+          temperature: temp
+        };
+        break;
+      case 'groq':
+        url = 'https://api.groq.com/openai/v1/chat/completions';
+        headers['Authorization'] = 'Bearer ' + ai.key;
+        body = {
+          model: ai.model || 'llama3-70b-8192',
+          messages: messages,
+          max_tokens: maxTokens,
+          temperature: temp
+        };
+        break;
+      case 'huggingface':
+        url = `https://api-inference.huggingface.co/models/${ai.model || 'mistralai/Mistral-7B-Instruct-v0.3'}`;
+        headers['Authorization'] = 'Bearer ' + ai.key;
+        let promptHF = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+        body = {
+          inputs: promptHF,
+          parameters: { max_new_tokens: maxTokens, temperature: temp }
+        };
+        break;
+      case 'openai':
+        url = 'https://api.openai.com/v1/chat/completions';
+        headers['Authorization'] = 'Bearer ' + ai.key;
+        body = {
+          model: ai.model || 'gpt-4o-mini',
+          messages: messages,
+          max_tokens: maxTokens,
+          temperature: temp
+        };
+        break;
+      default:
+        throw new Error('Proveedor no soportado en chat.');
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000)
+    });
+
+    const rawText = await res.text();
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${rawText.substring(0, 200)}`);
+    }
+
+    let data;
+    try { data = JSON.parse(rawText); } catch(e) { throw new Error('Respuesta no válida'); }
+
+    let responseText = '';
+    if (ai.provider === 'huggingface') {
+      responseText = data.generated_text || 'Sin respuesta';
+    } else {
+      responseText = data.choices?.[0]?.message?.content || 'Sin respuesta';
+    }
+
+    chatHistory.push({ role: 'assistant', content: responseText });
+    if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+
+    displayMessage('assistant', responseText);
+  } catch (err) {
+    console.error(err);
+    displayMessage('assistant', `❌ **Error en la comunicación con la IA:**\n\n${err.message}\n\nVerifica tu configuración (API key, modelo) y que tengas saldo/disponibilidad.`);
+  } finally {
+    loadingDiv.style.display = 'none';
+  }
+}
+
+function aiProviderChange() {
+  const p = document.getElementById('ai-prov').value;
+  const models = {
+    mistral:      'mistral-large-latest',
+    groq:         'llama3-70b-8192',
+    huggingface:  'mistralai/Mistral-7B-Instruct-v0.3',
+    openai:       'gpt-4o-mini',
+    gemini:       'gemini-pro',
+    none:         ''
+  };
+  const sel = document.getElementById('ai-model-sel');
+  const inp = document.getElementById('ai-model');
+  const hint = document.getElementById('ai-key-hint');
+  const hints = {
+    mistral:     'Mistral: <a onclick="window.open(\'https://console.mistral.ai\',\'_blank\')" style="color:var(--gr);cursor:pointer;">console.mistral.ai</a> → API Keys → Create',
+    groq:        'Groq: <a onclick="window.open(\'https://console.groq.com\',\'_blank\')" style="color:var(--gr);cursor:pointer;">console.groq.com</a> → API Keys → Create Key',
+    huggingface: 'HuggingFace: <a onclick="window.open(\'https://huggingface.co/settings/tokens\',\'_blank\')" style="color:var(--gr);cursor:pointer;">hf.co/settings/tokens</a> → New token',
+    openai:      'OpenAI: <a onclick="window.open(\'https://platform.openai.com/api-keys\',\'_blank\')" style="color:var(--gr);cursor:pointer;">platform.openai.com/api-keys</a>',
+    gemini:      'Google: <a onclick="window.open(\'https://aistudio.google.com/app/apikey\',\'_blank\')" style="color:var(--gr);cursor:pointer;">aistudio.google.com</a> (necesita VPN)',
+    none:        ''
+  };
+  if (inp) inp.value = models[p] || '';
+  if (sel) sel.value = models[p] || sel.options[0]?.value;
+  if (hint) hint.innerHTML = hints[p] || '';
+}
+
+const PROMPTS = {
+  quantum:   'Eres el asistente de QCOL (Quantum Computing Open Lab), creado por Franci Laffita Camargo, estudiante de Física Nuclear. Ayudas con Qiskit, Cirq, PennyLane, QuTiP, circuitos cuánticos y física cuántica. Responde en español, de forma concisa y técnicamente precisa.',
+  teacher:   'Eres un profesor experto en computación cuántica del ecosistema QCOL. Explicas conceptos de forma clara y pedagógica, con ejemplos prácticos. Usas analogías para hacer accesibles los conceptos difíciles. Responde siempre en español.',
+  concise:   'Eres el asistente cuántico de QCOL. Responde siempre en español, de forma muy concisa. Máximo 3-4 líneas por respuesta. Solo lo esencial. Para código Qiskit, muestra directamente el código.',
+  bilingual: 'You are the QCOL quantum computing assistant. Respond in both Spanish and English. First answer in Spanish, then provide the English translation. Be concise and technically precise.',
+  code:      'Eres el asistente de código cuántico de QCOL. Tu especialidad es generar código Qiskit y Cirq. Cuando te pidan un circuito o algoritmo, responde directamente con el código Python funcional, con comentarios breves. Usa siempre sintaxis moderna de Qiskit 1.x.'
+};
+
+function setPrompt(type) {
+  const el = document.getElementById('ai-prompt');
+  if (el && PROMPTS[type]) {
+    el.value = PROMPTS[type];
+    notify('Prompt: ' + type);
+  }
+}
+function saveAI() {
+  const ai = {
+    provider: document.getElementById('ai-prov').value,
+    key:      document.getElementById('ai-key').value.trim(),
+    model:    document.getElementById('ai-model').value.trim(),
+    prompt:   document.getElementById('ai-prompt').value.trim(),
+    temp:     parseFloat(document.getElementById('ai-temp')?.value || '0.7'),
+    tokens:   parseInt(document.getElementById('ai-tokens')?.value || '600'),
+    lang:     document.getElementById('ai-lang')?.value || 'es',
+  };
+  localStorage.setItem('qcol_ai', JSON.stringify(ai));
+  postToCore('QCOL_SAVE', { key: 'qcol_ai', val: ai });
+  notify('✅ IA guardada — ' + ai.provider + ' · ' + ai.model);
+  addSysLog('IA configurada: ' + ai.provider + ' · ' + ai.model, 'ok');
+  document.getElementById('ai-dot').className = ai.provider !== 'none' ? 'sdot ok' : 'sdot off';
+  document.getElementById('ai-status').textContent = ai.provider !== 'none'
+    ? '✅ ' + ai.provider + ' — ' + ai.model
+    : 'Sin configurar';
+}
+async function testAI() {
+  const ai = getAI();
+  if (ai.provider === 'none' || !ai.key) { notify('Configura la IA primero'); return; }
+  notify('Probando IA...');
+  const temp = ai.temp || 0.7;
+  const tokens = ai.tokens || 600;
+  try {
+    let url, body, headers;
+    headers = {'Content-Type':'application/json'};
+
+    if (ai.provider === 'mistral') {
+      url = 'https://api.mistral.ai/v1/chat/completions';
+      headers['Authorization'] = 'Bearer ' + ai.key;
+      body = { model: ai.model || 'mistral-large-latest',
+               messages:[{role:'user',content:'Di "QCOL OK"'}],
+               max_tokens:10, temperature: temp };
+    } else if (ai.provider === 'groq') {
+      url = 'https://api.groq.com/openai/v1/chat/completions';
+      headers['Authorization'] = 'Bearer ' + ai.key;
+      body = { model: ai.model || 'llama3-70b-8192',
+               messages:[{role:'user',content:'Di "QCOL OK"'}],
+               max_tokens:10, temperature: temp };
+    } else if (ai.provider === 'huggingface') {
+      url = `https://api-inference.huggingface.co/models/${ai.model || 'mistralai/Mistral-7B-Instruct-v0.3'}`;
+      headers['Authorization'] = 'Bearer ' + ai.key;
+      body = { inputs: 'Di "QCOL OK"', parameters: { max_new_tokens: 10 } };
+    } else if (ai.provider === 'openai') {
+      url = 'https://api.openai.com/v1/chat/completions';
+      headers['Authorization'] = 'Bearer ' + ai.key;
+      body = { model: ai.model || 'gpt-4o-mini',
+               messages:[{role:'user',content:'Di "QCOL OK"'}],
+               max_tokens:10, temperature: temp };
+    } else {
+      notify('Prueba manual para este proveedor'); return;
+    }
+
+    const res = await fetch(url, {
+      method:'POST', headers,
+      body:JSON.stringify(body),
+      signal:AbortSignal.timeout(15000)
+    });
+    const rawText = await res.text();
+    if (rawText.trim().startsWith('<') || rawText.trim().startsWith('<!')) {
+      notify('❌ CORS bloqueado — ' + ai.provider + ' no acepta llamadas directas desde el navegador');
+      return;
+    }
+    let d;
+    try { d = JSON.parse(rawText); } catch(e) {
+      notify('❌ Respuesta no válida: ' + rawText.slice(0, 60));
+      return;
+    }
+    if (res.ok) {
+      const resp = d.choices?.[0]?.message?.content?.trim()
+                || d.generated_text
+                || '✅ OK';
+      notify('✅ IA conectada: ' + resp);
+      document.getElementById('ai-dot').className = 'sdot ok';
+      document.getElementById('ai-status').textContent = '✅ Conectada — ' + ai.provider + ' · ' + ai.model;
+      addSysLog('IA probada: ' + ai.provider + ' · ' + ai.model, 'ok');
+    } else throw new Error(d.error?.message || d.message || 'Error ' + res.status);
+  } catch(e) {
+    notify('❌ ' + e.message);
+    addSysLog('Error IA: ' + e.message, 'err');
+  }
+}
+
 loadSaved();
 addSysLog('Configuración del ecosistema iniciada','info');
 addSysLog('QCOL v3.0.0 — Sistema modular','info');

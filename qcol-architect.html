@@ -2253,6 +2253,12 @@ function saveCircuit() {
     if (idx >= 0) all[idx] = entry;
     else all.unshift(entry);
     localStorage.setItem(key, JSON.stringify(all.slice(0, 100)));
+    // Sincronizar circuito a DB de GitHub vía postMessage al core
+    window.parent.postMessage({
+        type: 'QCOL_SAVE_CIRCUIT',
+        username: curUser?.username,
+        circuit: { name: name, code: code, lib: curLib, date: new Date().toLocaleDateString() }
+    }, '*');
     notify('✅ Guardado: ' + name);
     renderSaveList();
 }
