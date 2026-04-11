@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@14/dist/markdown-it.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/highlight.min.js"></script>
 <style>
+/* ===== ESTILOS BASE (heredados) ===== */
 :root{
   --bg:#0a0e1a;--bg2:#0d1117;--bg3:#0c1525;
   --p:#111827;--p2:#1a2540;
@@ -23,14 +24,14 @@
 html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--ex);}
 body{display:flex;flex-direction:column;overflow:hidden;}
 
-/* ── NOTIF ── */
+/* ===== NOTIFICACIONES ===== */
 .notif{position:fixed;top:.7rem;right:.7rem;z-index:9999;padding:.5rem .9rem;
   background:rgba(10,14,26,.97);border:1px solid var(--cy);border-radius:8px;
   font-family:var(--orb);font-size:.58rem;color:var(--cy);
   transform:translateX(130%);transition:transform .3s;pointer-events:none;}
 .notif.show{transform:translateX(0);}
 
-/* ── ACCESS DENIED ── */
+/* ===== ACCESO DENEGADO ===== */
 .access-denied{display:none;position:fixed;inset:0;background:var(--bg);
   flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center;gap:1.2rem;}
 .access-denied.show{display:flex;}
@@ -38,7 +39,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .denied-title{font-family:var(--orb);font-size:1rem;color:var(--rd);}
 .denied-desc{font-size:.75rem;color:var(--mu);max-width:340px;line-height:1.7;}
 
-/* ── TOPBAR ── */
+/* ===== TOPBAR ===== */
 .topbar{height:40px;display:flex;align-items:center;gap:.4rem;
   padding:0 .75rem;background:#07091200;background:linear-gradient(90deg,#07091299,#080d1899);
   backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,255,221,.14);flex-shrink:0;z-index:10;}
@@ -70,7 +71,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .admin-pill{padding:.17rem .42rem;border-radius:10px;font-family:var(--orb);font-size:.42rem;
   background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.18);color:var(--yw);}
 
-/* ── SECBAR ── */
+/* ===== SECBAR ===== */
 .secbar{height:30px;display:flex;align-items:stretch;
   background:#080b14;border-bottom:1px solid var(--bd3);flex-shrink:0;padding:0 .45rem;gap:.08rem;}
 .stab{display:flex;align-items:center;gap:.22rem;padding:0 .6rem;
@@ -91,26 +92,24 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .tbtn.rst{background:rgba(255,215,0,.07);border-color:rgba(255,215,0,.25);color:var(--yw);}
 .tbtn.rst:hover{background:rgba(255,215,0,.13);}
 
-/* ── MAIN ── */
+/* ===== MAIN ===== */
 .main{flex:1;overflow:hidden;display:flex;min-height:0;}
 #view-notebook{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
 .nb-scroll{flex:1;overflow-y:auto;padding:.6rem 0 2rem;}
 .nb-scroll::-webkit-scrollbar{width:5px;}
 .nb-scroll::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px;}
 
-/* ── CELDA BASE ── */
+/* ===== CELDA ===== */
 .nb-cell{display:flex;margin:.22rem auto;
   width:min(940px,97%);position:relative;
   border-radius:8px;border:1px solid transparent;transition:border-color .15s,box-shadow .15s;}
 .nb-cell:hover{border-color:rgba(0,255,221,.18);box-shadow:0 2px 12px rgba(0,0,0,.3);}
 .nb-cell.active{border-color:rgba(0,255,221,.45);box-shadow:0 2px 20px rgba(0,255,221,.06);}
 .nb-cell.running{border-color:rgba(0,136,255,.5);box-shadow:0 0 18px rgba(0,136,255,.08);}
-/* Celda Qiskit — borde izquierdo cian */
 .nb-cell.qk-cell{border-left:3px solid rgba(0,255,221,.35);}
 .nb-cell.qk-cell:hover{border-color:rgba(0,255,221,.35);border-left-color:rgba(0,255,221,.6);}
 .nb-cell.qk-cell.active{border-color:rgba(0,255,221,.55);border-left-color:var(--cy);}
 
-/* ── GUTTER ── */
 .cell-gutter{width:48px;flex-shrink:0;display:flex;flex-direction:column;
   align-items:center;padding:.5rem .2rem 0;gap:.25rem;}
 .cell-num{font-family:var(--mono);font-size:.56rem;color:var(--mu2);min-width:20px;text-align:center;}
@@ -124,7 +123,6 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .cell-run-btn.spinning{animation:sp .7s linear infinite;border-color:var(--gr);color:var(--gr);}
 @keyframes sp{to{transform:rotate(360deg);}}
 
-/* ── BODY ── */
 .cell-body{flex:1;display:flex;flex-direction:column;min-width:0;padding:.32rem 0;}
 .cell-type-badge{display:inline-flex;align-items:center;gap:.22rem;
   font-family:var(--orb);font-size:.4rem;color:var(--mu);
@@ -133,14 +131,13 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .ctb-qk{color:var(--cy);}
 .ctb-md{color:rgba(0,255,136,.7);}
 
-/* ── EDITOR ── */
+/* ===== EDITOR ===== */
 .cell-code-area{position:relative;background:var(--bg2);
   border:1px solid var(--bd3);border-radius:6px;overflow:hidden;min-height:42px;
   transition:border-color .15s;}
 .nb-cell.active .cell-code-area{border-color:rgba(0,255,221,.3);}
 .qk-cell .cell-code-area{border-color:rgba(0,255,221,.15);background:#0a1018;}
 .qk-cell.active .cell-code-area{border-color:rgba(0,255,221,.35);}
-/* Número de línea integrado */
 .cell-code-wrap{display:flex;height:100%;}
 .cell-linenos{width:32px;flex-shrink:0;padding:.55rem .3rem;
   background:rgba(0,0,0,.25);border-right:1px solid var(--bd3);
@@ -161,14 +158,13 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .cell-textarea::-webkit-scrollbar{width:4px;height:4px;}
 .cell-textarea::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
 
-/* ── OUTPUT — terminal JupyterLab ── */
+/* ===== OUTPUT ===== */
 .cell-output-area{margin-top:.28rem;border-radius:6px;overflow:hidden;
   border:1px solid var(--bd3);background:#050810;}
 .out-header{display:flex;align-items:center;gap:.4rem;padding:.25rem .65rem;
   background:rgba(0,0,0,.4);border-bottom:1px solid var(--bd3);font-family:var(--orb);font-size:.4rem;}
 .out-header-ok{color:var(--gr);}
 .out-header-err{color:var(--rd);}
-/* Texto terminal */
 .out-stdout{padding:.5rem .7rem;font-family:var(--mono);font-size:.67rem;line-height:1.62;
   white-space:pre-wrap;overflow-x:auto;color:#c8e0ff;background:#050810;
   max-height:400px;overflow-y:auto;}
@@ -177,19 +173,16 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .out-stderr{padding:.5rem .7rem;font-family:var(--mono);font-size:.67rem;line-height:1.62;
   white-space:pre-wrap;color:#ff9999;background:rgba(255,60,60,.04);
   border-top:1px solid rgba(255,68,102,.15);}
-/* Circuito texto — estilo visual mejorado */
 .out-circuit-text{padding:.5rem .7rem;font-family:var(--mono);font-size:.65rem;line-height:1.7;
   white-space:pre;overflow-x:auto;color:var(--cl);background:#040d18;
   border-top:1px solid rgba(0,170,255,.1);}
 .out-circuit-text::-webkit-scrollbar{height:4px;}
 .out-circuit-text::-webkit-scrollbar-thumb{background:var(--bd2);}
-/* Bloch sphere canvas por celda */
 .out-bloch-wrap{padding:.55rem .7rem;background:#04080f;
   border-top:1px solid rgba(0,255,221,.08);display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-start;}
 .bloch-item{display:flex;flex-direction:column;align-items:center;gap:.25rem;}
 .bloch-item canvas{border-radius:50%;box-shadow:0 0 20px rgba(0,136,255,.15);}
 .bloch-item-lbl{font-family:var(--mono);font-size:.52rem;color:var(--mu);}
-/* Probabilidades */
 .out-probs{padding:.55rem .7rem;background:#040c18;
   border-top:1px solid rgba(0,136,255,.1);}
 .out-probs-title{font-family:var(--orb);font-size:.42rem;color:var(--mu);
@@ -203,15 +196,13 @@ body{display:flex;flex-direction:column;overflow:hidden;}
   background:linear-gradient(90deg,rgba(0,136,255,.8),rgba(0,255,221,.8));}
 .prob-pct{color:var(--tx2);min-width:40px;text-align:right;font-size:.62rem;}
 .prob-count{color:var(--mu);min-width:45px;text-align:right;font-size:.58rem;}
-/* Imagen matplotlib / gráficas */
 .out-img{display:block;max-width:100%;border-radius:5px;
   margin:.4rem .6rem;box-shadow:0 4px 20px rgba(0,0,0,.5);}
-/* Resultados tipo dict */
 .out-dict{padding:.5rem .7rem;font-family:var(--mono);font-size:.66rem;line-height:1.6;
   color:var(--yw);background:#060c10;border-top:1px solid rgba(255,215,0,.08);
   white-space:pre-wrap;}
 
-/* ── MARKDOWN ── */
+/* ===== MARKDOWN ===== */
 .cell-md-rendered{padding:.55rem .7rem;font-size:.74rem;line-height:1.72;color:var(--tx);}
 .cell-md-rendered h1{font-family:var(--orb);font-size:1.05rem;color:var(--bl2);
   margin:.55rem 0 .3rem;padding-bottom:.25rem;border-bottom:1px solid rgba(0,136,255,.2);}
@@ -234,9 +225,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .cell-md-rendered th,.cell-md-rendered td{border:1px solid var(--bd2);padding:.28rem .5rem;}
 .cell-md-rendered th{background:rgba(0,136,255,.08);color:var(--bl2);}
 .cell-md-rendered img{max-width:100%;border-radius:5px;}
-/* Math display */
 .cell-md-rendered .MJX-TEX{color:var(--nm);}
-/* Markdown editor split */
 .md-split{display:flex;gap:.4rem;background:var(--bg2);
   border:1px solid var(--bd);border-radius:6px;min-height:130px;}
 .md-editor-pane{flex:1;border-right:1px solid var(--bd);}
@@ -252,7 +241,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
   padding:.52rem;font-family:var(--mono);font-size:.68rem;
   line-height:1.65;color:var(--tx2);resize:none;outline:none;}
 
-/* ── TOOLBAR ── */
+/* ===== TOOLBAR ===== */
 .cell-toolbar{display:none;position:absolute;top:.25rem;right:.4rem;
   gap:.15rem;align-items:center;z-index:5;}
 .nb-cell:hover .cell-toolbar,.nb-cell.active .cell-toolbar{display:flex;}
@@ -266,7 +255,6 @@ body.expo-mode .nb-cell.qk-cell .cell-toolbar .ct-btn:not(.ct-run){display:none!
   display:flex;align-items:center;justify-content:center;transition:all .14s;}
 .ct-btn:hover{border-color:var(--bl2);color:var(--bl2);}
 .ct-btn.danger:hover{border-color:var(--rd);color:var(--rd);}
-/* Botón restaurar celda */
 .cell-restore-btn{display:none;position:absolute;bottom:.25rem;right:.4rem;
   padding:.1rem .3rem;background:rgba(255,215,0,.07);
   border:1px solid rgba(255,215,0,.22);border-radius:3px;
@@ -287,7 +275,7 @@ body.expo-mode .nb-cell[data-ctype="code"] .cell-restore-btn{display:block;}
   width: 100%;
 }
 
-/* ── ADD ROW ── */
+/* ===== ADD ROW ===== */
 .add-cell-row{width:min(940px,97%);margin:.03rem auto;height:14px;
   display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s;}
 .add-cell-row:hover{opacity:1;}
@@ -305,7 +293,7 @@ body.expo-mode .nb-bottom{display:none;}
   transition:all .18s;text-align:center;}
 .nb-add-big:hover{background:rgba(0,255,221,.05);border-color:rgba(0,255,221,.45);color:var(--cy);}
 
-/* ── GESTIONAR ── */
+/* ===== GESTIONAR ===== */
 #view-manage{display:none;flex:1;flex-direction:column;overflow:hidden;}
 .manage-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden;}
 .manage-bar{display:flex;align-items:center;gap:.4rem;padding:.5rem .8rem;
@@ -345,7 +333,7 @@ body.expo-mode .nb-bottom{display:none;}
 .nb-empty-ttl{font-family:var(--orb);font-size:.75rem;color:var(--mu);}
 .nb-empty-sub{font-size:.64rem;color:var(--mu);opacity:.65;max-width:270px;line-height:1.55;}
 
-/* ── STATUSBAR ── */
+/* ===== STATUSBAR ===== */
 .statusbar{height:20px;display:flex;align-items:center;gap:.55rem;
   padding:0 .75rem;background:#060a10;border-top:1px solid var(--bd3);
   font-family:var(--mono);font-size:.5rem;color:var(--mu);flex-shrink:0;}
@@ -356,7 +344,7 @@ body.expo-mode .nb-bottom{display:none;}
 .sb-right{margin-left:auto;display:flex;gap:.55rem;}
 #sb-save-status{color:var(--gr);}
 
-/* ── MODAL ── */
+/* ===== MODAL ===== */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);
   z-index:800;align-items:center;justify-content:center;}
 .modal-ov.open{display:flex;}
@@ -378,18 +366,18 @@ textarea.fi{resize:vertical;min-height:58px;line-height:1.5;}
   border:1px solid var(--bd2);border-radius:6px;color:var(--mu);
   font-family:var(--orb);font-size:.5rem;cursor:pointer;}
 
-/* ── SYNTAX COLORS ── */
+/* ===== SINTAXIS ===== */
 .kw{color:var(--kw);font-weight:600;}
 .fn{color:var(--fn);}
 .st{color:var(--st);}
 .nm{color:var(--nm);}
 .cmt{color:var(--cmt);font-style:italic;}
 .cl{color:var(--cl);}
-.qt{color:var(--qt);}/* Qiskit class names */
-.blt{color:#ffb86c;}/* builtins */
-.op{color:#ff79c6;}/* operators */
+.qt{color:var(--qt);}
+.blt{color:#ffb86c;}
+.op{color:#ff79c6;}
 
-/* ── DRAG ── */
+/* ===== DRAG ===== */
 .nb-cell.drag-over{border-color:var(--cy)!important;box-shadow:0 0 0 1px rgba(0,255,221,.2)!important;}
 .nb-cell[draggable]{cursor:grab;}
 .nb-cell[draggable]:active{cursor:grabbing;}
@@ -505,13 +493,49 @@ textarea.fi{resize:vertical;min-height:58px;line-height:1.5;}
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-// QCOL QUANTUM NOTEBOOK v5.0 — Output completo + Expo mode
+// QCOL QUANTUM NOTEBOOK v6.0 — Circuito visual mejorado
 // ═══════════════════════════════════════════════════════════════
 let curUser=null,engineURL='',engineOK=false,running=false;
 let curView='notebook',cells=[],curCellId=null,execCounter=0;
 let _initialized=false,lastSaveTime=Date.now(),debounceTimer=null,dragSrcId=null;
 let _expositionMode=false,_originalCells=null;
 let md=null;
+
+// ═══════════════════════════════════════════════════════════════
+// DEFINICIÓN DE PUERTAS (estilo Arquitecto Cuántico)
+// ═══════════════════════════════════════════════════════════════
+const GATES = {
+  '1q': [
+    { id: 'H', sym: 'H', bg: '#1a5fb4', glow:'#1a5fb4', desc: 'Hadamard', code: 'qc.h({q})' },
+    { id: 'X', sym: 'X', bg: '#c01c28', glow:'#c01c28', desc: 'Pauli-X', code: 'qc.x({q})' },
+    { id: 'Y', sym: 'Y', bg: '#7a3e99', glow:'#7a3e99', desc: 'Pauli-Y', code: 'qc.y({q})' },
+    { id: 'Z', sym: 'Z', bg: '#1c71d8', glow:'#1c71d8', desc: 'Pauli-Z', code: 'qc.z({q})' },
+    { id: 'S', sym: 'S', bg: '#c64600', glow:'#c64600', desc: 'Fase π/2', code: 'qc.s({q})' },
+    { id: 'T', sym: 'T', bg: '#26a269', glow:'#26a269', desc: 'Fase π/4', code: 'qc.t({q})' },
+    { id: 'SX', sym: '√X', bg: '#c01c28', glow:'#c01c28', desc: 'Raíz X', code: 'qc.sx({q})' },
+    { id: 'RX', sym: 'Rx', bg: '#0077c2', glow:'#0077c2', desc: 'Rotación X', code: 'qc.rx(np.pi/4, {q})' },
+    { id: 'RY', sym: 'Ry', bg: '#005f6a', glow:'#005f6a', desc: 'Rotación Y', code: 'qc.ry(np.pi/4, {q})' },
+    { id: 'RZ', sym: 'Rz', bg: '#5e35b1', glow:'#5e35b1', desc: 'Rotación Z', code: 'qc.rz(np.pi/4, {q})' }
+  ],
+  '2q': [
+    { id: 'CX', sym: 'CX', bg: '#007070', glow:'#007070', desc: 'CNOT', code: 'qc.cx({q},{q2})', multi: true },
+    { id: 'CZ', sym: 'CZ', bg: '#00695c', glow:'#00695c', desc: 'CZ', code: 'qc.cz({q},{q2})', multi: true },
+    { id: 'SWAP', sym: 'SW', bg: '#1565c0', glow:'#1565c0', desc: 'SWAP', code: 'qc.swap({q},{q2})', multi: true }
+  ],
+  '3q': [
+    { id: 'CCX', sym: 'CCX', bg: '#005f6a', glow:'#005f6a', desc: 'Toffoli', code: 'qc.ccx({q},{q2},{q3})', triple: true },
+    { id: 'CSW', sym: 'CSW', bg: '#283593', glow:'#283593', desc: 'Fredkin', code: 'qc.cswap({q},{q2},{q3})', triple: true }
+  ],
+  'nq': [
+    { id: 'MCX', sym: 'MCX', bg: '#005f6a', glow:'#00aaaa', desc: 'Multi-CX', code: 'qc.mcx([{q},{q2}], {q3})', triple: true },
+    { id: 'CH',  sym: 'CH',  bg: '#1a5fb4', glow:'#4488cc', desc: 'CH',   code: 'qc.ch({q},{q2})', multi: true },
+    { id: 'CY',  sym: 'CY',  bg: '#7a3e99', glow:'#aa66cc', desc: 'CY',    code: 'qc.cy({q},{q2})', multi: true },
+    { id: 'RZZ', sym: 'Rzz', bg: '#5e35b1', glow:'#8860d0', desc: 'RZZ',   code: 'qc.rzz(np.pi/4,{q},{q2})', multi: true },
+  ],
+  'meas': [
+    { id: 'M', sym: 'M', bg: '#6d4c41', glow:'#6d4c41', desc: 'Medir', code: 'qc.measure({q},{q})' }
+  ]
+};
 
 function postCore(type,data={}){try{window.parent.postMessage({type,...data},'*');}catch(e){}}
 function notify(msg,ms=2800){const el=document.getElementById('notif');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),ms);}
@@ -599,7 +623,6 @@ import io, base64
 
 // ── PARSEAR RESPUESTA DEL SERVIDOR ────────────────────────────
 function parseServerResponse(raw){
-  // raw.data[0] puede ser string JSON o dict ya parseado
   let d=null;
   try{
     const item=raw?.data?.[0];
@@ -615,15 +638,12 @@ function renderOutput(outArea, d, elapsed, cellId){
   const t0=elapsed?`${elapsed}s`:null;
   let html='';
 
-  // Cabecera
   const isOk=d.success!==false;
   const hdrCls=isOk?'out-header-ok':'out-header-err';
   const hdrIcon=isOk?'✅':'❌';
   html+=`<div class="out-header ${hdrCls}">${hdrIcon} ${isOk?'Ejecutado':'Error'}${t0?' · '+t0:''}</div>`;
 
-  // ── STDOUT completo ──
   if(d.output&&d.output.trim()){
-    // Detectar si la salida contiene un diagrama de circuito (líneas con ─, │, ┤, ├, etc.)
     const lines=d.output.split('\n');
     let circuitBlock=[];
     let textBlock=[];
@@ -637,27 +657,22 @@ function renderOutput(outArea, d, elapsed, cellId){
     if(textBlock.length&&textBlock.join('').trim())html+=buildTextOut(textBlock.join('\n'));
   }
 
-  // ── STDERR ──
   if(d.stderr&&d.stderr.trim()){
     html+=`<div class="out-stderr">${escH(d.stderr)}</div>`;
   }
 
-  // ── PROBABILIDADES / COUNTS ──
   if(d.bloch&&d.bloch.probabilities){
     html+=buildProbsOut(d.bloch.probabilities,d.bloch.shots||1024,d.bloch.simulator||'AerSimulator');
-    // Añadir histograma canvas
     html+=buildHistogramOut(d.bloch.probabilities,d.bloch.shots||1024);
   }else if(d.counts){
     html+=buildProbsOut(d.counts,d.bloch?.shots||1024,'');
     html+=buildHistogramOut(d.counts,d.bloch?.shots||1024);
   }
 
-  // ── ESFERA DE BLOCH ──
   if(d.bloch&&d.bloch.probabilities){
     html+=buildBlochOut(d.bloch.probabilities);
   }
 
-  // ── IMAGEN matplotlib ──
   if(d.plot_png){
     html+=`<div style="padding:.3rem .5rem;background:#04080e;border-top:1px solid rgba(0,136,255,.08);">
       <div style="font-family:var(--orb);font-size:.4rem;color:var(--mu);padding:.2rem 0 .3rem;letter-spacing:.05em;">GRÁFICA MATPLOTLIB</div>
@@ -665,7 +680,6 @@ function renderOutput(outArea, d, elapsed, cellId){
     </div>`;
   }
 
-  // ── IMAGEN extra (plot_svg como fallback) ──
   if(d.plot_svg){
     html+=`<div style="padding:.3rem .5rem;background:#04080e;border-top:1px solid rgba(0,136,255,.08);">
       <div style="font-family:var(--orb);font-size:.4rem;color:var(--mu);padding:.2rem 0 .3rem;">DIAGRAMA SVG</div>
@@ -673,9 +687,7 @@ function renderOutput(outArea, d, elapsed, cellId){
     </div>`;
   }
 
-  // ── ERROR detallado ──
   if(!isOk&&d.output){
-    // Extraer línea de error
     const lineMatch = d.output.match(/[Ll]ine\s+(\d+)|línea\s+(\d+)/i);
     const errLine = lineMatch ? parseInt(lineMatch[1] || lineMatch[2]) : null;
     if (errLine && cellId) {
@@ -690,7 +702,6 @@ function renderOutput(outArea, d, elapsed, cellId){
 
 function buildTextOut(text){
   if(!text.trim())return'';
-  // Detectar si es dict de resultados como {'00': 512, '11': 512}
   if(/^\{['"0-9a-zA-Z_,:\s]+\}$/.test(text.trim())){
     return`<div class="out-dict">${escH(text)}</div>`;
   }
@@ -699,7 +710,6 @@ function buildTextOut(text){
 
 function buildCircuitOut(text){
   if(!text.trim())return'';
-  // Colorear el diagrama ASCII del circuito
   let colored=escH(text);
   colored=colored.replace(/([HXYZSTshxyzts])\s*(?=─|├|┤|\s)/g,'<span style="color:#00aaff;font-weight:700">$1</span>');
   colored=colored.replace(/(cx|cy|cz|ch|rx|ry|rz|ccx|mcx)\s*(?=[\s─])/gi,'<span style="color:#00ffdd;font-weight:700">$1</span>');
@@ -717,7 +727,6 @@ function buildProbsOut(probs,shots,sim){
   if(!entries.length)return'';
   const total=entries.reduce((s,[,v])=>s+v,0);
   const rows=entries.map(([st,v])=>{
-    // v puede ser count (int) o probability (float)
     const isCount=v>1;
     const prob=isCount?v/total:v;
     const count=isCount?v:Math.round(v*shots);
@@ -739,7 +748,6 @@ function buildProbsOut(probs,shots,sim){
 function buildHistogramOut(probs, shots){
   const entries=Object.entries(probs).sort((a,b)=>a[0].localeCompare(a[0]));
   if(!entries.length) return '';
-  const total=entries.reduce((s,[,v])=>s+v,0);
   const canvasId='hist-'+genId();
   setTimeout(()=>{
     const canvas=document.getElementById(canvasId);
@@ -753,7 +761,6 @@ function buildHistogramOut(probs, shots){
     const barW=Math.min(40,chartW/entries.length-8);
     const maxVal=Math.max(...entries.map(([,v])=>v));
     ctx.clearRect(0,0,w,h);
-    // Grid
     ctx.strokeStyle='rgba(255,255,255,0.08)';
     ctx.lineWidth=0.5;
     for(let i=0;i<=4;i++){
@@ -763,7 +770,6 @@ function buildHistogramOut(probs, shots){
       ctx.lineTo(w-padRight,y);
       ctx.stroke();
     }
-    // Barras
     entries.forEach(([st,v],i)=>{
       const x=padLeft+i*(barW+8)+8;
       const barH=(v/maxVal)*chartH;
@@ -777,12 +783,10 @@ function buildHistogramOut(probs, shots){
       ctx.font='9px JetBrains Mono,monospace';
       ctx.textAlign='center';
       ctx.fillText(st,x+barW/2,padTop+chartH+15);
-      // Valor encima
       ctx.fillStyle='#e2ecff';
       ctx.font='bold 8px JetBrains Mono,monospace';
       ctx.fillText(v>1?v:v.toFixed(2),x+barW/2,y-3);
     });
-    // Ejes
     ctx.strokeStyle='rgba(255,255,255,0.3)';
     ctx.lineWidth=1;
     ctx.beginPath();
@@ -798,7 +802,6 @@ function buildHistogramOut(probs, shots){
 }
 
 function buildBlochOut(probs){
-  // Calcular estados de Bloch por qubit desde los counts/probs
   const qubits=Object.keys(probs)[0]?.length||0;
   if(qubits===0)return'';
   const total=Object.values(probs).reduce((s,v)=>s+v,0);
@@ -832,23 +835,18 @@ function drawBlochSphere(canvasId,theta,qi){
   const ctx=c.getContext('2d');
   const w=c.width,h=c.height,cx=w/2,cy=h/2,r=w*0.38;
   ctx.clearRect(0,0,w,h);
-  // Fondo
   const bg=ctx.createRadialGradient(cx,cy-r*.2,r*.1,cx,cy,r);
   bg.addColorStop(0,'#0d1a2e');bg.addColorStop(1,'#040810');
   ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
-  // Esfera exterior
   ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
   ctx.strokeStyle='rgba(0,136,255,.35)';ctx.lineWidth=1.2;ctx.stroke();
-  // Elipses de latitud
   [.3,.6,.9].forEach(f=>{
     ctx.beginPath();ctx.ellipse(cx,cy,r*f,r*f*.3,0,0,Math.PI*2);
     ctx.strokeStyle=`rgba(0,136,255,${.08+f*.04})`;ctx.lineWidth=.7;ctx.stroke();
   });
-  // Ejes
   ctx.strokeStyle='rgba(0,200,255,.18)';ctx.lineWidth=.8;
   ctx.beginPath();ctx.moveTo(cx-r*1.05,cy);ctx.lineTo(cx+r*1.05,cy);ctx.stroke();
   ctx.beginPath();ctx.moveTo(cx,cy-r*1.05);ctx.lineTo(cx,cy+r*1.05);ctx.stroke();
-  // Vector de estado
   const x=r*Math.sin(theta)*Math.cos(0);
   const y=-r*Math.cos(theta);
   const grad=ctx.createLinearGradient(cx,cy,cx+x,cy+y);
@@ -856,12 +854,10 @@ function drawBlochSphere(canvasId,theta,qi){
   grad.addColorStop(1,'rgba(0,255,221,1)');
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+x,cy+y);
   ctx.strokeStyle=grad;ctx.lineWidth=2.2;ctx.stroke();
-  // Punto del estado
   ctx.beginPath();ctx.arc(cx+x,cy+y,5,0,Math.PI*2);
   const dotGrad=ctx.createRadialGradient(cx+x,cy+y,0,cx+x,cy+y,5);
   dotGrad.addColorStop(0,'#ffffff');dotGrad.addColorStop(1,'#00ffdd');
   ctx.fillStyle=dotGrad;ctx.fill();
-  // Etiquetas
   ctx.font='bold 9px JetBrains Mono,monospace';ctx.fillStyle='rgba(138,160,196,.8)';
   ctx.fillText('|0⟩',cx+3,cy-r-3);ctx.fillText('|1⟩',cx+3,cy+r+11);
 }
@@ -933,7 +929,6 @@ async function runCell(id){
   running=false;
   if(rbtn)rbtn.classList.remove('spinning');
   renderCellNum(id);
-  // Forzar re-render para mostrar errorLine si existe
   if(cell.errorLine) renderCells();
 }
 function renderCellNum(id){const cell=cells.find(c=>c.id===id);if(!cell)return;const el=document.querySelector(`[data-id="${id}"] .cell-num`);if(el)el.textContent=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]';}
@@ -1065,7 +1060,6 @@ function syncCellCode(id){const cell=cells.find(c=>c.id===id);if(!cell)return;co
 function focusCell(id){curCellId=id;document.querySelectorAll('.nb-cell').forEach(el=>{el.classList.toggle('active',el.dataset.id===id);});const ta=document.getElementById('ta-'+id)||document.getElementById('mta-'+id);if(ta)ta.focus();}
 function changeCellType(id){if(_expositionMode)return;const cell=cells.find(c=>c.id===id);if(!cell)return;cell.type=cell.type==='code'||cell.type==='qiskit'?'markdown':'code';cell.mdEdit=true;renderCells();focusCell(id);}
 
-// ── BOTÓN LIMPIAR CELDA ───────────────────────────────────────
 function clearCellContent(id) {
   const cell = cells.find(c => c.id === id);
   if (!cell) return;
@@ -1125,11 +1119,9 @@ function buildAddRow(idx){
   return row;
 }
 
-// Clases Qiskit para coloreo especial
 const QK_CLASSES=new Set(['QuantumCircuit','QuantumRegister','ClassicalRegister','AerSimulator','Statevector','DensityMatrix','Operator','Sampler','Estimator','transpile','plot_histogram','plot_bloch_multivector','plot_state_city']);
 const BUILTINS=new Set(['print','len','range','int','float','str','list','dict','set','tuple','type','isinstance','enumerate','zip','map','filter','sum','max','min','abs','round','sorted','reversed','open','input','format','repr','hash','id','callable','hasattr','getattr','setattr','delattr','super','property','classmethod','staticmethod','object']);
 
-// ── HIGHLIGHT CORREGIDO (sin class= visible) ──────────────────
 function highlight(code, isQk=false){
   const KW=new Set(['import','from','as','def','class','return','if','else','elif',
     'for','while','in','not','and','or','True','False','None','with','try','except',
@@ -1173,6 +1165,12 @@ function buildLinenos(code, errorLine){
   }).join('');
 }
 
+function buildCircuitVisualization(cell) {
+  // Esta función genera un SVG del circuito similar al Arquitecto Cuántico
+  // (Se implementará en futuras versiones, actualmente se usa la salida de texto)
+  return '';
+}
+
 function buildCellEl(cell,i){
   const el=document.createElement('div');
   const isQk=cell.type==='qiskit';
@@ -1190,7 +1188,6 @@ function buildCellEl(cell,i){
 
   const execLbl=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]';
 
-  // Toolbar
   const toolbar=_expositionMode
     ?`<div class="cell-toolbar">${isCode?`<button class="ct-btn ct-run" onclick="event.stopPropagation();runCell('${cell.id}')" title="Ejecutar">▶</button>`:''}
       </div>`
@@ -1296,7 +1293,7 @@ function onCellInput(id){
     const cell=cells.find(c=>c.id===id);
     if(cell){
       cell.code=ta.value;
-      cell.errorLine=null; // limpiar error al editar
+      cell.errorLine=null;
     }
     const isQk=cell?.type==='qiskit';
     syn.innerHTML=highlight(ta.value,isQk)+'\n';
@@ -1324,7 +1321,6 @@ function onCellKeydown(e,id){
   if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart,en=ta.selectionEnd;ta.value=ta.value.substring(0,s)+'    '+ta.value.substring(en);ta.selectionStart=ta.selectionEnd=s+4;onCellInput(id);return;}
   if(e.shiftKey&&e.key==='Enter'){e.preventDefault();runCell(id);const idx=cells.findIndex(c=>c.id===id);if(idx<cells.length-1)focusCell(cells[idx+1].id);else if(!_expositionMode)addCellAt(-1,'code');return;}
   if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();runCell(id);}
-  // Navegación entre celdas
   if(e.ctrlKey&&e.key==='ArrowUp'){
     e.preventDefault();
     const idx=cells.findIndex(c=>c.id===id);
@@ -1349,7 +1345,6 @@ function onMdKeydown(e,id){
   if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();syncCellCode(id);const cell=cells.find(c=>c.id===id);if(cell){cell.mdEdit=false;renderCells();}const idx=cells.findIndex(c=>c.id===id);if(idx<cells.length-1)focusCell(cells[idx+1].id);}
 }
 
-// Navegación global con flechas cuando no se edita
 window.addEventListener('keydown', e => {
   if (!curCellId) return;
   if (document.activeElement.tagName === 'TEXTAREA') return;
@@ -1425,7 +1420,6 @@ window.addEventListener('message',e=>{
   }
 });
 
-// Escuchar cambios en localStorage (cuando Fundador cambia URL)
 window.addEventListener('storage',e=>{
   if(e.key==='qcol_colab_url'&&e.newValue){
     engineURL=e.newValue;
@@ -1433,7 +1427,6 @@ window.addEventListener('storage',e=>{
   }
 });
 
-// Pedir usuario
 postCore('QCOL_GET_USER');
 setTimeout(()=>{if(!_initialized){try{const s=localStorage.getItem('qcol_cur_user');if(s)showUI(JSON.parse(s));}catch(e){}}},700);
 setTimeout(()=>{if(!_initialized){document.getElementById('access-denied').classList.add('show');document.getElementById('topbar').style.display='flex';_initialized=true;}},3000);
@@ -1441,7 +1434,6 @@ window.addEventListener('message',e=>{const d=e.data||{};if(d.type==='QCOL_USER_
 
 function requireAuth(){const role=curUser?.role||'guest';if(role!=='admin'&&role!=='founder'&&!_expositionMode){notify('❌ Requiere cuenta Admin o Founder');postCore('QCOL_LOGIN');return false;}return true;}
 
-// Init
 function initEngine(){const s=localStorage.getItem('qcol_colab_url');if(s){engineURL=s;checkEngine();}}
 initEngine();
 setTimeout(()=>initMarkdown(),400);
