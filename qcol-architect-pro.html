@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QCOL — Arquitecto Profesional</title>
+<title>QCOL — Quantum Notebook</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500;600&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@14/dist/markdown-it.min.js"></script>
@@ -41,15 +41,15 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 /* ── TOPBAR ── */
 .topbar{height:40px;display:flex;align-items:center;gap:.4rem;
   padding:0 .75rem;background:#07091200;background:linear-gradient(90deg,#07091299,#080d1899);
-  backdrop-filter:blur(8px);border-bottom:1px solid rgba(189,147,249,.14);flex-shrink:0;z-index:10;}
+  backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,255,221,.14);flex-shrink:0;z-index:10;}
 .btn-nav-back{display:flex;align-items:center;gap:.25rem;padding:.2rem .55rem;
-  background:rgba(189,147,249,.07);border:1px solid rgba(189,147,249,.25);border-radius:5px;
-  color:var(--pu);font-family:var(--orb);font-size:.46rem;cursor:pointer;transition:all .15s;flex-shrink:0;}
-.btn-nav-back:hover{background:rgba(189,147,249,.15);border-color:var(--pu);}
+  background:rgba(0,255,221,.07);border:1px solid rgba(0,255,221,.25);border-radius:5px;
+  color:var(--cy);font-family:var(--orb);font-size:.46rem;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.btn-nav-back:hover{background:rgba(0,255,221,.15);border-color:var(--cy);}
 .tb-logo{display:flex;align-items:center;gap:.3rem;flex-shrink:0;}
 .tb-q{font-family:var(--orb);font-size:.7rem;font-weight:900;color:var(--cy);}
-.tb-pro{font-family:var(--orb);font-size:.44rem;color:var(--pu);letter-spacing:.06em;
-  background:rgba(189,147,249,.1);border:1px solid rgba(189,147,249,.2);
+.tb-pro{font-family:var(--orb);font-size:.44rem;color:var(--cy);letter-spacing:.06em;
+  background:rgba(0,255,221,.1);border:1px solid rgba(0,255,221,.2);
   padding:.08rem .3rem;border-radius:3px;}
 .tb-sep{width:1px;height:16px;background:rgba(255,255,255,.08);flex-shrink:0;}
 .nb-name-inp{background:transparent;border:none;outline:none;
@@ -61,15 +61,12 @@ body{display:flex;flex-direction:column;overflow:hidden;}
   background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.3);border-radius:4px;
   font-family:var(--orb);font-size:.43rem;color:var(--gr);flex-shrink:0;letter-spacing:.05em;}
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:.28rem;}
-.engine-url-input{background:rgba(0,0,0,.4);border:1px solid var(--bd2);border-radius:5px;
-  padding:.17rem .42rem;font-family:var(--mono);font-size:.52rem;color:var(--tx2);width:155px;outline:none;}
-.engine-url-input:focus{border-color:var(--bl2);}
 .eng-pill{padding:.17rem .44rem;border-radius:10px;font-family:var(--orb);font-size:.42rem;
   background:rgba(74,106,154,.1);border:1px solid rgba(74,106,154,.2);color:var(--mu);}
 .eng-pill.on{background:rgba(0,255,136,.07);border-color:rgba(0,255,136,.3);color:var(--gr);animation:puls 2.5s infinite;}
 @keyframes puls{0%,100%{opacity:1;}50%{opacity:.6;}}
 .user-pill{padding:.17rem .42rem;border-radius:10px;font-family:var(--orb);font-size:.44rem;
-  background:rgba(189,147,249,.07);border:1px solid rgba(189,147,249,.18);color:var(--pu);}
+  background:rgba(0,255,221,.07);border:1px solid rgba(0,255,221,.18);color:var(--cy);}
 .admin-pill{padding:.17rem .42rem;border-radius:10px;font-family:var(--orb);font-size:.42rem;
   background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.18);color:var(--yw);}
 
@@ -80,17 +77,17 @@ body{display:flex;flex-direction:column;overflow:hidden;}
   background:transparent;border:none;color:var(--mu);
   font-family:var(--orb);font-size:.44rem;cursor:pointer;
   border-bottom:2px solid transparent;transition:all .15s;}
-.stab.on{color:var(--pu);border-bottom-color:var(--pu);}
+.stab.on{color:var(--cy);border-bottom-color:var(--cy);}
 .stab:hover:not(.on){color:var(--tx2);}
 .secbar-right{margin-left:auto;display:flex;align-items:center;gap:.22rem;padding:0 .15rem;}
 .tbtn{display:flex;align-items:center;gap:.25rem;padding:.2rem .5rem;
   background:transparent;border:1px solid var(--bd2);border-radius:4px;
   color:var(--mu);font-family:var(--orb);font-size:.44rem;cursor:pointer;transition:all .15s;white-space:nowrap;}
-.tbtn:hover{border-color:var(--bl2);color:var(--bl2);background:rgba(0,136,255,.05);}
+.tbtn:hover{border-color:var(--cy);color:var(--cy);background:rgba(0,136,255,.05);}
 .tbtn.run{background:linear-gradient(135deg,#003388,var(--bl));border-color:var(--bl);color:#fff;}
 .tbtn.run:hover{box-shadow:0 2px 8px rgba(0,136,255,.4);}
 .tbtn.run-all{background:linear-gradient(135deg,#004400,#008833);border-color:#008833;color:#fff;}
-.tbtn.pub{background:linear-gradient(135deg,#3a0075,var(--pu));border-color:var(--pu);color:#fff;}
+.tbtn.pub{background:linear-gradient(135deg,#005555,var(--cy));border-color:var(--cy);color:#000;}
 .tbtn.rst{background:rgba(255,215,0,.07);border-color:rgba(255,215,0,.25);color:var(--yw);}
 .tbtn.rst:hover{background:rgba(255,215,0,.13);}
 
@@ -105,8 +102,8 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .nb-cell{display:flex;margin:.22rem auto;
   width:min(940px,97%);position:relative;
   border-radius:8px;border:1px solid transparent;transition:border-color .15s,box-shadow .15s;}
-.nb-cell:hover{border-color:rgba(189,147,249,.18);box-shadow:0 2px 12px rgba(0,0,0,.3);}
-.nb-cell.active{border-color:rgba(189,147,249,.45);box-shadow:0 2px 20px rgba(189,147,249,.06);}
+.nb-cell:hover{border-color:rgba(0,255,221,.18);box-shadow:0 2px 12px rgba(0,0,0,.3);}
+.nb-cell.active{border-color:rgba(0,255,221,.45);box-shadow:0 2px 20px rgba(0,255,221,.06);}
 .nb-cell.running{border-color:rgba(0,136,255,.5);box-shadow:0 0 18px rgba(0,136,255,.08);}
 /* Celda Qiskit — borde izquierdo cian */
 .nb-cell.qk-cell{border-left:3px solid rgba(0,255,221,.35);}
@@ -120,7 +117,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .cell-run-btn{width:23px;height:23px;border-radius:50%;background:transparent;
   border:1px solid var(--bd2);color:var(--mu);font-size:.62rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
-.nb-cell.active .cell-run-btn{border-color:var(--bl2);color:var(--bl2);}
+.nb-cell.active .cell-run-btn{border-color:var(--cy);color:var(--cy);}
 .qk-cell .cell-run-btn{border-color:rgba(0,255,221,.3);color:var(--cy);}
 .qk-cell.active .cell-run-btn{border-color:var(--cy);color:var(--cy);}
 .cell-run-btn:hover{background:rgba(0,136,255,.15);border-color:var(--bl);color:var(--bl2);transform:scale(1.12);}
@@ -140,7 +137,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
 .cell-code-area{position:relative;background:var(--bg2);
   border:1px solid var(--bd3);border-radius:6px;overflow:hidden;min-height:42px;
   transition:border-color .15s;}
-.nb-cell.active .cell-code-area{border-color:rgba(189,147,249,.3);}
+.nb-cell.active .cell-code-area{border-color:rgba(0,255,221,.3);}
 .qk-cell .cell-code-area{border-color:rgba(0,255,221,.15);background:#0a1018;}
 .qk-cell.active .cell-code-area{border-color:rgba(0,255,221,.35);}
 /* Número de línea integrado */
@@ -160,7 +157,7 @@ body{display:flex;flex-direction:column;overflow:hidden;}
   padding:.55rem .7rem;font-family:var(--mono);font-size:.7rem;
   border:none;outline:none;resize:none;line-height:1.65;
   z-index:2;white-space:pre;overflow:auto;tab-size:4;min-height:42px;
-  letter-spacing:0;}
+  letter-spacing:0; pointer-events:auto;}
 .cell-textarea::-webkit-scrollbar{width:4px;height:4px;}
 .cell-textarea::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
 
@@ -273,55 +270,67 @@ body.expo-mode .nb-cell.qk-cell .cell-toolbar .ct-btn:not(.ct-run){display:none!
 .cell-restore-btn{display:none;position:absolute;bottom:.25rem;right:.4rem;
   padding:.1rem .3rem;background:rgba(255,215,0,.07);
   border:1px solid rgba(255,215,0,.22);border-radius:3px;
-  color:var(--yw);font-family:var(--orb);font-size:.4rem;cursor:pointer;z-index:5;}
+  color:var(--yw);font-family:var(--orb);font-size:.4rem;cursor:pointer;z-index:10;}
 body.expo-mode .nb-cell.qk-cell .cell-restore-btn,
 body.expo-mode .nb-cell[data-ctype="code"] .cell-restore-btn{display:block;}
 .cell-restore-btn:hover{background:rgba(255,215,0,.14);}
+
+/* Línea con error */
+.lineno.error-line {
+  background: rgba(255,68,102,0.2);
+  color: #ff4466;
+  border-right: 2px solid #ff4466;
+}
+.syntax-error-line {
+  background: rgba(255,68,102,0.15);
+  display: inline-block;
+  width: 100%;
+}
 
 /* ── ADD ROW ── */
 .add-cell-row{width:min(940px,97%);margin:.03rem auto;height:14px;
   display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s;}
 .add-cell-row:hover{opacity:1;}
 body.expo-mode .add-cell-row{display:none;}
-.add-cell-line{flex:1;height:1px;background:rgba(189,147,249,.15);}
+.add-cell-line{flex:1;height:1px;background:rgba(0,255,221,.15);}
 .add-cell-btns{display:flex;gap:.2rem;padding:0 .4rem;}
-.add-btn{padding:.09rem .36rem;background:var(--bg);border:1px solid rgba(189,147,249,.25);
-  border-radius:3px;color:var(--pu);font-family:var(--orb);font-size:.38rem;cursor:pointer;transition:all .14s;}
-.add-btn:hover{background:rgba(189,147,249,.07);}
+.add-btn{padding:.09rem .36rem;background:var(--bg);border:1px solid rgba(0,255,221,.25);
+  border-radius:3px;color:var(--cy);font-family:var(--orb);font-size:.38rem;cursor:pointer;transition:all .14s;}
+.add-btn:hover{background:rgba(0,255,221,.07);}
 .nb-bottom{width:min(940px,97%);margin:.35rem auto 2rem;display:flex;gap:.4rem;}
 body.expo-mode .nb-bottom{display:none;}
 .nb-add-big{flex:1;padding:.48rem;background:transparent;
-  border:1px dashed rgba(189,147,249,.18);border-radius:7px;
-  color:rgba(189,147,249,.5);font-family:var(--orb);font-size:.48rem;cursor:pointer;
+  border:1px dashed rgba(0,255,221,.18);border-radius:7px;
+  color:rgba(0,255,221,.5);font-family:var(--orb);font-size:.48rem;cursor:pointer;
   transition:all .18s;text-align:center;}
-.nb-add-big:hover{background:rgba(189,147,249,.05);border-color:rgba(189,147,249,.45);color:var(--pu);}
+.nb-add-big:hover{background:rgba(0,255,221,.05);border-color:rgba(0,255,221,.45);color:var(--cy);}
 
 /* ── GESTIONAR ── */
 #view-manage{display:none;flex:1;flex-direction:column;overflow:hidden;}
 .manage-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden;}
 .manage-bar{display:flex;align-items:center;gap:.4rem;padding:.5rem .8rem;
   background:var(--p);border-bottom:1px solid var(--bd);flex-shrink:0;}
-.manage-title-lbl{font-family:var(--orb);font-size:.62rem;color:var(--pu);}
+.manage-title-lbl{font-family:var(--orb);font-size:.62rem;color:var(--cy);}
 .nb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
   gap:.75rem;padding:.9rem;overflow-y:auto;flex:1;}
 .nb-grid::-webkit-scrollbar{width:5px;}
 .nb-grid::-webkit-scrollbar-thumb{background:var(--bd2);}
 .nb-card{background:var(--p);border:1px solid var(--bd);border-radius:9px;overflow:hidden;transition:all .22s;}
-.nb-card:hover{border-color:rgba(189,147,249,.38);box-shadow:0 5px 18px rgba(189,147,249,.06);}
+.nb-card:hover{border-color:rgba(0,255,221,.38);box-shadow:0 5px 18px rgba(0,255,221,.06);}
 .nb-card-hdr{padding:.58rem .82rem;background:#080b14;
-  border-bottom:1px solid rgba(189,147,249,.12);
+  border-bottom:1px solid rgba(0,255,221,.12);
   display:flex;align-items:center;justify-content:space-between;}
 .nb-card-title{font-family:var(--orb);font-size:.6rem;color:var(--tx);}
 .nb-card-badge{font-family:var(--orb);font-size:.41rem;padding:.08rem .28rem;
-  border-radius:3px;background:rgba(189,147,249,.09);
-  border:1px solid rgba(189,147,249,.22);color:var(--pu);}
+  border-radius:3px;background:rgba(0,255,221,.09);
+  border:1px solid rgba(0,255,221,.22);color:var(--cy);}
 .nb-card-body{padding:.75rem;}
 .nb-card-meta{font-family:var(--mono);font-size:.52rem;color:var(--mu2);margin-bottom:.5rem;}
 .nb-card-actions{display:flex;gap:.25rem;}
-.btn-edit-nb{flex:1;padding:.38rem;background:rgba(189,147,249,.08);
-  border:1px solid rgba(189,147,249,.22);border-radius:5px;
-  color:var(--pu);font-family:var(--orb);font-size:.48rem;cursor:pointer;transition:all .18s;}
-.btn-edit-nb:hover{background:rgba(189,147,249,.18);}
+.btn-edit-nb{flex:1;padding:.38rem;background:rgba(0,255,221,.08);
+  border:1px solid rgba(0,255,221,.22);border-radius:5px;
+  color:var(--cy);font-family:var(--orb);font-size:.48rem;cursor:pointer;transition:all .18s;}
+.btn-edit-nb:hover{background:rgba(0,255,221,.18);}
 .btn-pub-nb{flex:1;padding:.38rem;background:rgba(0,136,255,.08);
   border:1px solid rgba(0,136,255,.25);border-radius:5px;
   color:var(--bl2);font-family:var(--orb);font-size:.48rem;cursor:pointer;transition:all .18s;}
@@ -351,20 +360,20 @@ body.expo-mode .nb-bottom{display:none;}
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);
   z-index:800;align-items:center;justify-content:center;}
 .modal-ov.open{display:flex;}
-.modal{background:var(--p);border:1px solid rgba(189,147,249,.3);
+.modal{background:var(--p);border:1px solid rgba(0,255,221,.3);
   border-radius:11px;padding:1.35rem;width:min(460px,92vw);}
-.modal-title{font-family:var(--orb);font-size:.78rem;color:var(--pu);margin-bottom:.9rem;}
+.modal-title{font-family:var(--orb);font-size:.78rem;color:var(--cy);margin-bottom:.9rem;}
 .fg{margin-bottom:.62rem;}
 .fl{font-family:var(--orb);font-size:.47rem;color:var(--mu);
   letter-spacing:.07em;display:block;margin-bottom:.17rem;}
 .fi{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--bd2);
   border-radius:6px;padding:.4rem .65rem;color:var(--tx);
   font-family:var(--mono);font-size:.68rem;outline:none;}
-.fi:focus{border-color:var(--pu);}
+.fi:focus{border-color:var(--cy);}
 textarea.fi{resize:vertical;min-height:58px;line-height:1.5;}
 .btn-row{display:flex;gap:.35rem;margin-top:.55rem;}
-.btn-pri{padding:.36rem .82rem;background:linear-gradient(135deg,#4a0a8a,var(--pu));
-  border:none;border-radius:5px;color:#fff;font-family:var(--orb);font-size:.52rem;cursor:pointer;}
+.btn-pri{padding:.36rem .82rem;background:linear-gradient(135deg,#008080,var(--cy));
+  border:none;border-radius:5px;color:#000;font-family:var(--orb);font-size:.52rem;cursor:pointer;}
 .btn-cancel{padding:.36rem .78rem;background:transparent;
   border:1px solid var(--bd2);border-radius:6px;color:var(--mu);
   font-family:var(--orb);font-size:.5rem;cursor:pointer;}
@@ -390,7 +399,6 @@ textarea.fi{resize:vertical;min-height:58px;line-height:1.5;}
   .cell-gutter{width:36px;}
   .topbar{padding:0 .4rem;gap:.18rem;}
   .tbtn span{display:none;}
-  .engine-url-input{width:110px;}
   .cell-linenos{width:24px;font-size:.54rem;}
 }
 </style>
@@ -401,8 +409,8 @@ textarea.fi{resize:vertical;min-height:58px;line-height:1.5;}
 <div class="access-denied" id="access-denied">
   <div class="denied-icon">🔒</div>
   <div class="denied-title">ACCESO RESTRINGIDO</div>
-  <div class="denied-desc">El Arquitecto Profesional es exclusivo para<br>
-    <strong style="color:var(--pu);">Administradores</strong> y el
+  <div class="denied-desc">Quantum Notebook es exclusivo para<br>
+    <strong style="color:var(--cy);">Administradores</strong> y el
     <strong style="color:var(--yw);">Fundador</strong>.
   </div>
   <button class="btn-nav-back" style="margin-top:.5rem;" onclick="postCore('QCOL_NAV',{screen:'home'})">← Volver al menú</button>
@@ -413,13 +421,12 @@ textarea.fi{resize:vertical;min-height:58px;line-height:1.5;}
   <div class="tb-sep"></div>
   <div class="tb-logo">
     <span class="tb-q">Q</span><span style="font-family:var(--orb);font-size:.68rem;font-weight:900;color:var(--bl2);">COL</span>
-    <span class="tb-pro">PRO</span>
+    <span class="tb-pro">NOTEBOOK</span>
   </div>
   <div class="tb-sep"></div>
   <input class="nb-name-inp" id="nb-name-inp" placeholder="Sin título" value="Nuevo Notebook">
   <span id="expo-badge">👁 EXPOSICIÓN</span>
   <div class="tb-right">
-    <input type="text" id="engine-url-input" class="engine-url-input" placeholder="https://...hf.space" onchange="setEngineURL(this.value)">
     <div class="eng-pill" id="eng-badge">● SIN COMPILADOR</div>
     <div class="admin-pill" id="admin-pill" style="display:none;">ADMIN+</div>
     <div class="user-pill" id="user-pill">—</div>
@@ -498,7 +505,7 @@ textarea.fi{resize:vertical;min-height:58px;line-height:1.5;}
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-// QCOL ARQUITECTO PROFESIONAL v4.1 — Output completo + Expo mode
+// QCOL QUANTUM NOTEBOOK v5.0 — Output completo + Expo mode
 // ═══════════════════════════════════════════════════════════════
 let curUser=null,engineURL='',engineOK=false,running=false;
 let curView='notebook',cells=[],curCellId=null,execCounter=0;
@@ -554,7 +561,7 @@ function restoreCell(id){
   if(!_originalCells)return;
   const idx=cells.findIndex(c=>c.id===id);if(idx<0)return;
   const orig=_originalCells[idx];if(!orig)return;
-  cells[idx]={...orig,id:cells[idx].id,output:'',exec_count:null,mdEdit:false};
+  cells[idx]={...orig,id:cells[idx].id,output:'',exec_count:null,mdEdit:false,errorLine:null};
   renderCells();notify('↺ Celda restaurada');
 }
 
@@ -603,7 +610,7 @@ function parseServerResponse(raw){
 }
 
 // ── RENDER DE OUTPUT COMPLETO ─────────────────────────────────
-function renderOutput(outArea, d, elapsed){
+function renderOutput(outArea, d, elapsed, cellId){
   if(!outArea)return;
   const t0=elapsed?`${elapsed}s`:null;
   let html='';
@@ -638,8 +645,11 @@ function renderOutput(outArea, d, elapsed){
   // ── PROBABILIDADES / COUNTS ──
   if(d.bloch&&d.bloch.probabilities){
     html+=buildProbsOut(d.bloch.probabilities,d.bloch.shots||1024,d.bloch.simulator||'AerSimulator');
+    // Añadir histograma canvas
+    html+=buildHistogramOut(d.bloch.probabilities,d.bloch.shots||1024);
   }else if(d.counts){
     html+=buildProbsOut(d.counts,d.bloch?.shots||1024,'');
+    html+=buildHistogramOut(d.counts,d.bloch?.shots||1024);
   }
 
   // ── ESFERA DE BLOCH ──
@@ -665,6 +675,13 @@ function renderOutput(outArea, d, elapsed){
 
   // ── ERROR detallado ──
   if(!isOk&&d.output){
+    // Extraer línea de error
+    const lineMatch = d.output.match(/[Ll]ine\s+(\d+)|línea\s+(\d+)/i);
+    const errLine = lineMatch ? parseInt(lineMatch[1] || lineMatch[2]) : null;
+    if (errLine && cellId) {
+      const cell = cells.find(c => c.id === cellId);
+      if (cell) cell.errorLine = errLine;
+    }
     html+=buildErrorOut(d.output);
   }
 
@@ -719,6 +736,67 @@ function buildProbsOut(probs,shots,sim){
   </div>`;
 }
 
+function buildHistogramOut(probs, shots){
+  const entries=Object.entries(probs).sort((a,b)=>a[0].localeCompare(a[0]));
+  if(!entries.length) return '';
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  const canvasId='hist-'+genId();
+  setTimeout(()=>{
+    const canvas=document.getElementById(canvasId);
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    const w=canvas.width=Math.min(600,entries.length*70+60);
+    const h=canvas.height=200;
+    const padLeft=45,padRight=20,padTop=15,padBottom=35;
+    const chartW=w-padLeft-padRight;
+    const chartH=h-padTop-padBottom;
+    const barW=Math.min(40,chartW/entries.length-8);
+    const maxVal=Math.max(...entries.map(([,v])=>v));
+    ctx.clearRect(0,0,w,h);
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.08)';
+    ctx.lineWidth=0.5;
+    for(let i=0;i<=4;i++){
+      const y=padTop+chartH*(1-i/4);
+      ctx.beginPath();
+      ctx.moveTo(padLeft,y);
+      ctx.lineTo(w-padRight,y);
+      ctx.stroke();
+    }
+    // Barras
+    entries.forEach(([st,v],i)=>{
+      const x=padLeft+i*(barW+8)+8;
+      const barH=(v/maxVal)*chartH;
+      const y=padTop+chartH-barH;
+      const grad=ctx.createLinearGradient(x,y,x+barW,y+barH);
+      grad.addColorStop(0,'#00aaff');
+      grad.addColorStop(1,'#00ffdd');
+      ctx.fillStyle=grad;
+      ctx.fillRect(x,y,barW,barH);
+      ctx.fillStyle='#aabcda';
+      ctx.font='9px JetBrains Mono,monospace';
+      ctx.textAlign='center';
+      ctx.fillText(st,x+barW/2,padTop+chartH+15);
+      // Valor encima
+      ctx.fillStyle='#e2ecff';
+      ctx.font='bold 8px JetBrains Mono,monospace';
+      ctx.fillText(v>1?v:v.toFixed(2),x+barW/2,y-3);
+    });
+    // Ejes
+    ctx.strokeStyle='rgba(255,255,255,0.3)';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(padLeft-2,padTop);
+    ctx.lineTo(padLeft-2,padTop+chartH);
+    ctx.lineTo(w-padRight,padTop+chartH);
+    ctx.stroke();
+  },20);
+  return `<div style="padding:.6rem;background:#040c18;border-top:1px solid rgba(0,136,255,.1);">
+    <div style="font-family:var(--orb);font-size:.42rem;color:var(--mu);margin-bottom:.4rem;">📊 HISTOGRAMA · ${shots} SHOTS</div>
+    <canvas id="${canvasId}" style="max-width:100%;height:auto;background:#050810;border-radius:6px;"></canvas>
+  </div>`;
+}
+
 function buildBlochOut(probs){
   // Calcular estados de Bloch por qubit desde los counts/probs
   const qubits=Object.keys(probs)[0]?.length||0;
@@ -738,7 +816,7 @@ function buildBlochOut(probs){
     const cid='bloch-'+genId();
     setTimeout(()=>drawBlochSphere(cid,theta,qi),50);
     return`<div class="bloch-item">
-      <canvas id="${cid}" width="90" height="90"></canvas>
+      <canvas id="${cid}" width="150" height="150"></canvas>
       <div class="bloch-item-lbl">q[${qi}] P₀=${(p0*100).toFixed(0)}%</div>
     </div>`;
   }).join('');
@@ -840,11 +918,11 @@ async function runCell(id){
       const d=parseServerResponse(raw);
       execCounter++;cell.exec_count=execCounter;
       const elapsed=((Date.now()-t0)/1000).toFixed(2);
-      renderOutput(outArea,d,elapsed);
+      renderOutput(outArea,d,elapsed,id);
       setSbRun(false,'✅ '+elapsed+'s');
     } else {
       execCounter++;cell.exec_count=execCounter;
-      if(outArea)outArea.innerHTML='<div class="out-stdout" style="color:var(--mu);">⚡ Sin motor — configura la URL del compilador en la barra superior</div>';
+      if(outArea)outArea.innerHTML='<div class="out-stdout" style="color:var(--mu);">⚡ Sin motor — configura la URL del compilador en el panel Fundador</div>';
       setSbRun(false,'Sin motor');
     }
   }catch(e){
@@ -855,6 +933,8 @@ async function runCell(id){
   running=false;
   if(rbtn)rbtn.classList.remove('spinning');
   renderCellNum(id);
+  // Forzar re-render para mostrar errorLine si existe
+  if(cell.errorLine) renderCells();
 }
 function renderCellNum(id){const cell=cells.find(c=>c.id===id);if(!cell)return;const el=document.querySelector(`[data-id="${id}"] .cell-num`);if(el)el.textContent=cell.exec_count!==null?`[${cell.exec_count}]`:'[ ]';}
 async function runCurCell(){if(curCellId)await runCell(curCellId);}
@@ -911,7 +991,7 @@ function handleImport(e){
         const src=Array.isArray(c.source)?c.source.join(''):c.source||'';
         const tags=c.metadata?.tags||[];
         const type=c.cell_type==='markdown'?'markdown':(tags.includes('qiskit-cell')?'qiskit':'code');
-        cells.push({id:genId(),type,code:src,output:'',exec_count:null,mdEdit:false});
+        cells.push({id:genId(),type,code:src,output:'',exec_count:null,mdEdit:false,errorLine:null});
       });
       if(cells.length===0)addCellAt(-1,'code');
       else{renderCells();focusCell(cells[0].id);}
@@ -973,7 +1053,7 @@ result = sim.run(transpile(qc, sim), shots=1024).result()
 counts = result.get_counts()
 print("\\nResultados:", counts)
 `;
-  const cell={id:genId(),type,code:type==='qiskit'?defaultQk:'',output:'',exec_count:null,mdEdit:false};
+  const cell={id:genId(),type,code:type==='qiskit'?defaultQk:'',output:'',exec_count:null,mdEdit:false,errorLine:null};
   if(afterIdx===-1||afterIdx>=cells.length)cells.push(cell);
   else cells.splice(afterIdx+1,0,cell);
   renderCells();focusCell(cell.id);updateStatus();
@@ -984,6 +1064,24 @@ function moveCellDown(id){const i=cells.findIndex(c=>c.id===id);if(i<0||i>=cells
 function syncCellCode(id){const cell=cells.find(c=>c.id===id);if(!cell)return;const ta=document.getElementById('ta-'+id);const mta=document.getElementById('mta-'+id);if(ta)cell.code=ta.value;if(mta)cell.code=mta.value;}
 function focusCell(id){curCellId=id;document.querySelectorAll('.nb-cell').forEach(el=>{el.classList.toggle('active',el.dataset.id===id);});const ta=document.getElementById('ta-'+id)||document.getElementById('mta-'+id);if(ta)ta.focus();}
 function changeCellType(id){if(_expositionMode)return;const cell=cells.find(c=>c.id===id);if(!cell)return;cell.type=cell.type==='code'||cell.type==='qiskit'?'markdown':'code';cell.mdEdit=true;renderCells();focusCell(id);}
+
+// ── BOTÓN LIMPIAR CELDA ───────────────────────────────────────
+function clearCellContent(id) {
+  const cell = cells.find(c => c.id === id);
+  if (!cell) return;
+  cell.code = '';
+  cell.errorLine = null;
+  const ta = document.getElementById('ta-'+id) || document.getElementById('mta-'+id);
+  if (ta) {
+    ta.value = '';
+    onCellInput(id);
+  }
+  if (cell.type === 'markdown') {
+    cell.mdEdit = true;
+    renderCells();
+  }
+  notify('🧹 Celda limpiada');
+}
 
 // ── MARKDOWN ──────────────────────────────────────────────────
 function initMarkdown(){
@@ -1031,33 +1129,48 @@ function buildAddRow(idx){
 const QK_CLASSES=new Set(['QuantumCircuit','QuantumRegister','ClassicalRegister','AerSimulator','Statevector','DensityMatrix','Operator','Sampler','Estimator','transpile','plot_histogram','plot_bloch_multivector','plot_state_city']);
 const BUILTINS=new Set(['print','len','range','int','float','str','list','dict','set','tuple','type','isinstance','enumerate','zip','map','filter','sum','max','min','abs','round','sorted','reversed','open','input','format','repr','hash','id','callable','hasattr','getattr','setattr','delattr','super','property','classmethod','staticmethod','object']);
 
-function highlight(code,isQk=false){
-  const KW=['import','from','as','def','class','return','if','else','elif','for','while','in','not','and','or','True','False','None','with','try','except','finally','lambda','pass','break','continue','yield','raise','del','global','assert','is','async','await'];
-  let h=escH(code);
-  // Comentarios primero (más prioritario)
-  h=h.replace(/(#[^\n]*)/g,'<span class="cmt">$1</span>');
-  // Strings multilinea
-  h=h.replace(/("""[\s\S]*?"""|'''[\s\S]*?''')/g,'<span class="st">$1</span>');
-  // Strings normales
-  h=h.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,(m)=>m.includes('class="')?m:`<span class="st">${m}</span>`);
-  // Números
-  h=h.replace(/\b(\d+\.?\d*(?:[eEjJ][+-]?\d+)?)\b/g,(m)=>m.includes('class="')?m:`<span class="nm">${m}</span>`);
-  // Keywords
-  KW.forEach(k=>{const re=new RegExp(`\\b(${k})\\b`,'g');h=h.replace(re,(m,w)=>m.includes('class="')?m:`<span class="kw">${w}</span>`);});
-  // Clases Qiskit (cian brillante)
-  if(isQk){QK_CLASSES.forEach(k=>{const re=new RegExp(`\\b(${k})\\b`,'g');h=h.replace(re,(m,w)=>m.includes('class="')?m:`<span class="qt">${w}</span>`);});}
-  // Builtins
-  BUILTINS.forEach(k=>{const re=new RegExp(`\\b(${k})\\b(?=\\s*\\()`, 'g');h=h.replace(re,(m,w)=>m.includes('class="')?m:`<span class="blt">${w}</span>`);});
-  // Funciones
-  h=h.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g,(m,fn)=>m.includes('class="')?m:`<span class="fn">${fn}</span>`);
-  // Decoradores
-  h=h.replace(/(@[A-Za-z_][A-Za-z0-9_.]*)/g,(m)=>m.includes('class="')?m:`<span class="kw">${m}</span>`);
-  return h;
+// ── HIGHLIGHT CORREGIDO (sin class= visible) ──────────────────
+function highlight(code, isQk=false){
+  const KW=new Set(['import','from','as','def','class','return','if','else','elif',
+    'for','while','in','not','and','or','True','False','None','with','try','except',
+    'finally','lambda','pass','break','continue','yield','raise','del','global',
+    'assert','is','async','await','nonlocal']);
+  const BUILTIN=new Set(['print','len','range','int','float','str','list','dict',
+    'set','tuple','type','isinstance','enumerate','zip','map','filter','sum','max',
+    'min','abs','round','sorted','reversed','open','input','format','repr']);
+
+  const TOKEN_RE = /(#[^\n]*)|("""[\s\S]*?"""|'''[\s\S]*?''')|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b(\d+(?:\.\d+)?(?:[eEjJ][+-]?\d+)?)\b|(@[A-Za-z_][A-Za-z0-9_.]*)|([A-Za-z_]\w*)/g;
+
+  let result='', lastIdx=0, m;
+  TOKEN_RE.lastIndex=0;
+  while((m=TOKEN_RE.exec(code))!==null){
+    if(m.index>lastIdx) result+=escH(code.slice(lastIdx,m.index));
+    const [full,cmt,strT,strS,num,dec,word]=m;
+    if(cmt!==undefined)         result+=`<span class="cmt">${escH(cmt)}</span>`;
+    else if(strT!==undefined)   result+=`<span class="st">${escH(strT)}</span>`;
+    else if(strS!==undefined)   result+=`<span class="st">${escH(strS)}</span>`;
+    else if(num!==undefined)    result+=`<span class="nm">${escH(num)}</span>`;
+    else if(dec!==undefined)    result+=`<span class="kw">${escH(dec)}</span>`;
+    else if(word!==undefined){
+      if(KW.has(word))          result+=`<span class="kw">${word}</span>`;
+      else if(isQk&&QK_CLASSES.has(word)) result+=`<span class="qt">${word}</span>`;
+      else if(BUILTIN.has(word)&&code[m.index+word.length]==='(') result+=`<span class="blt">${word}</span>`;
+      else if(code[m.index+word.length]==='(') result+=`<span class="fn">${word}</span>`;
+      else result+=escH(word);
+    }
+    lastIdx=m.index+full.length;
+  }
+  if(lastIdx<code.length) result+=escH(code.slice(lastIdx));
+  return result;
 }
 
-function buildLinenos(code){
-  const n=code.split('\n').length;
-  return Array.from({length:n},(_,i)=>i+1).join('\n');
+function buildLinenos(code, errorLine){
+  const lines=code.split('\n');
+  return lines.map((_,i)=>{
+    const ln=i+1;
+    const isErr=(errorLine===ln);
+    return `<div class="lineno ${isErr?'error-line':''}">${ln}</div>`;
+  }).join('');
 }
 
 function buildCellEl(cell,i){
@@ -1085,6 +1198,7 @@ function buildCellEl(cell,i){
         <button class="ct-btn" onclick="event.stopPropagation();moveCellUp('${cell.id}')" title="Subir">↑</button>
         <button class="ct-btn" onclick="event.stopPropagation();moveCellDown('${cell.id}')" title="Bajar">↓</button>
         <button class="ct-btn" onclick="event.stopPropagation();changeCellType('${cell.id}')" title="Cambiar tipo">${isCode?'Md':'{ }'}</button>
+        <button class="ct-btn" onclick="event.stopPropagation();clearCellContent('${cell.id}')" title="Limpiar contenido">🗑</button>
         <button class="ct-btn danger" onclick="event.stopPropagation();deleteCell('${cell.id}')" title="Eliminar">✕</button>
       </div>`;
 
@@ -1093,8 +1207,15 @@ function buildCellEl(cell,i){
       ?`<span style="color:rgba(0,255,221,.8)">⚛</span> Qiskit · <span style="color:var(--mu)">QuantumCircuit · AerSimulator · NumPy · Matplotlib incluidos</span>`
       :`<span style="color:rgba(0,170,255,.7)">{}</span> Python`;
     const badgeCls=isQk?'ctb-qk':'ctb-code';
-    const hl=highlight(cell.code||'',isQk);
-    const lnos=buildLinenos(cell.code||'');
+    let hl=highlight(cell.code||'',isQk);
+    if(cell.errorLine){
+      let hlLines=hl.split('\n');
+      if(hlLines[cell.errorLine-1]){
+        hlLines[cell.errorLine-1]=`<span class="syntax-error-line">${hlLines[cell.errorLine-1]}</span>`;
+      }
+      hl=hlLines.join('\n');
+    }
+    const lnos=buildLinenos(cell.code||'', cell.errorLine);
     const restoreBtn=_expositionMode?`<button class="cell-restore-btn" onclick="event.stopPropagation();restoreCell('${cell.id}')">↺ Original</button>`:'';
     const outContent=cell.output?`<div class="out-stdout">${escH(cell.output)}</div>`:'';
     el.innerHTML=`${toolbar}
@@ -1173,10 +1294,13 @@ function onCellInput(id){
   const lnos=document.getElementById('lnos-'+id);
   if(ta&&syn){
     const cell=cells.find(c=>c.id===id);
-    if(cell)cell.code=ta.value;
+    if(cell){
+      cell.code=ta.value;
+      cell.errorLine=null; // limpiar error al editar
+    }
     const isQk=cell?.type==='qiskit';
     syn.innerHTML=highlight(ta.value,isQk)+'\n';
-    if(lnos)lnos.textContent=buildLinenos(ta.value);
+    if(lnos)lnos.innerHTML=buildLinenos(ta.value);
     autoResize(ta);
     syn.scrollTop=ta.scrollTop;syn.scrollLeft=ta.scrollLeft;
     if(lnos)lnos.scrollTop=ta.scrollTop;
@@ -1200,11 +1324,49 @@ function onCellKeydown(e,id){
   if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart,en=ta.selectionEnd;ta.value=ta.value.substring(0,s)+'    '+ta.value.substring(en);ta.selectionStart=ta.selectionEnd=s+4;onCellInput(id);return;}
   if(e.shiftKey&&e.key==='Enter'){e.preventDefault();runCell(id);const idx=cells.findIndex(c=>c.id===id);if(idx<cells.length-1)focusCell(cells[idx+1].id);else if(!_expositionMode)addCellAt(-1,'code');return;}
   if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();runCell(id);}
+  // Navegación entre celdas
+  if(e.ctrlKey&&e.key==='ArrowUp'){
+    e.preventDefault();
+    const idx=cells.findIndex(c=>c.id===id);
+    if(idx>0)focusCell(cells[idx-1].id);
+    return;
+  }
+  if(e.ctrlKey&&e.key==='ArrowDown'){
+    e.preventDefault();
+    const idx=cells.findIndex(c=>c.id===id);
+    if(idx<cells.length-1)focusCell(cells[idx+1].id);
+    return;
+  }
+  if(e.key==='Escape'){
+    e.preventDefault();
+    ta.blur();
+    document.querySelector(`.nb-cell[data-id="${id}"]`)?.focus();
+    return;
+  }
 }
 function onMdKeydown(e,id){
   if(e.key==='Escape'){syncCellCode(id);const cell=cells.find(c=>c.id===id);if(cell){cell.mdEdit=false;renderCells();}}
   if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();syncCellCode(id);const cell=cells.find(c=>c.id===id);if(cell){cell.mdEdit=false;renderCells();}const idx=cells.findIndex(c=>c.id===id);if(idx<cells.length-1)focusCell(cells[idx+1].id);}
 }
+
+// Navegación global con flechas cuando no se edita
+window.addEventListener('keydown', e => {
+  if (!curCellId) return;
+  if (document.activeElement.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const idx = cells.findIndex(c => c.id === curCellId);
+    if (idx > 0) focusCell(cells[idx-1].id);
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const idx = cells.findIndex(c => c.id === curCellId);
+    if (idx < cells.length - 1) focusCell(cells[idx+1].id);
+  } else if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const ta = document.getElementById('ta-'+curCellId) || document.getElementById('mta-'+curCellId);
+    if (ta) ta.focus();
+  }
+});
 
 // ── SHOW UI ────────────────────────────────────────────────────
 function showUI(user){
@@ -1226,7 +1388,7 @@ function showUI(user){
     const ap=document.getElementById('admin-pill');if(ap)ap.style.display='';
   }
   const stored=localStorage.getItem('qcol_colab_url')||'';
-  if(stored){engineURL=stored;const inp=document.getElementById('engine-url-input');if(inp)inp.value=stored;checkEngine();}
+  if(stored){engineURL=stored;checkEngine();}
   if(role==='admin'||role==='founder')refreshNbs();
   if(cells.length===0&&!_expositionMode)addCellAt(-1,'qiskit');
 }
@@ -1246,7 +1408,7 @@ window.addEventListener('message',e=>{
     const nb=d.nb;
     document.getElementById('nb-name-inp').value=nb.title||nb.name||'Sin título';
     if(nb.cells&&nb.cells.length>0){
-      cells=nb.cells.map(c=>({...c,id:genId(),output:'',exec_count:null,mdEdit:false}));
+      cells=nb.cells.map(c=>({...c,id:genId(),output:'',exec_count:null,mdEdit:false,errorLine:null}));
     } else cells=[];
     if(isExpo){
       _initialized=true;
@@ -1263,6 +1425,14 @@ window.addEventListener('message',e=>{
   }
 });
 
+// Escuchar cambios en localStorage (cuando Fundador cambia URL)
+window.addEventListener('storage',e=>{
+  if(e.key==='qcol_colab_url'&&e.newValue){
+    engineURL=e.newValue;
+    checkEngine();
+  }
+});
+
 // Pedir usuario
 postCore('QCOL_GET_USER');
 setTimeout(()=>{if(!_initialized){try{const s=localStorage.getItem('qcol_cur_user');if(s)showUI(JSON.parse(s));}catch(e){}}},700);
@@ -1272,7 +1442,7 @@ window.addEventListener('message',e=>{const d=e.data||{};if(d.type==='QCOL_USER_
 function requireAuth(){const role=curUser?.role||'guest';if(role!=='admin'&&role!=='founder'&&!_expositionMode){notify('❌ Requiere cuenta Admin o Founder');postCore('QCOL_LOGIN');return false;}return true;}
 
 // Init
-function initEngine(){const s=localStorage.getItem('qcol_colab_url');if(s){engineURL=s;const inp=document.getElementById('engine-url-input');if(inp)inp.value=s;checkEngine();}}
+function initEngine(){const s=localStorage.getItem('qcol_colab_url');if(s){engineURL=s;checkEngine();}}
 initEngine();
 setTimeout(()=>initMarkdown(),400);
 </script>
