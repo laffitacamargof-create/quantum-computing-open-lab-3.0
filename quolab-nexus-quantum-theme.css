@@ -1,154 +1,111 @@
-/* QuOLab Nexus 3.0 — shared quantum environment skin
-   Presentation-only overrides. Keep module DOM, handlers, APIs and simulation code intact. */
+/* QUOLAB NEXUS 3.0 — visual reconstruction layer
+   Reference-led presentation system. This file changes presentation only:
+   simulation engines, DOM contracts, event handlers, APIs and persistence stay untouched. */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
- --qn-bg:#020817;--qn-panel:rgba(7,20,47,.86);--qn-panel2:rgba(10,28,62,.82);
- --qn-line:rgba(43,151,255,.42);--qn-cyan:#40d9ff;--qn-blue:#147dff;
- --qn-violet:#9253ff;--qn-text:#eaf2ff;--qn-muted:#91a9cb;
+ --qn-bg:#050817;--qn-deep:#070d20;--qn-glass:rgba(11,20,47,.78);--qn-glass2:rgba(14,27,61,.88);
+ --qn-line:rgba(91,151,255,.22);--qn-line-hot:rgba(72,177,255,.58);
+ --qn-blue:#328cff;--qn-cyan:#51e5ff;--qn-violet:#a66cff;--qn-purple:#7048d9;
+ --qn-text:#edf4ff;--qn-muted:#91a5c8;--qn-green:#5bf0bc;--qn-red:#ff6b91;
+ --qn-radius:18px;--qn-shadow:0 22px 70px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.055);
+ --qn-font:'Manrope',system-ui,sans-serif;--qn-display:'Space Grotesk',sans-serif;--qn-mono:'IBM Plex Mono',monospace;
+ color-scheme:dark;
 }
-html{background:#020817!important}
+html{background:var(--qn-bg)!important}
 body{
- color:var(--qn-text)!important;
+ color:var(--qn-text)!important;font-family:var(--qn-font)!important;
  background:
-  radial-gradient(ellipse at 51% 7%,rgba(36,95,220,.36),transparent 33%),
-  radial-gradient(ellipse at 88% 74%,rgba(122,42,226,.25),transparent 31%),
-  radial-gradient(ellipse at 8% 82%,rgba(0,162,255,.20),transparent 34%),
-  radial-gradient(ellipse at 48% 110%,rgba(49,91,255,.16),transparent 38%),
-  linear-gradient(145deg,#020817 0%,#06152f 52%,#03091b 100%)!important;
+  radial-gradient(ellipse at 48% 12%,rgba(43,93,205,.26),transparent 34%),
+  radial-gradient(ellipse at 84% 68%,rgba(110,55,205,.19),transparent 32%),
+  radial-gradient(ellipse at 5% 82%,rgba(0,171,229,.14),transparent 34%),
+  linear-gradient(135deg,#050817 0%,#09132d 48%,#07091b 100%)!important;
  background-attachment:fixed!important;
 }
-body::before{
- content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.56;
- background-image:
- radial-gradient(2px 2px at 8% 18%,#a8eaff 55%,transparent 70%),
- radial-gradient(1px 1px at 21% 72%,#fff 55%,transparent 70%),
- radial-gradient(2px 2px at 67% 22%,#7b9dff 55%,transparent 70%),
- radial-gradient(1px 1px at 82% 61%,#fff 55%,transparent 70%),
- radial-gradient(2px 2px at 91% 14%,#bd8cff 55%,transparent 70%),
- radial-gradient(1px 1px at 42% 91%,#8ceaff 55%,transparent 70%);
- background-size:380px 300px,440px 370px,520px 420px,360px 310px,610px 500px,470px 390px;
+body:before{
+ content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.34;
+ background-image:radial-gradient(1px 1px at 8% 17%,#d9f5ff 99%,transparent),radial-gradient(1px 1px at 27% 72%,#82bfff 99%,transparent),radial-gradient(1px 1px at 67% 22%,#c3a3ff 99%,transparent),radial-gradient(1px 1px at 91% 58%,#9feaff 99%,transparent),linear-gradient(rgba(80,142,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(80,142,255,.025) 1px,transparent 1px);
+ background-size: auto,auto,auto,auto,46px 46px,46px 46px;
 }
-#openq-header,.titlebar,.toolbar,.screen-hdr,header,.header,.topbar,.app-header,.panelhead,.panel-header,.circuit-hdr,.code-hdr,.out-hdr,.palette-hdr,.rtabs{
- background:linear-gradient(110deg,rgba(4,17,46,.96),rgba(9,31,75,.84))!important;
- border-color:var(--qn-line)!important;backdrop-filter:blur(22px) saturate(145%)!important;
+body>*{position:relative;z-index:1}
+::selection{background:rgba(66,153,255,.36);color:#fff}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:rgba(2,7,20,.35)}::-webkit-scrollbar-thumb{background:rgba(87,139,218,.34);border:2px solid transparent;border-radius:99px;background-clip:padding-box}
+:where(header,.toolbar,.topbar,.app-header,.header,.sidebar,.side-panel,.panel,.card,.sec,.window,.workspace,.modal,.chat-panel,.ai-panel,.toolbox,.gate-palette,.circuit-panel,.code-panel,.output-panel,.visualization-panel,.notebook-cell,.editor-wrap,.results-panel,.block,.section,.container-card){
+ border-color:var(--qn-line)!important;
 }
-#openq-header{box-shadow:0 8px 30px rgba(0,0,0,.22)}
-#nexus-sidebar{
- background:linear-gradient(180deg,rgba(5,20,51,.94),rgba(3,12,34,.90))!important;
- border:1px solid var(--qn-line)!important;box-shadow:0 18px 50px rgba(0,0,0,.38),0 0 24px rgba(0,136,255,.13);
- backdrop-filter:blur(24px);
+:where(.panel,.card,.sec,.window,.workspace,.modal,.chat-panel,.ai-panel,.toolbox,.gate-palette,.circuit-panel,.code-panel,.output-panel,.visualization-panel,.notebook-cell,.editor-wrap,.results-panel,.block,.section,.container-card){
+ background:linear-gradient(145deg,rgba(16,30,66,.82),rgba(7,14,35,.88))!important;
+ border:1px solid var(--qn-line)!important;border-radius:var(--qn-radius)!important;
+ box-shadow:var(--qn-shadow)!important;backdrop-filter:blur(22px) saturate(135%);
 }
-#nexus-sidebar button{border-radius:11px!important;transition:all .2s}
-#nexus-sidebar button:hover,#nexus-sidebar button.active{
- background:linear-gradient(100deg,rgba(0,126,255,.38),rgba(128,65,255,.18))!important;
- border-color:rgba(57,217,255,.62)!important;box-shadow:inset 0 0 0 1px rgba(57,217,255,.13),0 0 18px rgba(0,136,255,.16)
+:where(header,.toolbar,.topbar,.app-header,.header){
+ background:rgba(5,11,29,.82)!important;backdrop-filter:blur(24px) saturate(145%);
+ border-bottom:1px solid var(--qn-line)!important;
 }
-#nexus-sidebar .qn-icon{filter:drop-shadow(0 0 5px rgba(47,205,255,.35))}
-#nexus-dock{
- background:rgba(3,14,38,.88)!important;border:1px solid var(--qn-line)!important;
- border-radius:17px!important;box-shadow:0 14px 42px rgba(0,0,0,.42),0 0 22px rgba(0,130,255,.13);
- backdrop-filter:blur(24px)
+:where(h1,h2,h3,.title,.logo,.brand,.section-title,.panel-title){font-family:var(--qn-display)!important;letter-spacing:-.025em}
+:where(h1){color:#f4f8ff!important}
+:where(h2,.section-title,.panel-title){color:#dceaff!important}
+:where(p,label,small,.subtitle,.description){color:var(--qn-muted)}
+:where(button,.btn,.tab,.tool-btn,.gate-btn,.action-btn,[role=button]){
+ font-family:var(--qn-font)!important;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
 }
-#nexus-dock button{border:1px solid rgba(57,151,255,.2)!important;border-radius:11px!important;background:rgba(13,48,99,.48)!important}
-#module-container{position:relative;z-index:1}
-#module-container .screen{background:transparent}
-#module-container .screen-hdr{
- border:1px solid rgba(43,151,255,.34)!important;border-radius:14px;margin:10px 14px 0;
- box-shadow:0 10px 28px rgba(0,0,0,.2)
+:where(button,.btn,.action-btn,.tool-btn){
+ border:1px solid rgba(100,159,255,.24)!important;border-radius:11px!important;
+ background:linear-gradient(145deg,rgba(26,52,101,.72),rgba(13,28,61,.82))!important;color:#eaf4ff!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
 }
-#module-container .module-iframe-wrap{
- margin:10px 14px 24px;overflow:hidden;border:1px solid rgba(43,151,255,.34);
- border-radius:16px;background:rgba(3,13,37,.42);box-shadow:0 16px 45px rgba(0,0,0,.28)
+:where(button,.btn,.action-btn,.tool-btn):hover{transform:translateY(-1px);border-color:var(--qn-line-hot)!important;box-shadow:0 8px 28px rgba(28,119,255,.16),inset 0 1px 0 rgba(255,255,255,.09)}
+:where(button.primary,.btn-primary,.primary,.run-btn,.execute-btn,.active,.tab.active,.tab.on){
+ background:linear-gradient(110deg,#1677ee,#5146d8)!important;color:white!important;border-color:rgba(109,184,255,.65)!important;
+ box-shadow:0 8px 30px rgba(32,111,255,.25),inset 0 1px 0 rgba(255,255,255,.22)!important;
 }
-#module-container .module-iframe{background:transparent;min-height:calc(100vh - 170px)}
-#module-container .menu-hero{padding:1.7rem 1rem 1rem}
-#module-container .menu-hero h1{color:#e8f6ff;text-shadow:0 0 24px rgba(0,165,255,.34);letter-spacing:.04em}
-#module-container .menu-hero p{color:#9db6d8;max-width:920px;margin:auto;line-height:1.65}
-#module-container .menu-grid{max-width:1160px;gap:15px}
-#module-container .menu-card,.card,.project-card,.panel,.sec,.widget,.tool-panel,.workspace-panel,.editor-panel,.result-panel,.modal,.modal-content,.dropdown-menu,.module-placeholder{
- background:linear-gradient(145deg,rgba(8,29,68,.88),rgba(3,14,38,.92))!important;
- border:1px solid rgba(43,151,255,.38)!important;border-radius:15px!important;
- box-shadow:0 12px 34px rgba(0,0,0,.26),inset 0 1px rgba(190,230,255,.06),0 0 18px rgba(0,126,255,.07)!important;
- backdrop-filter:blur(18px)!important;
+:where(input,textarea,select,.search-box,.code-editor,.cm-editor){
+ color:var(--qn-text)!important;background:rgba(3,9,26,.76)!important;border:1px solid rgba(103,151,226,.25)!important;border-radius:10px!important;
 }
-.menu-card:hover,.card:hover,.project-card:hover{border-color:rgba(64,217,255,.75)!important;box-shadow:0 16px 42px rgba(0,100,240,.2)!important}
-.card-icon-box{background:linear-gradient(135deg,rgba(0,136,255,.24),rgba(142,70,255,.18))!important;border-color:rgba(64,217,255,.42)!important}
-.card-title,.screen-title,.sec-title,.hdr,.q,.ph-title{color:#b9eaff!important;text-shadow:0 0 18px rgba(0,150,255,.2)}
-button,.btn,.hbtn,.btn-primary,.btn-pri,.btn-run,.btn-exec,.btn-execute,.btn-submit,.btn-ph,.tab,.navtab,.rtab{
- transition:filter .18s,box-shadow .18s,border-color .18s,transform .18s!important
+:where(input,textarea,select):focus{outline:none!important;border-color:rgba(75,183,255,.8)!important;box-shadow:0 0 0 3px rgba(52,139,255,.13)!important}
+:where(a){color:#78caff}
+:where(.notif,.toast,.notification){border-radius:12px!important;backdrop-filter:blur(18px);box-shadow:0 12px 40px rgba(0,0,0,.38)}
+/* Quantum Open Lab — palette, circuit canvas, Bloch and analysis surfaces */
+:where(.body-layout,.main-layout,.workspace-layout){gap:14px}
+:where(.gate-palette,.gates-panel,.toolbox){background:linear-gradient(180deg,rgba(12,25,58,.92),rgba(6,13,33,.95))!important}
+:where(.gate-btn,.gate,.quantum-gate,.palette-item){
+ min-width:42px;min-height:40px;border-radius:10px!important;border:1px solid rgba(83,160,255,.32)!important;
+ background:linear-gradient(145deg,rgba(29,72,132,.72),rgba(13,30,70,.9))!important;color:#eaf6ff!important;
+ box-shadow:0 5px 18px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.1)!important;
 }
-button:hover,.btn:hover,.hbtn:hover,.btn-primary:hover,.btn-pri:hover,.btn-run:hover,.btn-exec:hover,.btn-execute:hover,.btn-submit:hover,.btn-ph:hover{
- filter:brightness(1.12);box-shadow:0 0 17px rgba(0,157,255,.22)
+:where(.gate-btn,.gate,.quantum-gate,.palette-item):hover{border-color:#5bdcff!important;box-shadow:0 0 18px rgba(40,180,255,.2)!important}
+:where(.circuit-canvas,.circuit-editor,.circuit-area,.circuit-grid,.circuit-container){
+ background-color:rgba(2,8,24,.9)!important;
+ background-image:linear-gradient(rgba(67,131,221,.075) 1px,transparent 1px),linear-gradient(90deg,rgba(67,131,221,.075) 1px,transparent 1px)!important;
+ background-size:24px 24px!important;border:1px solid rgba(65,129,225,.22)!important;border-radius:14px!important;
 }
-input,select,textarea,.form-i,.fi,.server-input{
- color:var(--qn-text)!important;background:rgba(2,10,28,.78)!important;border-color:rgba(61,151,231,.45)!important
-}
-input:focus,select:focus,textarea:focus,.form-i:focus,.fi:focus{
- outline:none!important;border-color:var(--qn-cyan)!important;box-shadow:0 0 0 2px rgba(64,217,255,.13)!important
-}
-a{color:#65dcff}
-table{border-color:rgba(43,151,255,.26)!important}
-th{background:rgba(13,55,112,.46)!important;color:#a8eaff!important}
-td{border-color:rgba(43,151,255,.2)!important}
-pre,code,.code-editor,.cm-editor{background:rgba(1,8,26,.82)!important;border-color:rgba(43,151,255,.32)!important}
-.notif{background:rgba(3,14,36,.97)!important;border-color:var(--qn-cyan)!important;backdrop-filter:blur(18px)}
-#ai-panel-wrapper .ai-panel,.ai-panel{
- background:linear-gradient(155deg,rgba(5,22,55,.98),rgba(3,11,30,.98))!important;
- border-color:rgba(57,180,255,.54)!important;box-shadow:0 24px 70px rgba(0,0,0,.58),0 0 28px rgba(0,120,255,.14)!important;
- backdrop-filter:blur(24px)
-}
-#ai-panel-wrapper .ai-hdr,.ai-hdr{background:linear-gradient(110deg,rgba(0,112,220,.2),rgba(120,65,220,.14))!important}
-#ai-panel-wrapper .ai-msg.bot,.ai-msg.bot{background:rgba(12,55,112,.38)!important;border-color:rgba(55,165,255,.32)!important}
-#ai-panel-wrapper .ai-input-row,.ai-input-row{background:rgba(5,19,47,.92)!important;border-color:rgba(43,151,255,.3)!important}
-
-/* Quantum Open Lab: match the supplied workspace's compact engineering layout */
-body:has(.body-layout) .titlebar{height:38px!important;background:rgba(5,17,42,.94)!important}
-body:has(.body-layout) .toolbar{height:46px!important;min-height:46px!important;background:rgba(7,22,52,.94)!important}
-body:has(.body-layout) .body-layout{height:calc(100vh - 84px)!important;background:transparent}
-body:has(.body-layout) .palette,body:has(.body-layout) .right-panel{
- background:linear-gradient(180deg,rgba(8,24,57,.96),rgba(4,14,36,.94))!important;
- border-color:rgba(43,151,255,.35)!important
-}
-body:has(.body-layout) .palette-hdr,body:has(.body-layout) .circuit-hdr,body:has(.body-layout) .code-hdr,body:has(.body-layout) .out-hdr,body:has(.body-layout) .rtabs{
- background:linear-gradient(100deg,rgba(12,35,80,.92),rgba(6,19,48,.92))!important;border-color:rgba(43,151,255,.3)!important
-}
-body:has(.body-layout) .center-area{background:rgba(3,13,35,.34)!important}
-body:has(.body-layout) .circuit-section,body:has(.body-layout) .code-section,body:has(.body-layout) .output-panel,body:has(.body-layout) .bloch-panel,body:has(.body-layout) .save-panel{
- background:linear-gradient(145deg,rgba(8,24,57,.92),rgba(3,13,34,.95))!important;border-color:rgba(43,151,255,.32)!important
-}
-body:has(.body-layout) .circuit-body,body:has(.body-layout) .out-body,body:has(.body-layout) .syn-lay,body:has(.body-layout) .code-ta,body:has(.body-layout) .lnums{
- background:rgba(3,13,34,.92)!important
-}
-body:has(.body-layout) .pal-gate{
- border:1px solid rgba(75,161,255,.5)!important;border-radius:9px!important;
- box-shadow:inset 0 1px rgba(255,255,255,.08),0 5px 15px rgba(0,0,0,.22)
-}
-body:has(.body-layout) .pal-gate:hover{box-shadow:0 0 18px rgba(0,145,255,.26)!important}
-body:has(.body-layout) .placed-gate .pg-box{border-radius:7px!important;box-shadow:0 0 14px rgba(0,120,255,.22)}
-body:has(.body-layout) .toolbar .btn-run{background:linear-gradient(110deg,#075fdb,#078bff)!important;border:1px solid rgba(80,190,255,.5)!important;border-radius:9px!important}
-body:has(.body-layout) .toolbar .mode-btn.on,body:has(.body-layout) .toolbar .lib-btn.on{background:linear-gradient(110deg,rgba(0,118,255,.35),rgba(129,70,255,.25))!important;border-color:#40d9ff!important;color:#eaf8ff!important}
-body:has(.body-layout) #bloch-canvas{background:radial-gradient(circle at 35% 30%,rgba(12,59,128,.8),rgba(2,10,28,.96))!important;box-shadow:0 0 35px rgba(0,122,255,.22),inset 0 0 25px rgba(83,160,255,.1)!important}
-body:has(.body-layout) .statusbar{background:rgba(3,12,31,.96)!important;border-color:rgba(43,151,255,.3)!important}
-body:has(.body-layout) .resize-handle-h,body:has(.body-layout) .resize-handle-v{background:rgba(49,132,220,.42)!important}
+:where(.qubit-line,.wire,.circuit-wire){border-color:rgba(104,160,239,.54)!important}
+:where(.bloch,.bloch-sphere,.bloch-container,.visualization,.plot-container){background:radial-gradient(circle at 50% 38%,rgba(38,116,222,.16),rgba(4,10,27,.92) 72%)!important;border-radius:16px!important}
+:where(.code-panel,.code-editor,.editor-wrap,.cm-editor,pre,code){font-family:var(--qn-mono)!important}
+:where(.results-panel,.histogram,.chart-panel){background:linear-gradient(150deg,rgba(12,25,57,.9),rgba(5,12,30,.95))!important}
+/* Notebook and App Studio */
+:where(.cell,.notebook-cell,.output,.cell-output,.code-cell){border-radius:14px!important}
+:where(.cm-editor,.CodeMirror,.monaco-editor){background:rgba(3,8,24,.96)!important;border-radius:12px!important}
+:where(.toolbar,.tabs,.tab-bar,.nav-tabs){gap:7px}
+:where(.tab,.nav-tab){border-radius:9px!important}
+:where(.sidebar,.side-nav,.navigation,.left-sidebar){background:rgba(5,12,31,.86)!important;backdrop-filter:blur(24px);border-right:1px solid var(--qn-line)!important}
+:where(.sidebar a,.side-nav a,.navigation a,.nav-item){border-radius:10px;transition:all .18s}
+:where(.sidebar a:hover,.side-nav a:hover,.navigation a:hover,.nav-item:hover){background:rgba(50,126,235,.14)!important;color:#eaf6ff!important}
+/* QNexusAi surfaces */
+:where(.ai-panel,.chat-panel,.assistant-panel,.qnexus-panel){background:linear-gradient(180deg,rgba(17,25,62,.94),rgba(7,12,34,.96))!important;border:1px solid rgba(135,102,255,.32)!important}
+:where(.message,.chat-message,.assistant-message){border-radius:14px!important}
+:where(.user-message){background:rgba(34,99,189,.24)!important}
+:where(.assistant-message){background:rgba(105,69,185,.13)!important}
+/* responsive: preserve tool usability on narrow displays */
 @media(max-width:900px){
- #nexus-sidebar{width:66px;padding:8px;left:7px;top:64px;bottom:65px}
- #nexus-sidebar .qn-brand strong,#nexus-sidebar .qn-brand small,#nexus-sidebar button .qn-label,#nexus-sidebar .qn-version{display:none}
- #nexus-sidebar .qn-brand{justify-content:center;padding:7px 0}
- #nexus-sidebar button{justify-content:center;padding:8px 3px}
- #nexus-sidebar button .qn-icon{font-size:20px}
- #module-container{margin-left:78px!important}
-}
-@media(max-width:760px){
- body:has(.body-layout) .titlebar{height:30px!important}
- body:has(.body-layout) .toolbar{height:auto!important;min-height:46px!important}
- body:has(.body-layout) .body-layout{height:auto!important}
+ :where(.body-layout,.main-layout,.workspace-layout){grid-template-columns:minmax(0,1fr)!important}
+ :where(.sidebar,.side-nav,.navigation,.left-sidebar){max-width:100%;overflow-x:auto}
+ :where(.panel,.card,.sec,.window,.workspace){border-radius:14px!important}
 }
 @media(max-width:600px){
- #nexus-sidebar{top:58px;bottom:58px;width:54px;left:4px;padding:5px;gap:4px}
- #nexus-sidebar button{min-height:36px}
- #module-container{margin-left:62px!important;padding-top:58px!important}
- #module-container .screen-hdr{margin:6px 5px 0;padding:9px!important}
- #module-container .module-iframe-wrap{margin:6px 5px 16px}
- #nexus-dock{max-width:calc(100vw - 70px);overflow-x:auto;left:calc(50% + 28px);bottom:5px}
- #nexus-dock button{padding:7px 9px;font-size:10px}
- #openq-header{padding-left:65px!important}
+ body{background-attachment:scroll!important}
+ :where(.toolbar,.topbar,.app-header,.header){padding-left:12px!important;padding-right:12px!important}
+ :where(button,.btn,.action-btn){min-height:38px}
+ :where(.panel,.card,.sec,.window,.workspace,.modal){padding:12px!important}
+ :where(.gate-palette,.toolbox){max-height:34vh;overflow:auto}
 }
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
