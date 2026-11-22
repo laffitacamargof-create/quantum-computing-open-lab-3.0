@@ -398,6 +398,7 @@ body::before{content:'';position:fixed;inset:0;
 #ai-panel-wrapper .katex-display>.katex{white-space:nowrap}
 #ai-panel-wrapper .math-fallback{white-space:pre-wrap}
 </style>
+<link rel="stylesheet" href="quolab-nexus-quantum-theme.css?v=1.0.0">
 </head>
 <body>
 
@@ -587,6 +588,27 @@ body::before{content:'';position:fixed;inset:0;
       <button class="btn-cancel" onclick="QuOLabNexus.closeAuth()">CANCEL</button>
     </div>
   </div>
+</div>
+
+
+<nav id="nexus-sidebar" aria-label="QuOLab Nexus applications">
+  <div class="qn-brand"><span class="qn-atom">⚛</span><div><strong>QuOLab Nexus</strong><small>Quantum Environment</small></div></div>
+  <button onclick="QuOLabNexus.nav('home')" class="active"><span class="qn-icon">⌂</span><span class="qn-label">Inicio</span></button>
+  <button onclick="QuOLabNexus.nav('architect-pro')"><span class="qn-icon">▤</span><span class="qn-label">Quantum Notebook</span></button>
+  <button onclick="QuOLabNexus.nav('architect')"><span class="qn-icon">⚛</span><span class="qn-label">Quantum Open Lab</span></button>
+  <button onclick="QuOLabNexus.nav('quantum-puzzle')"><span class="qn-icon">✣</span><span class="qn-label">Quantum Puzzle</span></button>
+  <button onclick="QuOLabNexus.nav('projects')"><span class="qn-icon">▣</span><span class="qn-label">Projects</span></button>
+  <button onclick="QuOLabNexus.nav('nexus-connectors')"><span class="qn-icon">⌘</span><span class="qn-label">Conectores</span></button>
+  <button onclick="QuOLabNexus.nav('account')"><span class="qn-icon">◉</span><span class="qn-label">Mi cuenta</span></button>
+  <button onclick="QuOLabNexus.nav('founder')"><span class="qn-icon">⚙</span><span class="qn-label">Administración</span></button>
+  <button onclick="QuOLabNexus.nav('help')"><span class="qn-icon">?</span><span class="qn-label">Ayuda</span></button>
+  <div class="qn-spacer"></div><div class="qn-version">QUANTUM ENVIRONMENT · BETA</div>
+</nav>
+<div id="nexus-dock" aria-label="Accesos rápidos">
+  <button onclick="QuOLabNexus.nav('architect')"><span>⚛</span>Open Lab</button>
+  <button onclick="QuOLabNexus.nav('architect-pro')"><span>▤</span>Notebook</button>
+  <button onclick="QuOLabNexus.nav('projects')"><span>▣</span>Projects</button>
+  <button onclick="QuOLabNexus.toggleAI()"><span>✧</span>QNexusAi</button>
 </div>
 
 <div id="module-container">
