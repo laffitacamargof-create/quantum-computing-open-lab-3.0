@@ -2,7 +2,7 @@ name: Deploy QuOLab Nexus to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "ui/quolab-nexus-quantum-desktop"]
   workflow_dispatch:
 
 permissions:
