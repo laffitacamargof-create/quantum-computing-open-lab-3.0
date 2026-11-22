@@ -1,0 +1,137 @@
+/* QuOLab Nexus — Quantum Environment visual layer
+   UI-only skin. Does not replace application scripts, events, APIs or simulator logic. */
+:root{
+  --qn-bg:#03091b;--qn-panel:rgba(5,19,48,.82);--qn-panel-2:rgba(7,29,67,.76);
+  --qn-line:rgba(44,157,255,.46);--qn-cyan:#27d9ff;--qn-blue:#087dff;
+  --qn-violet:#9b5cff;--qn-text:#eaf5ff;--qn-muted:#9bb6d5;
+}
+html{background:#020718}
+body{
+  color:var(--qn-text)!important;
+  background:
+    radial-gradient(ellipse at 48% 8%,rgba(37,77,190,.28),transparent 38%),
+    radial-gradient(ellipse at 82% 70%,rgba(91,27,190,.20),transparent 34%),
+    radial-gradient(ellipse at 12% 88%,rgba(0,151,255,.17),transparent 38%),
+    linear-gradient(135deg,#020718 0%,#061432 48%,#03091d 100%)!important;
+  background-attachment:fixed!important;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.48;
+  background-image:
+    radial-gradient(2px 2px at 8% 18%,#8ceaff 55%,transparent 70%),
+    radial-gradient(1px 1px at 21% 72%,#fff 55%,transparent 70%),
+    radial-gradient(2px 2px at 67% 22%,#7b9dff 55%,transparent 70%),
+    radial-gradient(1px 1px at 82% 61%,#fff 55%,transparent 70%),
+    radial-gradient(2px 2px at 91% 14%,#bb8cff 55%,transparent 70%),
+    radial-gradient(1px 1px at 42% 91%,#8ceaff 55%,transparent 70%);
+  background-size:380px 300px,440px 370px,520px 420px,360px 310px,610px 500px,470px 390px;
+}
+header,.header,.topbar,.app-header,.screen-hdr,.toolbar,.panel-header{
+  background:linear-gradient(110deg,rgba(4,20,54,.94),rgba(8,31,76,.78))!important;
+  border-color:var(--qn-line)!important;backdrop-filter:blur(22px)!important;
+}
+aside,.sidebar,.left-sidebar,.right-sidebar,.side-panel,.tool-sidebar{
+  background:linear-gradient(180deg,rgba(4,19,48,.94),rgba(4,13,35,.88))!important;
+  border-color:var(--qn-line)!important;backdrop-filter:blur(20px)!important;
+}
+.panel,.card,.widget,.tool-panel,.workspace-panel,.editor-panel,.result-panel,.modal,.dropdown-menu{
+  background:linear-gradient(145deg,rgba(7,29,68,.84),rgba(3,14,39,.88))!important;
+  border:1px solid rgba(44,157,255,.38)!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.28),inset 0 1px rgba(170,224,255,.07),0 0 18px rgba(0,126,255,.08)!important;
+  backdrop-filter:blur(18px)!important;
+}
+button,.btn,.action-btn,.tab,.nav-item,.menu-card{
+  transition:background .18s,border-color .18s,box-shadow .18s,transform .18s!important;
+}
+button,.btn,.action-btn{
+  border-color:rgba(48,158,255,.45)!important;
+}
+button:hover,.btn:hover,.action-btn:hover,.nav-item:hover,.tab:hover{
+  border-color:rgba(39,217,255,.86)!important;
+  box-shadow:0 0 18px rgba(0,153,255,.20)!important;
+}
+input,select,textarea,.form-control,.search-input{
+  color:var(--qn-text)!important;background:rgba(1,9,27,.72)!important;
+  border-color:rgba(51,147,232,.42)!important;
+}
+input:focus,select:focus,textarea:focus{
+  outline:none!important;border-color:var(--qn-cyan)!important;
+  box-shadow:0 0 0 2px rgba(39,217,255,.12)!important;
+}
+a{color:#62d9ff}
+h1,h2,h3,.title,.section-title{ text-shadow:0 0 20px rgba(0,148,255,.13) }
+table{border-color:rgba(44,157,255,.26)!important}
+th{background:rgba(13,55,112,.42)!important;color:#9ceaff!important}
+td{border-color:rgba(44,157,255,.20)!important}
+pre,code,.code-editor,.cm-editor{
+  background:rgba(1,8,26,.78)!important;border-color:rgba(44,157,255,.32)!important;
+}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:linear-gradient(#087dff,#754bdb);border:2px solid rgba(2,9,25,.8);border-radius:12px}
+::-webkit-scrollbar-track{background:rgba(1,7,22,.45)}
+/* Main Nexus shell: permanent launcher rail + bottom app dock */
+#nexus-sidebar{
+  position:fixed;z-index:180;left:14px;top:76px;bottom:76px;width:224px;
+  display:flex;flex-direction:column;gap:7px;padding:12px;
+  border:1px solid rgba(42,154,255,.48);border-radius:18px;
+  background:linear-gradient(180deg,rgba(4,21,55,.90),rgba(3,12,34,.84));
+  box-shadow:0 18px 55px rgba(0,0,0,.38),inset 0 1px rgba(190,230,255,.08);
+  backdrop-filter:blur(22px);
+}
+#nexus-sidebar .qn-brand{display:flex;align-items:center;gap:10px;padding:8px 6px 13px;border-bottom:1px solid rgba(50,145,230,.25);margin-bottom:3px}
+#nexus-sidebar .qn-atom{font-size:26px;color:#5ce7ff;text-shadow:0 0 16px #078cff}
+#nexus-sidebar .qn-brand strong{display:block;font:700 13px 'Orbitron',sans-serif;color:#effaff}
+#nexus-sidebar .qn-brand small{color:#93b6d8;font-size:10px}
+#nexus-sidebar button{
+  display:flex;align-items:center;gap:11px;width:100%;min-height:39px;padding:8px 10px;
+  color:#dceeff;background:rgba(13,47,96,.32);border:1px solid transparent;border-radius:10px;
+  font:500 12px 'Exo 2',sans-serif;text-align:left;cursor:pointer;
+}
+#nexus-sidebar button .qn-icon{width:22px;text-align:center;font-size:17px;color:#48d9ff}
+#nexus-sidebar button:hover,#nexus-sidebar button.active{
+  background:linear-gradient(100deg,rgba(0,111,255,.48),rgba(27,66,151,.34));
+  border-color:rgba(45,198,255,.62);box-shadow:0 0 18px rgba(0,130,255,.20)
+}
+#nexus-sidebar .qn-spacer{flex:1}
+#nexus-sidebar .qn-version{padding:9px;border-radius:10px;background:rgba(9,39,89,.42);color:#8eb7df;font-size:10px;text-align:center}
+#nexus-dock{
+  position:fixed;z-index:190;left:50%;bottom:12px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid rgba(44,157,255,.48);
+  border-radius:16px;background:rgba(3,15,43,.86);box-shadow:0 12px 35px rgba(0,0,0,.4);
+  backdrop-filter:blur(20px)
+}
+#nexus-dock button{padding:8px 12px;border-radius:10px;background:rgba(13,51,104,.52);color:#e8f6ff;font:500 11px 'Exo 2',sans-serif;white-space:nowrap}
+#nexus-dock button span{color:#52dfff;margin-right:6px}
+#module-container{margin-left:248px!important;padding-top:70px!important;min-height:100vh}
+#openq-header{background:rgba(2,10,29,.88)!important;border-bottom:1px solid rgba(44,157,255,.42)!important;backdrop-filter:blur(24px)!important}
+#ai-panel-wrapper .ai-panel{background:linear-gradient(145deg,rgba(5,22,57,.97),rgba(3,12,34,.97))!important;border-color:rgba(47,172,255,.58)!important;box-shadow:0 20px 65px rgba(0,0,0,.48),0 0 26px rgba(0,127,255,.12)!important}
+#module-container .screen{background:transparent}
+#module-container .screen-hdr{border:1px solid rgba(44,157,255,.34)!important;border-radius:14px;margin:10px 14px 0;padding:12px 16px!important}
+#module-container .module-iframe-wrap{margin:10px 14px 24px;overflow:hidden;border:1px solid rgba(44,157,255,.32);border-radius:16px;background:rgba(3,13,37,.36);box-shadow:0 16px 45px rgba(0,0,0,.25)}
+#module-container .module-iframe{min-height:calc(100vh - 170px);background:transparent}
+#module-container .menu-hero{padding:1.7rem 1rem 1rem}
+#module-container .menu-grid{max-width:1100px;gap:14px}
+#module-container .menu-card{
+  background:linear-gradient(145deg,rgba(8,34,79,.80),rgba(3,15,43,.88))!important;
+  border:1px solid rgba(44,157,255,.42)!important;border-radius:16px!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.24),inset 0 1px rgba(190,230,255,.06)!important
+}
+#module-container .menu-card:hover{transform:translateY(-3px)!important;border-color:#35d5ff!important;box-shadow:0 14px 35px rgba(0,112,255,.2)!important}
+@media(max-width:900px){
+ #nexus-sidebar{width:66px;padding:8px;left:7px;top:64px;bottom:65px}
+ #nexus-sidebar .qn-brand strong,#nexus-sidebar .qn-brand small,#nexus-sidebar button .qn-label,#nexus-sidebar .qn-version{display:none}
+ #nexus-sidebar .qn-brand{justify-content:center;padding:7px 0}
+ #nexus-sidebar button{justify-content:center;padding:8px 3px}
+ #nexus-sidebar button .qn-icon{font-size:20px}
+ #module-container{margin-left:78px!important}
+}
+@media(max-width:600px){
+ #nexus-sidebar{top:58px;bottom:58px;width:54px;left:4px;padding:5px;gap:4px}
+ #nexus-sidebar button{min-height:36px}
+ #module-container{margin-left:62px!important;padding-top:58px!important}
+ #module-container .screen-hdr{margin:6px 5px 0;padding:9px!important}
+ #module-container .module-iframe-wrap{margin:6px 5px 16px}
+ #nexus-dock{max-width:calc(100vw - 70px);overflow-x:auto;left:calc(50% + 28px);bottom:5px}
+ #nexus-dock button{padding:7px 9px;font-size:10px}
+ #openq-header{padding-left:65px!important}
+}
