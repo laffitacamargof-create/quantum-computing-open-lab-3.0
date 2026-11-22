@@ -2,7 +2,7 @@ name: Deploy QuOLab Nexus to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "ui/quolab-nexus-quantum-desktop"]
   workflow_dispatch:
 
 permissions:
@@ -31,6 +31,7 @@ jobs:
           cp index.html .nojekyll dist/
           cp quolab-nexus-*.html dist/
           cp quolab-nexus-*.js dist/
+          cp quolab-nexus-*.css dist/
           test -s dist/index.html
           test -s dist/quolab-nexus-quantum-notebook.html
           test -s dist/quolab-nexus-supabase-config.js
