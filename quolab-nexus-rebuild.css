@@ -1,0 +1,94 @@
+/* QUOLAB NEXUS 3.0 — Interface reconstruction layer
+   Presentation-only layer. Existing application logic and component IDs are preserved. */
+:root{
+  color-scheme:dark;
+  --qn-bg:#050812;--qn-panel:rgba(12,19,36,.88);--qn-panel2:rgba(17,27,49,.92);
+  --qn-line:rgba(115,157,224,.16);--qn-line-hot:rgba(76,216,255,.42);
+  --qn-cyan:#64e7f5;--qn-blue:#6e9dff;--qn-violet:#a78bfa;
+  --qn-text:#eaf1ff;--qn-muted:#8292b4;--qn-green:#6ee7b7;
+  --qn-radius:15px;--qn-shadow:0 22px 70px rgba(0,0,0,.42);
+}
+html{background:var(--qn-bg);scrollbar-color:#34496e #080d19}
+body{
+  color:var(--qn-text)!important;
+  background:
+    radial-gradient(ellipse at 18% 8%,rgba(48,102,190,.18),transparent 38%),
+    radial-gradient(ellipse at 86% 20%,rgba(121,78,198,.14),transparent 34%),
+    radial-gradient(ellipse at 55% 100%,rgba(27,130,153,.10),transparent 42%),
+    linear-gradient(145deg,#070b17 0%,#090f20 52%,#060a15 100%)!important;
+  font-family:'Inter','Exo 2',system-ui,sans-serif!important;
+}
+body::before{
+  background-image:linear-gradient(rgba(124,162,228,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(124,162,228,.035) 1px,transparent 1px)!important;
+  background-size:48px 48px!important;opacity:.42;
+}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(1,4,12,.38) 100%)}
+body>*{position:relative;z-index:1}
+#openq-header,header,.topbar,.titlebar,.repo-header,.toolbar,.admin-bar{
+  background:rgba(7,12,25,.82)!important;
+  border-color:var(--qn-line)!important;
+  box-shadow:0 8px 30px rgba(0,0,0,.18);
+  backdrop-filter:blur(24px) saturate(140%)!important;
+}
+#openq-header{border-bottom:1px solid var(--qn-line-hot)!important}
+.logo-q,.logo-col,.logo-text,.tb-q,.tb-pro,.repo-title,.hdr,.sec-title,.titlebar .tb-brand{
+  text-shadow:0 0 22px rgba(100,231,245,.18);
+}
+button,.btn,.bsm,.fbtn,.tag-chip,.tab,.btn-primary,.btn-pri,.btn-run{
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease!important;
+}
+button:hover,.btn:hover,.bsm:hover,.fbtn:hover,.tag-chip:hover,.btn-primary:hover,.btn-pri:hover,.btn-run:hover{
+  border-color:var(--qn-cyan)!important;box-shadow:0 0 0 1px rgba(100,231,245,.10),0 8px 24px rgba(35,153,211,.12);
+}
+button:active,.btn:active{transform:translateY(1px)}
+input,select,textarea,.fi,.nb-name-inp{
+  background:rgba(3,8,19,.72)!important;color:var(--qn-text)!important;
+  border-color:var(--qn-line)!important;border-radius:9px!important;
+}
+input:focus,select:focus,textarea:focus,.fi:focus{
+  outline:none!important;border-color:var(--qn-cyan)!important;
+  box-shadow:0 0 0 3px rgba(100,231,245,.09)!important;
+}
+.card,.sec,.panel,.project-card,.stat,.empty,.access-denied,.search-box,.editor,.workspace,.tool-card,.module-card,.window,.modal,.dialog,.chat-panel,.chat-widget{
+  background:linear-gradient(145deg,rgba(17,27,49,.90),rgba(8,14,29,.92))!important;
+  border:1px solid var(--qn-line)!important;border-radius:var(--qn-radius)!important;
+  box-shadow:var(--qn-shadow);
+}
+.card:hover,.project-card:hover,.tool-card:hover,.module-card:hover{
+  border-color:var(--qn-line-hot)!important;transform:translateY(-2px);
+}
+.card-hdr,.sec-title,.panel-header,.window-header{
+  background:rgba(20,33,58,.62)!important;border-color:var(--qn-line)!important;
+}
+.grid,.projects-grid{gap:16px!important}
+a{color:var(--qn-cyan)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:rgba(3,7,16,.45)}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--qn-blue),#52658e);border:2px solid #080d19;border-radius:12px}
+.notif{background:rgba(8,15,31,.96)!important;border-color:var(--qn-cyan)!important;color:var(--qn-cyan)!important;box-shadow:0 15px 50px rgba(0,0,0,.45)}
+/* Quantum Architect: lab-console hierarchy */
+.toolbar{min-height:46px!important;padding:7px 12px!important;gap:7px!important}
+.btn-run{border-radius:9px!important;background:linear-gradient(120deg,#2369d7,#4c8fff)!important;box-shadow:0 5px 22px rgba(54,122,244,.24)}
+/* Notebook: focused writing surface */
+.cm-editor,.CodeMirror,.notebook,.cell,.output,.nb-cell,.code-cell{
+  border-color:var(--qn-line)!important;border-radius:11px!important;
+}
+.cm-editor,.CodeMirror{background:#080e1c!important}
+.cm-gutters{background:#0b1426!important;border-color:var(--qn-line)!important}
+.cm-activeLine,.cm-activeLineGutter{background:rgba(91,145,226,.075)!important}
+/* Ecosystem modules */
+main{position:relative;z-index:1}
+.wrap{position:relative;z-index:1}
+.sec,.card{backdrop-filter:blur(18px)}
+.tabs{border-color:var(--qn-line)!important}
+.tab.on,.tab.active{color:var(--qn-cyan)!important;border-bottom-color:var(--qn-cyan)!important}
+.empty{min-height:48vh}
+@media(max-width:760px){
+  body{font-size:14px}
+  #openq-header,header,.topbar,.repo-header{padding-left:12px!important;padding-right:12px!important}
+  .grid,.projects-grid{grid-template-columns:1fr!important;padding:12px!important}
+  .toolbar{flex-wrap:nowrap!important;overflow-x:auto!important}
+  .card,.sec{border-radius:12px!important}
+  .chat-panel,.chat-widget{max-width:calc(100vw - 20px)!important}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
